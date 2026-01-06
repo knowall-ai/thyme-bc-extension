@@ -42,6 +42,19 @@ jobs:
             $tokenResponse = Invoke-RestMethod -Uri $tokenUrl -Method Post -Body $tokenBody -ContentType "application/x-www-form-urlencoded"
             $accessToken = $tokenResponse.access_token
             Write-Host "Got access token (first 50 chars): $($accessToken.Substring(0, 50))..."
+
+            # Decode JWT to see claims (for debugging)
+            $tokenParts = $accessToken.Split('.')
+            $payload = $tokenParts[1]
+            # Add padding if needed
+            $padding = 4 - ($payload.Length % 4)
+            if ($padding -ne 4) { $payload += '=' * $padding }
+            $decodedPayload = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($payload))
+            $claims = $decodedPayload | ConvertFrom-Json
+            Write-Host "Token audience (aud): $($claims.aud)"
+            Write-Host "Token app ID (appid): $($claims.appid)"
+            Write-Host "Token roles: $($claims.roles -join ', ')"
+            Write-Host "Token tenant (tid): $($claims.tid)"
           } catch {
             Write-Host "Token Error: $($_.Exception.Message)"
             $errorBody = $_.ErrorDetails.Message
