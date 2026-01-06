@@ -27,12 +27,13 @@ jobs:
           BC_CLIENT_ID: ${{ secrets.BC_CLIENT_ID }}
           BC_CLIENT_SECRET: ${{ secrets.BC_CLIENT_SECRET }}
         run: |
-          # Get OAuth token directly with correct scope for BC API
-          $tokenUrl = "https://login.microsoftonline.com/$($env:BC_TENANT_ID)/oauth2/v2.0/token"
+          # Get OAuth token directly with correct resource for BC API
+          # Using v1.0 endpoint with resource parameter (required for BC Online)
+          $tokenUrl = "https://login.microsoftonline.com/$($env:BC_TENANT_ID)/oauth2/token"
           $tokenBody = @{
             client_id = $env:BC_CLIENT_ID
             client_secret = $env:BC_CLIENT_SECRET
-            scope = "https://api.businesscentral.dynamics.com/.default"
+            resource = "https://api.businesscentral.dynamics.com"
             grant_type = "client_credentials"
           }
 
