@@ -48,6 +48,12 @@
 
 | `Publish-BcContainerApp` fails for BC SaaS
 | Use `Publish-PerTenantExtensionApps` for BC Online environments instead of `Publish-BcContainerApp`.
+
+| `401 Unauthorized` with `Authentication_InvalidCredentials` when publishing
+| Azure AD app missing `Automation.ReadWrite.All` permission. Add this in Azure Portal → App registrations → API permissions → Dynamics 365 Business Central → Application permissions → `Automation.ReadWrite.All`, then grant admin consent.
+
+| `-schemaSyncMode ForceSync` validation error
+| Use `-schemaSyncMode Force` instead. Valid values are `Add` or `Force`.
 |===
 
 == Getting Help
