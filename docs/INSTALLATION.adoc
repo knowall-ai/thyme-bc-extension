@@ -1,0 +1,145 @@
+= Installation Guide
+:toc:
+
+== Prerequisites
+
+* Business Central online environment (Sandbox or Production)
+* Azure AD tenant with admin access
+* One of:
+** VS Code with AL Language extension (manual deployment)
+** GitHub account (automated deployment)
+
+== Option 1: Automated Deployment (GitHub Actions)
+
+=== Step 1: Fork or Clone Repository
+
+[source,bash]
+----
+git clone https://github.com/knowall-ai/thyme-bc-extension.git
+----
+
+=== Step 2: Create Azure AD App Registration
+
+1. Go to https://portal.azure.com[Azure Portal]
+2. Navigate to *Azure Active Directory* → *App registrations*
+3. Click *New registration*
+   * Name: `Thyme BC Extension Deployment`
+   * Supported account types: *Single tenant*
+4. After creation, note the *Application (client) ID*
+5. Go to *API permissions* → *Add a permission*
+   * Select *Dynamics 365 Business Central*
+   * Choose *Application permissions*
+   * Select `API.ReadWrite.All`
+6. Click *Grant admin consent*
+7. Go to *Certificates & secrets* → *New client secret*
+   * Description: `GitHub Actions`
+   * Expiry: 24 months
+   * Copy the secret value immediately
+
+=== Step 3: Authorize App in BC Admin Center
+
+1. Go to https://businesscentral.dynamics.com/admin[BC Admin Center]
+2. Select your environment (Sandbox or Production)
+3. Navigate to *Azure Active Directory apps*
+4. Click *+ Add*
+5. Enter the Client ID from Step 2
+6. Set appropriate permissions (SUPER for deployment)
+
+=== Step 4: Configure GitHub Secrets
+
+In your GitHub repository settings:
+
+1. Go to *Settings* → *Environments*
+2. Create environment: `Sandbox`
+3. Add secrets:
+   * `BC_TENANT_ID` - Your Azure AD tenant ID
+   * `BC_CLIENT_ID` - App registration client ID
+   * `BC_CLIENT_SECRET` - App registration client secret
+4. Repeat for `Production` environment if needed
+
+=== Step 5: Trigger Deployment
+
+Push to `main` branch triggers Sandbox deployment:
+
+[source,bash]
+----
+git push origin main
+----
+
+Create a release for Production deployment:
+
+[source,bash]
+----
+gh release create v1.0.0 --title "Initial Release" --notes "First production deployment"
+----
+
+== Option 2: Manual Deployment (VS Code)
+
+=== Step 1: Install Prerequisites
+
+1. Install https://code.visualstudio.com/[VS Code]
+2. Install https://marketplace.visualstudio.com/items?itemName=ms-dynamics-smb.al[AL Language extension]
+
+=== Step 2: Open Project
+
+[source,bash]
+----
+git clone https://github.com/knowall-ai/thyme-bc-extension.git
+code thyme-bc-extension
+----
+
+=== Step 3: Download Symbols
+
+1. Press `Ctrl+Shift+P`
+2. Type `AL: Download Symbols`
+3. Enter BC environment credentials when prompted
+
+=== Step 4: Deploy
+
+1. Update `.vscode/launch.json` with your environment name
+2. Press `F5` to deploy
+
+== Option 3: Upload .app File Manually
+
+=== Step 1: Build the Extension
+
+[source,bash]
+----
+# In VS Code, press Ctrl+Shift+B
+# Or use command line with AL compiler
+----
+
+=== Step 2: Upload via BC Admin Center
+
+1. Go to https://businesscentral.dynamics.com/admin[BC Admin Center]
+2. Select your environment
+3. Navigate to *Extensions* → *Manage* → *Upload Extension*
+4. Select the `.app` file
+5. Click *Deploy*
+
+== Verification
+
+After installation, verify the API is accessible:
+
+[source,bash]
+----
+curl -H "Authorization: Bearer {token}" \
+  "https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/projects"
+----
+
+Expected: JSON response with project data including `billToCustomerName` field.
+
+== Uninstallation
+
+=== Via BC Admin Center
+
+1. Go to *Extensions* → *Manage*
+2. Find *Thyme BC API Extension*
+3. Click *Uninstall*
+
+=== Via PowerShell
+
+[source,powershell]
+----
+Uninstall-NAVApp -ServerInstance BC -Name "Thyme BC API Extension" -Publisher "KnowAll"
+----

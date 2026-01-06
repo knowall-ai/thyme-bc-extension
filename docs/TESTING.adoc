@@ -1,0 +1,99 @@
+= Testing Guide
+:toc:
+
+== Prerequisites
+
+* Extension deployed to BC Sandbox environment
+* Azure AD app with `API.ReadWrite.All` permission
+* Valid authentication credentials
+
+== Testing the API Endpoints
+
+=== 1. Get Authentication Token
+
+[source,bash]
+----
+# Using Azure CLI
+az account get-access-token --resource https://api.businesscentral.dynamics.com
+
+# Or using client credentials
+curl -X POST "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token" \
+  -d "client_id={client_id}" \
+  -d "client_secret={client_secret}" \
+  -d "scope=https://api.businesscentral.dynamics.com/.default" \
+  -d "grant_type=client_credentials"
+----
+
+=== 2. Test Projects API
+
+[source,bash]
+----
+curl -H "Authorization: Bearer {token}" \
+  "https://api.businesscentral.dynamics.com/v2.0/{tenant}/Sandbox/api/knowall/thyme/v1.0/companies({companyId})/projects"
+----
+
+.Expected Response
+[source,json]
+----
+{
+  "value": [
+    {
+      "id": "guid-here",
+      "number": "J00010",
+      "description": "Website Redesign",
+      "billToCustomerNo": "C00010",
+      "billToCustomerName": "Contoso Ltd",
+      "personResponsible": "John Smith",
+      "status": "Open",
+      "startingDate": "2026-01-01",
+      "endingDate": "2026-06-30",
+      "lastModifiedDateTime": "2026-01-06T12:00:00Z"
+    }
+  ]
+}
+----
+
+=== 3. Test Job Tasks API
+
+[source,bash]
+----
+curl -H "Authorization: Bearer {token}" \
+  "https://api.businesscentral.dynamics.com/v2.0/{tenant}/Sandbox/api/knowall/thyme/v1.0/companies({companyId})/jobTasks"
+----
+
+=== 4. Test with OData Filters
+
+[source,bash]
+----
+# Filter by status
+.../projects?$filter=status eq 'Open'
+
+# Filter job tasks by job number
+.../jobTasks?$filter=jobNo eq 'J00010'
+
+# Filter by job task type (Posting = billable)
+.../jobTasks?$filter=jobTaskType eq 'Posting'
+----
+
+== Using MCP Tools for Testing
+
+If you have the `business-central-sandbox` MCP server configured:
+
+[source]
+----
+# List projects
+mcp__business-central-sandbox__list_items resource=projects
+
+# Filter job tasks
+mcp__business-central-sandbox__get_items_by_field resource=jobTasks field=jobNo value=J00010
+----
+
+== Validation Checklist
+
+* [ ] Projects API returns customer name and number
+* [ ] Projects API returns status field
+* [ ] Projects API returns dates (startingDate, endingDate)
+* [ ] Job Tasks API returns all tasks
+* [ ] Job Tasks API filters by jobTaskType work
+* [ ] OData $filter queries work correctly
+* [ ] OData $select queries work correctly

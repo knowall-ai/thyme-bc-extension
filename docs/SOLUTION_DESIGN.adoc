@@ -1,0 +1,110 @@
+= Solution Design
+:toc:
+
+== Overview
+
+The Thyme BC Extension provides custom API endpoints that expose Business Central Job and Job Task data with additional fields not available in the standard BC API v2.0.
+
+== Problem Statement
+
+The standard BC API v2.0 `/projects` endpoint only returns 4 fields:
+
+* `id` - System GUID
+* `number` - Job number
+* `displayName` - Combined customer/project name
+* `lastModifiedDateTime` - Last modified timestamp
+
+This is insufficient for the Thyme time tracking app which needs:
+
+* Customer name and number (for grouping projects by client)
+* Person responsible (project manager)
+* Project status (to filter active projects)
+* Start/end dates (for project timeline)
+* Job tasks (for time entry allocation)
+
+== Architecture
+
+[source]
+----
+┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
+│   Thyme App     │────▶│  Custom API Pages    │────▶│   BC Tables     │
+│  (TypeScript)   │     │  (AL Extension)      │     │   (Job, etc.)   │
+└─────────────────┘     └──────────────────────┘     └─────────────────┘
+         │                        │
+         │                        │
+         ▼                        ▼
+   OAuth 2.0 Token          API Configuration:
+   (Azure AD)               - APIGroup: thyme
+                            - APIPublisher: knowall
+                            - APIVersion: v1.0
+----
+
+== API Design
+
+=== Endpoint Structure
+
+[source]
+----
+https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/projects
+https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/jobTasks
+----
+
+=== Projects API (Page 50100)
+
+Maps to the BC `Job` table (table 167).
+
+[cols="1,1,1", options="header"]
+|===
+| API Field | BC Field | Notes
+
+| id | SystemId | Primary key (GUID)
+| number | No. | Job number
+| description | Description | Project name
+| billToCustomerNo | Bill-to Customer No. | Customer code
+| billToCustomerName | Bill-to Name | Customer display name
+| personResponsible | Person Responsible | Project manager
+| status | Status | Enum: Planning, Quote, Open, Completed
+| startingDate | Starting Date | Project start
+| endingDate | Ending Date | Project end
+| lastModifiedDateTime | SystemModifiedAt | For sync
+|===
+
+=== Job Tasks API (Page 50101)
+
+Maps to the BC `Job Task` table (table 1001).
+
+[cols="1,1,1", options="header"]
+|===
+| API Field | BC Field | Notes
+
+| id | SystemId | Primary key (GUID)
+| jobNo | Job No. | Parent job reference
+| jobTaskNo | Job Task No. | Task number
+| description | Description | Task name
+| jobTaskType | Job Task Type | Enum: Posting, Heading, Total, Begin-Total, End-Total
+| lastModifiedDateTime | SystemModifiedAt | For sync
+|===
+
+== Object ID Ranges
+
+[cols="1,1", options="header"]
+|===
+| Object | ID
+
+| Thyme Projects API | Page 50100
+| Thyme Job Tasks API | Page 50101
+| (Reserved for future) | 50102-50199
+|===
+
+== Security
+
+* APIs inherit BC's standard security model
+* Users need appropriate permissions on Job and Job Task tables
+* OAuth 2.0 authentication via Azure AD
+* Supports both delegated and application permissions
+
+== Future Enhancements
+
+* **Time Entries API** - POST endpoint to submit time back to BC
+* **Resource API** - Expose employees/resources for time entry allocation
+* **Webhook support** - Real-time notifications when projects change
