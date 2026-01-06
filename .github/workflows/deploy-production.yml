@@ -83,9 +83,12 @@ jobs:
 
           # Deploy to Production
           Write-Host "Publishing to Production..."
+          $environmentUrl = "https://businesscentral.dynamics.com/$($env:BC_TENANT_ID)/Production"
+          Write-Host "Environment URL: $environmentUrl"
+
           Publish-PerTenantExtensionApps `
             -bcAuthContext $authContext `
-            -environment "Production" `
+            -environmentUrl $environmentUrl `
             -appFiles $appFilePath `
             -schemaSyncMode Force
 

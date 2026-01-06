@@ -86,9 +86,12 @@ jobs:
 
           # Deploy to Sandbox
           Write-Host "Publishing to Sandbox..."
+          $environmentUrl = "https://businesscentral.dynamics.com/$($env:BC_TENANT_ID)/Sandbox"
+          Write-Host "Environment URL: $environmentUrl"
+
           Publish-PerTenantExtensionApps `
             -bcAuthContext $authContext `
-            -environment "Sandbox" `
+            -environmentUrl $environmentUrl `
             -appFiles $appFilePath `
             -schemaSyncMode Force
 
