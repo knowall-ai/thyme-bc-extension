@@ -123,8 +123,23 @@ jobs:
             "Content-Type" = "application/json"
           }
 
-          # Get companies
-          Write-Host "Getting companies..."
+          # First test: Try standard BC API to verify token works
+          $standardApiUrl = "https://api.businesscentral.dynamics.com/v2.0/$($env:BC_TENANT_ID)/Sandbox/api/v2.0"
+          Write-Host "Testing standard BC API: $standardApiUrl/companies"
+          try {
+            $testResponse = Invoke-RestMethod -Uri "$standardApiUrl/companies" -Headers $headers -Method Get
+            Write-Host "Standard API works! Found $($testResponse.value.Count) companies"
+          } catch {
+            Write-Host "Standard API also fails: $($_.Exception.Message)"
+            if ($_.Exception.Response) {
+              $errorStream = $_.Exception.Response.GetResponseStream()
+              $reader = New-Object System.IO.StreamReader($errorStream)
+              Write-Host "Standard API Error: $($reader.ReadToEnd())"
+            }
+          }
+
+          # Get companies via Automation API
+          Write-Host "Getting companies via Automation API..."
           try {
             $companiesResponse = Invoke-RestMethod -Uri "$automationApiUrl/companies" -Headers $headers -Method Get
             $company = $companiesResponse.value | Select-Object -First 1
@@ -136,6 +151,14 @@ jobs:
             $reader = New-Object System.IO.StreamReader($errorStream)
             $errorBody = $reader.ReadToEnd()
             Write-Host "Error Body: $errorBody"
+            Write-Host ""
+            Write-Host "=== TROUBLESHOOTING ==="
+            Write-Host "The token is valid but BC rejected it. Please verify in BC Admin Center:"
+            Write-Host "1. Go to https://businesscentral.dynamics.com/admin"
+            Write-Host "2. Click 'Microsoft Entra Apps' in the left sidebar"
+            Write-Host "3. Verify your app is listed and shows 'Authorized' status"
+            Write-Host "4. If you see a 'Grant' link, click it to complete authorization"
+            Write-Host "========================"
             throw
           }
 
