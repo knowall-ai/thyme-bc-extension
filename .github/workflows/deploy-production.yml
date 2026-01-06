@@ -84,8 +84,8 @@ jobs:
           # Deploy to Production
           Write-Host "Publishing to Production..."
 
-          # Fix the apiBaseUrl to include tenant ID
-          $authContext.apiBaseUrl = "https://api.businesscentral.dynamics.com/v2.0/$($env:BC_TENANT_ID)"
+          # Fix the apiBaseUrl to include tenant ID (without /v2.0 - the function adds that)
+          $authContext.apiBaseUrl = "https://api.businesscentral.dynamics.com/$($env:BC_TENANT_ID)"
           Write-Host "API Base URL: $($authContext.apiBaseUrl)"
 
           Publish-PerTenantExtensionApps `
