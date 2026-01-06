@@ -9,6 +9,12 @@
 # Build output
 output/
 
+# Environment files (secrets)
+.env
+.env.local
+.env.*.local
+*.env
+
 # OS files
 .DS_Store
 Thumbs.db
