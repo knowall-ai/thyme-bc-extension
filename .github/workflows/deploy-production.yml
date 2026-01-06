@@ -87,7 +87,7 @@ jobs:
             -bcAuthContext $authContext `
             -environment "Production" `
             -appFiles $appFilePath `
-            -schemaSyncMode ForceSync
+            -schemaSyncMode Force
 
           Write-Host "Deployed to Production successfully!"
 

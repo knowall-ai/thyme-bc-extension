@@ -90,7 +90,7 @@ jobs:
             -bcAuthContext $authContext `
             -environment "Sandbox" `
             -appFiles $appFilePath `
-            -schemaSyncMode ForceSync
+            -schemaSyncMode Force
 
           Write-Host "Deployed to Sandbox successfully!"
 
