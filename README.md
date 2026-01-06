@@ -76,7 +76,32 @@ https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall
 
 Press `Ctrl+Shift+B` to build the `.app` file.
 
-### Deploy to Sandbox
+### Deploy via GitHub Actions (Recommended)
+
+The repo includes a CI/CD workflow that automatically builds and deploys on push to `main`.
+
+**Required GitHub Secrets:**
+
+| Secret | Description |
+|--------|-------------|
+| `BC_TENANT_ID` | Your Azure AD tenant ID |
+| `BC_CLIENT_ID` | Azure AD app registration client ID |
+| `BC_CLIENT_SECRET` | Azure AD app registration client secret |
+
+**Required GitHub Variables:**
+
+| Variable | Description |
+|----------|-------------|
+| `BC_ENVIRONMENT` | Target environment (e.g., `Sandbox`) |
+
+**Azure AD App Setup:**
+
+1. Register an app in Azure AD
+2. Grant API permission: `Dynamics 365 Business Central` → `API.ReadWrite.All`
+3. Create a client secret
+4. In BC Admin Center, authorize the app for your environment
+
+### Deploy via VS Code
 
 1. Configure `launch.json` with your sandbox environment name
 2. Press `F5` to publish directly to sandbox

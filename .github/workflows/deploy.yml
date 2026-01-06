@@ -1,0 +1,70 @@
+name: Build and Deploy to BC Sandbox
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install BcContainerHelper
+        shell: powershell
+        run: |
+          Install-Module BcContainerHelper -Force -AllowClobber
+          Import-Module BcContainerHelper
+
+      - name: Build and Deploy
+        shell: powershell
+        env:
+          BC_TENANT_ID: ${{ secrets.BC_TENANT_ID }}
+          BC_CLIENT_ID: ${{ secrets.BC_CLIENT_ID }}
+          BC_CLIENT_SECRET: ${{ secrets.BC_CLIENT_SECRET }}
+          BC_ENVIRONMENT: ${{ vars.BC_ENVIRONMENT }}
+        run: |
+          # Create credential for Azure AD app
+          $secureSecret = ConvertTo-SecureString $env:BC_CLIENT_SECRET -AsPlainText -Force
+          $credential = New-Object PSCredential($env:BC_CLIENT_ID, $secureSecret)
+
+          # Get auth context
+          $authContext = New-BcAuthContext `
+            -tenantID $env:BC_TENANT_ID `
+            -clientID $env:BC_CLIENT_ID `
+            -clientSecret $secureSecret
+
+          # Download symbols
+          $symbolsFolder = Join-Path $env:GITHUB_WORKSPACE ".alpackages"
+          New-Item -ItemType Directory -Path $symbolsFolder -Force | Out-Null
+
+          # Compile the app
+          $appFile = Compile-AppInBcContainer `
+            -appProjectFolder $env:GITHUB_WORKSPACE `
+            -appOutputFolder $env:GITHUB_WORKSPACE `
+            -appSymbolsFolder $symbolsFolder `
+            -credential $credential `
+            -authContext $authContext `
+            -environment $env:BC_ENVIRONMENT
+
+          Write-Host "Built app: $appFile"
+
+          # Publish to sandbox
+          Publish-BcContainerApp `
+            -appFile $appFile `
+            -authContext $authContext `
+            -environment $env:BC_ENVIRONMENT `
+            -scope Tenant `
+            -syncMode ForceSync
+
+          Write-Host "Deployed to $env:BC_ENVIRONMENT successfully!"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: thyme-bc-extension
+          path: '*.app'
+          if-no-files-found: warn
