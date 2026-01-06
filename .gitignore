@@ -1,0 +1,14 @@
+# AL Language / Business Central
+.alpackages/
+.snapshots/
+*.app
+
+# VS Code
+.vscode/*.code-workspace
+
+# Build output
+output/
+
+# OS files
+.DS_Store
+Thumbs.db
