@@ -27,12 +27,26 @@ jobs:
           BC_CLIENT_ID: ${{ secrets.BC_CLIENT_ID }}
           BC_CLIENT_SECRET: ${{ secrets.BC_CLIENT_SECRET }}
         run: |
-          $secureSecret = ConvertTo-SecureString $env:BC_CLIENT_SECRET -AsPlainText -Force
+          # Get OAuth token directly with correct scope for BC API
+          $tokenUrl = "https://login.microsoftonline.com/$($env:BC_TENANT_ID)/oauth2/v2.0/token"
+          $tokenBody = @{
+            client_id = $env:BC_CLIENT_ID
+            client_secret = $env:BC_CLIENT_SECRET
+            scope = "https://api.businesscentral.dynamics.com/.default"
+            grant_type = "client_credentials"
+          }
 
-          $authContext = New-BcAuthContext `
-            -tenantID $env:BC_TENANT_ID `
-            -clientID $env:BC_CLIENT_ID `
-            -clientSecret $secureSecret
+          Write-Host "Getting OAuth token..."
+          try {
+            $tokenResponse = Invoke-RestMethod -Uri $tokenUrl -Method Post -Body $tokenBody -ContentType "application/x-www-form-urlencoded"
+            $accessToken = $tokenResponse.access_token
+            Write-Host "Got access token (first 50 chars): $($accessToken.Substring(0, 50))..."
+          } catch {
+            Write-Host "Token Error: $($_.Exception.Message)"
+            $errorBody = $_.ErrorDetails.Message
+            Write-Host "Error Details: $errorBody"
+            throw
+          }
 
           Write-Host "Authenticated successfully"
 
@@ -91,15 +105,25 @@ jobs:
           Write-Host "Automation API URL: $automationApiUrl"
 
           $headers = @{
-            "Authorization" = "Bearer $($authContext.AccessToken)"
+            "Authorization" = "Bearer $accessToken"
             "Content-Type" = "application/json"
           }
 
           # Get companies
           Write-Host "Getting companies..."
-          $companiesResponse = Invoke-RestMethod -Uri "$automationApiUrl/companies" -Headers $headers -Method Get
-          $company = $companiesResponse.value | Select-Object -First 1
-          Write-Host "Using company: $($company.name) ($($company.id))"
+          try {
+            $companiesResponse = Invoke-RestMethod -Uri "$automationApiUrl/companies" -Headers $headers -Method Get
+            $company = $companiesResponse.value | Select-Object -First 1
+            Write-Host "Using company: $($company.name) ($($company.id))"
+          } catch {
+            Write-Host "Companies API Error: $($_.Exception.Message)"
+            Write-Host "Status Code: $($_.Exception.Response.StatusCode.value__)"
+            $errorStream = $_.Exception.Response.GetResponseStream()
+            $reader = New-Object System.IO.StreamReader($errorStream)
+            $errorBody = $reader.ReadToEnd()
+            Write-Host "Error Body: $errorBody"
+            throw
+          }
 
           # Upload extension
           Write-Host "Uploading extension..."
@@ -112,7 +136,7 @@ jobs:
           } | ConvertTo-Json
 
           $uploadHeaders = @{
-            "Authorization" = "Bearer $($authContext.AccessToken)"
+            "Authorization" = "Bearer $accessToken"
             "Content-Type" = "application/octet-stream"
             "If-Match" = "*"
           }

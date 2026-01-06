@@ -29,9 +29,12 @@ git clone https://github.com/knowall-ai/thyme-bc-extension.git
 5. Go to *API permissions* → *Add a permission*
    * Select *Dynamics 365 Business Central*
    * Choose *Application permissions*
-   * Select `API.ReadWrite.All`
+   * Select `API.ReadWrite.All` and `Automation.ReadWrite.All`
 6. Click *Grant admin consent*
-7. Go to *Certificates & secrets* → *New client secret*
+7. Go to *Authentication* → *Add a platform* → *Web*
+   * Redirect URI: `https://businesscentral.dynamics.com/OAuthLanding.htm`
+   * Click *Configure*
+8. Go to *Certificates & secrets* → *New client secret*
    * Description: `GitHub Actions`
    * Expiry: 24 months
    * Copy the secret value immediately
@@ -39,11 +42,11 @@ git clone https://github.com/knowall-ai/thyme-bc-extension.git
 === Step 3: Authorize App in BC Admin Center
 
 1. Go to https://businesscentral.dynamics.com/admin[BC Admin Center]
-2. Select your environment (Sandbox or Production)
-3. Navigate to *Azure Active Directory apps*
-4. Click *+ Add*
-5. Enter the Client ID from Step 2
-6. Set appropriate permissions (SUPER for deployment)
+2. Navigate to *Microsoft Entra Apps* (in left sidebar)
+3. Click *+ Authorize Microsoft Entra app*
+4. Enter the Client ID from Step 2
+5. Click *Save*
+6. Click the *Grant* link next to the app to complete admin consent
 
 === Step 4: Configure GitHub Secrets
 

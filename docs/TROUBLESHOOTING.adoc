@@ -54,6 +54,12 @@
 
 | `-schemaSyncMode ForceSync` validation error
 | Use `-schemaSyncMode Force` instead. Valid values are `Add` or `Force`.
+
+| `401 Unauthorized` even with correct Azure AD permissions
+| App not authorized in BC Admin Center. Go to BC Admin Center → Microsoft Entra Apps → Authorize Microsoft Entra app → enter Client ID → Save. This is required in addition to Azure Portal API permissions.
+
+| `AADSTS500113: No reply address is registered for the application`
+| Azure AD app missing redirect URI. Go to Azure Portal → App registrations → your app → Authentication → Add platform → Web → enter `https://businesscentral.dynamics.com/OAuthLanding.htm` → Configure.
 |===
 
 == Getting Help
