@@ -84,18 +84,44 @@ jobs:
             throw "Failed to compile app"
           }
 
-          # Deploy to Sandbox
+          # Deploy to Sandbox using REST API directly (BcContainerHelper has tenant URL bug)
           Write-Host "Publishing to Sandbox..."
 
-          # Fix the apiBaseUrl to include tenant ID (without /v2.0 - the function adds that)
-          $authContext.apiBaseUrl = "https://api.businesscentral.dynamics.com/$($env:BC_TENANT_ID)"
-          Write-Host "API Base URL: $($authContext.apiBaseUrl)"
+          $automationApiUrl = "https://api.businesscentral.dynamics.com/v2.0/$($env:BC_TENANT_ID)/Sandbox/api/microsoft/automation/v2.0"
+          Write-Host "Automation API URL: $automationApiUrl"
 
-          Publish-PerTenantExtensionApps `
-            -bcAuthContext $authContext `
-            -environment "Sandbox" `
-            -appFiles $appFilePath `
-            -schemaSyncMode Force
+          $headers = @{
+            "Authorization" = "Bearer $($authContext.AccessToken)"
+            "Content-Type" = "application/json"
+          }
+
+          # Get companies
+          Write-Host "Getting companies..."
+          $companiesResponse = Invoke-RestMethod -Uri "$automationApiUrl/companies" -Headers $headers -Method Get
+          $company = $companiesResponse.value | Select-Object -First 1
+          Write-Host "Using company: $($company.name) ($($company.id))"
+
+          # Upload extension
+          Write-Host "Uploading extension..."
+          $appContent = [System.IO.File]::ReadAllBytes($appFilePath)
+          $base64App = [Convert]::ToBase64String($appContent)
+
+          $uploadBody = @{
+            "schedule" = "Current version"
+            "schemaSyncMode" = "Force"
+          } | ConvertTo-Json
+
+          $uploadHeaders = @{
+            "Authorization" = "Bearer $($authContext.AccessToken)"
+            "Content-Type" = "application/octet-stream"
+            "If-Match" = "*"
+          }
+
+          $extensionUploadUrl = "$automationApiUrl/companies($($company.id))/extensionUpload/Microsoft.NAV.upload?SchemaUpdateMode=forcesync"
+          Write-Host "Upload URL: $extensionUploadUrl"
+
+          $appBytes = [System.IO.File]::ReadAllBytes($appFilePath)
+          Invoke-RestMethod -Uri $extensionUploadUrl -Headers $uploadHeaders -Method Post -Body $appBytes
 
           Write-Host "Deployed to Sandbox successfully!"
 
