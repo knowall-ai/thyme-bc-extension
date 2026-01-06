@@ -1,0 +1,65 @@
+name: Deploy to Sandbox (Contoso)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+    environment: Sandbox
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install BcContainerHelper
+        shell: powershell
+        run: |
+          Install-Module BcContainerHelper -Force -AllowClobber
+          Import-Module BcContainerHelper
+
+      - name: Build and Deploy to Sandbox
+        shell: powershell
+        env:
+          BC_TENANT_ID: ${{ secrets.BC_TENANT_ID }}
+          BC_CLIENT_ID: ${{ secrets.BC_CLIENT_ID }}
+          BC_CLIENT_SECRET: ${{ secrets.BC_CLIENT_SECRET }}
+        run: |
+          $secureSecret = ConvertTo-SecureString $env:BC_CLIENT_SECRET -AsPlainText -Force
+
+          $authContext = New-BcAuthContext `
+            -tenantID $env:BC_TENANT_ID `
+            -clientID $env:BC_CLIENT_ID `
+            -clientSecret $secureSecret
+
+          # Download symbols and compile
+          $symbolsFolder = Join-Path $env:GITHUB_WORKSPACE ".alpackages"
+          New-Item -ItemType Directory -Path $symbolsFolder -Force | Out-Null
+
+          $appFile = Compile-AppInBcContainer `
+            -appProjectFolder $env:GITHUB_WORKSPACE `
+            -appOutputFolder $env:GITHUB_WORKSPACE `
+            -appSymbolsFolder $symbolsFolder `
+            -authContext $authContext `
+            -environment "Sandbox"
+
+          Write-Host "Built app: $appFile"
+
+          # Deploy to Sandbox (Contoso Ltd)
+          Publish-BcContainerApp `
+            -appFile $appFile `
+            -authContext $authContext `
+            -environment "Sandbox" `
+            -scope Tenant `
+            -syncMode ForceSync
+
+          Write-Host "Deployed to Sandbox (Contoso Ltd) successfully!"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: thyme-bc-extension-sandbox
+          path: '*.app'
+          if-no-files-found: warn

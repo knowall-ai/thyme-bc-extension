@@ -78,9 +78,21 @@ Press `Ctrl+Shift+B` to build the `.app` file.
 
 ### Deploy via GitHub Actions (Recommended)
 
-The repo includes a CI/CD workflow that automatically builds and deploys on push to `main`.
+The repo includes CI/CD workflows for both environments:
 
-**Required GitHub Secrets:**
+| Workflow | Trigger | Target |
+|----------|---------|--------|
+| `deploy-sandbox.yml` | Push to `main` | Sandbox (Contoso Ltd) |
+| `deploy-production.yml` | Release published | Production (KnowAll Ltd) |
+
+**GitHub Environments Required:**
+
+Create two environments in Settings → Environments:
+
+1. **Sandbox** - No protection rules
+2. **Production** - Add required reviewers for safety
+
+**Secrets (per environment):**
 
 | Secret | Description |
 |--------|-------------|
@@ -88,18 +100,12 @@ The repo includes a CI/CD workflow that automatically builds and deploys on push
 | `BC_CLIENT_ID` | Azure AD app registration client ID |
 | `BC_CLIENT_SECRET` | Azure AD app registration client secret |
 
-**Required GitHub Variables:**
-
-| Variable | Description |
-|----------|-------------|
-| `BC_ENVIRONMENT` | Target environment (e.g., `Sandbox`) |
-
 **Azure AD App Setup:**
 
 1. Register an app in Azure AD
 2. Grant API permission: `Dynamics 365 Business Central` → `API.ReadWrite.All`
 3. Create a client secret
-4. In BC Admin Center, authorize the app for your environment
+4. In BC Admin Center, authorize the app for both environments
 
 ### Deploy via VS Code
 
