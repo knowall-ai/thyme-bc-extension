@@ -1,4 +1,14 @@
-# Thyme BC API Extension
+<p align="center">
+  <img src="images/hero.svg" alt="Thyme BC Extension" width="100%">
+</p>
+
+<p align="center">
+  <a href="https://github.com/knowall-ai/thyme">Thyme App</a> •
+  <a href="https://thyme.knowall.ai">Website</a> •
+  <a href="https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/devenv-develop-custom-api">BC API Docs</a>
+</p>
+
+---
 
 Custom Business Central API endpoints for the [Thyme](https://github.com/knowall-ai/thyme) time tracking app.
 
