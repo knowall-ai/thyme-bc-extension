@@ -30,6 +30,23 @@ Endpoints available at:
 - **Build**: `Ctrl+Shift+B`
 - **Deploy to sandbox**: `F5`
 
+## CI/CD Deployment
+
+GitHub Actions workflows deploy to BC Online (SaaS):
+
+- `.github/workflows/deploy-sandbox.yml` - Triggered on push to `main`
+- `.github/workflows/deploy-production.yml` - Triggered on release
+
+**Important**: BC Online requires different functions than BC on-premises containers:
+- Use `Publish-PerTenantExtensionApps` (not `Publish-BcContainerApp`)
+- Use `Download-Artifacts` to get `alc.exe` for compilation
+- Download symbols via BC Online dev API, not `Compile-AppInBcContainer`
+
+Secrets needed per environment:
+- `BC_TENANT_ID` - Azure AD tenant ID
+- `BC_CLIENT_ID` - App registration client ID
+- `BC_CLIENT_SECRET` - App registration client secret
+
 ## Related Repositories
 
 - [Thyme App](https://github.com/knowall-ai/thyme) - The main time tracking app

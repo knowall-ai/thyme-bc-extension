@@ -42,6 +42,12 @@
 
 | `Job` table not found in symbols
 | Using wrong BC version. Check `platform` and `application` versions in `app.json`.
+
+| `Compile-AppInBcContainer : A parameter cannot be found that matches parameter name 'authContext'`
+| Wrong function for BC Online. Use `Download-Artifacts` to get `alc.exe`, download symbols via dev API, compile with `alc.exe`, then deploy with `Publish-PerTenantExtensionApps`.
+
+| `Publish-BcContainerApp` fails for BC SaaS
+| Use `Publish-PerTenantExtensionApps` for BC Online environments instead of `Publish-BcContainerApp`.
 |===
 
 == Getting Help

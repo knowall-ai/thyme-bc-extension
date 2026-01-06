@@ -34,28 +34,74 @@ jobs:
             -clientID $env:BC_CLIENT_ID `
             -clientSecret $secureSecret
 
-          # Download symbols and compile
+          Write-Host "Authenticated successfully"
+
+          # Get BC artifacts for the AL compiler
+          $artifactUrl = Get-BCArtifactUrl -type OnPrem -country w1 -select Latest
+          Write-Host "Using artifact: $artifactUrl"
+
+          # Download and extract artifacts to get alc.exe
+          $artifactFolder = Download-Artifacts -artifactUrl $artifactUrl -includePlatform
+          $platformFolder = $artifactFolder[1]
+          Write-Host "Platform folder: $platformFolder"
+
+          # Find alc.exe
+          $alcPath = Get-ChildItem -Path $platformFolder -Filter "alc.exe" -Recurse | Select-Object -First 1
+          Write-Host "ALC path: $($alcPath.FullName)"
+
+          # Download symbols from BC Online
           $symbolsFolder = Join-Path $env:GITHUB_WORKSPACE ".alpackages"
           New-Item -ItemType Directory -Path $symbolsFolder -Force | Out-Null
 
-          $appFile = Compile-AppInBcContainer `
-            -appProjectFolder $env:GITHUB_WORKSPACE `
-            -appOutputFolder $env:GITHUB_WORKSPACE `
-            -appSymbolsFolder $symbolsFolder `
-            -authContext $authContext `
-            -environment "Sandbox"
+          # Get environment info and download symbols
+          $baseAppSymbolsUrl = "https://api.businesscentral.dynamics.com/v2.0/$($env:BC_TENANT_ID)/Sandbox/dev/packages?publisher=Microsoft&appName=Base%20Application&versionText=0.0.0.0&tenant=$($env:BC_TENANT_ID)"
+          $systemAppSymbolsUrl = "https://api.businesscentral.dynamics.com/v2.0/$($env:BC_TENANT_ID)/Sandbox/dev/packages?publisher=Microsoft&appName=System%20Application&versionText=0.0.0.0&tenant=$($env:BC_TENANT_ID)"
+          $systemSymbolsUrl = "https://api.businesscentral.dynamics.com/v2.0/$($env:BC_TENANT_ID)/Sandbox/dev/packages?publisher=Microsoft&appName=System&versionText=0.0.0.0&tenant=$($env:BC_TENANT_ID)"
 
-          Write-Host "Built app: $appFile"
+          $headers = @{
+            "Authorization" = "Bearer $($authContext.AccessToken)"
+          }
 
-          # Deploy to Sandbox (Contoso Ltd)
-          Publish-BcContainerApp `
-            -appFile $appFile `
-            -authContext $authContext `
+          Write-Host "Downloading Base Application symbols..."
+          try {
+            Invoke-WebRequest -Uri $baseAppSymbolsUrl -Headers $headers -OutFile "$symbolsFolder/Microsoft_Base Application.app"
+          } catch {
+            Write-Host "Warning: Could not download Base Application: $_"
+          }
+
+          Write-Host "Downloading System Application symbols..."
+          try {
+            Invoke-WebRequest -Uri $systemAppSymbolsUrl -Headers $headers -OutFile "$symbolsFolder/Microsoft_System Application.app"
+          } catch {
+            Write-Host "Warning: Could not download System Application: $_"
+          }
+
+          Write-Host "Downloading System symbols..."
+          try {
+            Invoke-WebRequest -Uri $systemSymbolsUrl -Headers $headers -OutFile "$symbolsFolder/Microsoft_System.app"
+          } catch {
+            Write-Host "Warning: Could not download System: $_"
+          }
+
+          # Compile the app
+          $appFolder = $env:GITHUB_WORKSPACE
+          $outputFolder = $env:GITHUB_WORKSPACE
+
+          Write-Host "Compiling app..."
+          & $alcPath.FullName /project:$appFolder /packagecachepath:$symbolsFolder /out:$outputFolder
+
+          $appFile = Get-ChildItem -Path $outputFolder -Filter "*.app" | Where-Object { $_.Name -notlike "Microsoft_*" } | Select-Object -First 1
+          Write-Host "Built app: $($appFile.FullName)"
+
+          # Deploy to Sandbox using Publish-PerTenantExtensionApps
+          Write-Host "Publishing to Sandbox..."
+          Publish-PerTenantExtensionApps `
+            -bcAuthContext $authContext `
             -environment "Sandbox" `
-            -scope Tenant `
-            -syncMode ForceSync
+            -appFiles $appFile.FullName `
+            -schemaSyncMode ForceSync
 
-          Write-Host "Deployed to Sandbox (Contoso Ltd) successfully!"
+          Write-Host "Deployed to Sandbox successfully!"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
