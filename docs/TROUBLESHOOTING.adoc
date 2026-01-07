@@ -69,6 +69,12 @@
 
 | `404 Not Found` when uploading extension via Automation API
 | The extension upload endpoint requires a 3-step process: (1) POST to `/extensionUpload` to create upload object, (2) PATCH to `/extensionUpload({id})/extensionContent` with the .app file bytes, (3) POST to `/extensionUpload({id})/Microsoft.NAV.upload` to trigger installation. A single POST to `/extensionUpload/Microsoft.NAV.upload` will return 404.
+
+| Extension deployment fails with "Unable to publish app" but no error message in API
+| *Version mismatch*: Your `app.json` targets a different BC version than your environment. Check `platform` and `application` values in `app.json` against your BC version. For example, if BC runs 27.2.x but `app.json` has `"platform": "24.0.0.0"`, update to `"platform": "27.0.0.0"`. The BC Automation API doesn't return detailed errors - you must view the Extension Deployment Status page in BC to see the actual error.
+
+| Extension upload fails with generic error, no details in API
+| *Placeholder app ID*: If your `app.json` has a placeholder ID like `"id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"`, BC will reject the upload. Generate a proper unique GUID using `uuidgen` (Linux/Mac) or `[guid]::NewGuid()` (PowerShell) and replace the placeholder.
 |===
 
 == Getting Help
