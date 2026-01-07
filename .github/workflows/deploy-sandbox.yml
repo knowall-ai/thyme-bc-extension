@@ -67,8 +67,8 @@ jobs:
           # Get the BC Online environment info to determine correct artifact version
           $environmentUrl = "https://api.businesscentral.dynamics.com/v2.0/$($env:BC_TENANT_ID)/Sandbox"
 
-          # Get sandbox artifact matching BC Online version
-          $artifactUrl = Get-BCArtifactUrl -type Sandbox -country us -select Latest
+          # Get sandbox artifact matching BC Online version (using UK locale to match target environment)
+          $artifactUrl = Get-BCArtifactUrl -type Sandbox -country gb -select Latest
           Write-Host "Using artifact: $artifactUrl"
 
           # Create compiler folder from artifacts
