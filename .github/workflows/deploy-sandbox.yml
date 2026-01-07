@@ -177,13 +177,43 @@ jobs:
           $environmentUrl = "https://businesscentral.dynamics.com/$($env:BC_TENANT_ID)/Sandbox"
           Write-Host "Environment URL: $environmentUrl"
 
-          Publish-PerTenantExtensionApps `
-            -bcAuthContext $authContext `
-            -environment "Sandbox" `
-            -appFiles $appFilePath `
-            -schemaSyncMode Force
+          try {
+            Publish-PerTenantExtensionApps `
+              -bcAuthContext $authContext `
+              -environment "Sandbox" `
+              -appFiles $appFilePath `
+              -schemaSyncMode Force
 
-          Write-Host "Deployed to Sandbox successfully!"
+            Write-Host "Deployed to Sandbox successfully!"
+          } catch {
+            Write-Host "Publish failed: $($_.Exception.Message)"
+            Write-Host ""
+            Write-Host "=== Checking Extension Deployment Status ==="
+
+            # Query extension deployment status via Automation API
+            try {
+              $statusUrl = "$automationApiUrl/companies($($company.id))/extensionDeploymentStatus"
+              Write-Host "Querying: $statusUrl"
+              $statusResponse = Invoke-RestMethod -Uri $statusUrl -Headers $headers -Method Get
+
+              # Show recent deployment attempts
+              $recentDeployments = $statusResponse.value | Sort-Object -Property startedOn -Descending | Select-Object -First 5
+              foreach ($deployment in $recentDeployments) {
+                Write-Host ""
+                Write-Host "--- Deployment: $($deployment.name) v$($deployment.extensionVersion) ---"
+                Write-Host "  Status: $($deployment.status)"
+                Write-Host "  Started: $($deployment.startedOn)"
+                Write-Host "  Operation: $($deployment.operationType)"
+                if ($deployment.errorMessage) {
+                  Write-Host "  ERROR: $($deployment.errorMessage)"
+                }
+              }
+            } catch {
+              Write-Host "Could not query deployment status: $($_.Exception.Message)"
+            }
+
+            throw "Extension deployment failed"
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
