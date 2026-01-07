@@ -180,10 +180,22 @@ jobs:
 
           $extensionUploadUrl = "$automationApiUrl/companies($($company.id))/extensionUpload"
           Write-Host "Create URL: $extensionUploadUrl"
+          Write-Host "Create Body: $createBody"
 
-          $uploadObject = Invoke-RestMethod -Uri $extensionUploadUrl -Headers $createHeaders -Method Post -Body $createBody
-          $uploadId = $uploadObject.systemId
-          Write-Host "Created extensionUpload with ID: $uploadId"
+          try {
+            $uploadObject = Invoke-RestMethod -Uri $extensionUploadUrl -Headers $createHeaders -Method Post -Body $createBody
+            $uploadId = $uploadObject.systemId
+            Write-Host "Created extensionUpload with ID: $uploadId"
+          } catch {
+            Write-Host "Step 1 Error: $($_.Exception.Message)"
+            if ($_.Exception.Response) {
+              $errorStream = $_.Exception.Response.GetResponseStream()
+              $reader = New-Object System.IO.StreamReader($errorStream)
+              $errorBody = $reader.ReadToEnd()
+              Write-Host "Step 1 Error Body: $errorBody"
+            }
+            throw
+          }
 
           # Step 2: Upload the actual .app file content
           Write-Host "Step 2: Uploading .app file content..."
