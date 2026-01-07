@@ -203,14 +203,24 @@ jobs:
           Write-Host "Step 3: Triggering installation..."
           $installHeaders = @{
             "Authorization" = "Bearer $accessToken"
-            "Content-Type" = "application/json"
           }
 
           $installUrl = "$automationApiUrl/companies($($company.id))/extensionUpload($uploadId)/Microsoft.NAV.upload"
           Write-Host "Install URL: $installUrl"
 
-          Invoke-RestMethod -Uri $installUrl -Headers $installHeaders -Method Post
-          Write-Host "Deployed to Sandbox successfully!"
+          try {
+            Invoke-RestMethod -Uri $installUrl -Headers $installHeaders -Method Post
+            Write-Host "Deployed to Sandbox successfully!"
+          } catch {
+            Write-Host "Installation Error: $($_.Exception.Message)"
+            if ($_.Exception.Response) {
+              $errorStream = $_.Exception.Response.GetResponseStream()
+              $reader = New-Object System.IO.StreamReader($errorStream)
+              $errorBody = $reader.ReadToEnd()
+              Write-Host "Error Body: $errorBody"
+            }
+            throw
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

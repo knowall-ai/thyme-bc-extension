@@ -66,6 +66,9 @@
 
 | `AADSTS500113: No reply address is registered for the application`
 | Azure AD app missing redirect URI. Go to Azure Portal → App registrations → your app → Authentication → Add platform → Web → enter `https://businesscentral.dynamics.com/OAuthLanding.htm` → Configure.
+
+| `404 Not Found` when uploading extension via Automation API
+| The extension upload endpoint requires a 3-step process: (1) POST to `/extensionUpload` to create upload object, (2) PATCH to `/extensionUpload({id})/extensionContent` with the .app file bytes, (3) POST to `/extensionUpload({id})/Microsoft.NAV.upload` to trigger installation. A single POST to `/extensionUpload/Microsoft.NAV.upload` will return 404.
 |===
 
 == Getting Help
