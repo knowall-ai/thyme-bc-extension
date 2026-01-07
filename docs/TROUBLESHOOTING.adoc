@@ -58,6 +58,12 @@
 | `401 Unauthorized` even with correct Azure AD permissions
 | App not authorized in BC Admin Center. Go to BC Admin Center → Microsoft Entra Apps → Authorize Microsoft Entra app → enter Client ID → Save. This is required in addition to Azure Portal API permissions.
 
+| `Authentication_InvalidCredentials` even after BC Admin Center authorization
+| *Most common cause*: App not configured inside Business Central itself. BC Admin Center authorization is for tenant-level access only. For the Automation API, you must ALSO configure the app in Business Central: Open BC → search for "Microsoft Entra applications" → New → enter Client ID → set State to Enabled → add permission sets `D365 AUTOMATION` and `EXTEN. MGT. - ADMIN`. See https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/administration/automation-apis-using-s2s-authentication[Microsoft S2S Authentication Docs].
+
+| BC Admin Center "Grant" button doesn't change to "Authorized" after clicking
+| This requires the *Cloud Application Administrator* role in Azure AD (not just Dynamics 365 Administrator). However, you can proceed anyway - the more critical step is configuring the app inside Business Central itself with the "Microsoft Entra applications" page and assigning permission sets.
+
 | `AADSTS500113: No reply address is registered for the application`
 | Azure AD app missing redirect URI. Go to Azure Portal → App registrations → your app → Authentication → Add platform → Web → enter `https://businesscentral.dynamics.com/OAuthLanding.htm` → Configure.
 |===

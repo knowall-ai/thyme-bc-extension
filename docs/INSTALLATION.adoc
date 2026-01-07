@@ -48,7 +48,28 @@ git clone https://github.com/knowall-ai/thyme-bc-extension.git
 5. Click *Save*
 6. Click the *Grant* link next to the app to complete admin consent
 
-=== Step 4: Configure GitHub Secrets
+NOTE: The Grant link requires the *Cloud Application Administrator* role in Azure AD (not just Dynamics 365 Administrator). If Grant doesn't change to "Authorized", you may still proceed - the next step is required regardless.
+
+=== Step 4: Configure App in Business Central (Required for Automation API)
+
+IMPORTANT: This step is *in addition to* the BC Admin Center authorization. The BC Admin Center only authorizes tenant-level access. For the Automation API to work, you must also configure the app inside Business Central itself.
+
+1. Open your Business Central environment (Sandbox or Production)
+2. Search for *Microsoft Entra applications* (or "AAD Applications")
+3. Click *New* to create a new application
+4. Enter the *Client ID* from Step 2
+5. Fill in a *Description* (e.g., "Thyme BC Extension Deployment")
+6. Set *State* to *Enabled*
+7. In the *User Permission Sets* section, add these permission sets:
+   * `D365 AUTOMATION` - Required for Automation API access
+   * `EXTEN. MGT. - ADMIN` - Required for extension management
+8. Close the card
+
+TIP: Without this step, you will get `Authentication_InvalidCredentials` errors even if the Azure AD app has correct permissions and BC Admin Center shows the app.
+
+See https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/administration/automation-apis-using-s2s-authentication[Microsoft S2S Authentication Docs] for more details.
+
+=== Step 5: Configure GitHub Secrets
 
 In your GitHub repository settings:
 
@@ -60,7 +81,7 @@ In your GitHub repository settings:
    * `BC_CLIENT_SECRET` - App registration client secret
 4. Repeat for `Production` environment if needed
 
-=== Step 5: Trigger Deployment
+=== Step 6: Trigger Deployment
 
 Push to `main` branch triggers Sandbox deployment:
 
