@@ -107,7 +107,6 @@ Maps to the BC `Time Sheet Header` table (table 950).
 | resourceNo | Resource No. | Associated resource
 | ownerUserId | Owner User ID | Time sheet owner
 | approverUserId | Approver User ID | Assigned approver
-| status | Status | Enum: Open, Submitted, Rejected, Approved
 | lastModifiedDateTime | SystemModifiedAt | For sync
 |===
 
@@ -151,7 +150,6 @@ Maps to the BC `Resource` table (table 156).
 | name | Name | Resource name
 | type | Type | Enum: Person, Machine
 | capacity | Capacity | Weekly hours target
-| employeeNo | Employee No. | Linked employee
 | baseUnitOfMeasure | Base Unit of Measure | Hour/Day units
 | lastModifiedDateTime | SystemModifiedAt | For sync
 |===

@@ -44,10 +44,6 @@ page 50104 "Thyme Resources API"
                 {
                     Caption = 'Capacity';
                 }
-                field(employeeNo; Rec."Employee No.")
-                {
-                    Caption = 'Employee No.';
-                }
                 field(baseUnitOfMeasure; Rec."Base Unit of Measure")
                 {
                     Caption = 'Base Unit of Measure';

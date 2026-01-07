@@ -52,10 +52,6 @@ page 50102 "Thyme Time Sheet Header API"
                 {
                     Caption = 'Approver User ID';
                 }
-                field(status; Rec.Status)
-                {
-                    Caption = 'Status';
-                }
                 field(lastModifiedDateTime; Rec.SystemModifiedAt)
                 {
                     Caption = 'Last Modified DateTime';

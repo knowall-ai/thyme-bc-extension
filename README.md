@@ -78,7 +78,6 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 | `resourceNo` | Resource number |
 | `ownerUserId` | Owner user ID |
 | `approverUserId` | Approver user ID |
-| `status` | Open, Submitted, Rejected, Approved |
 | `lastModifiedDateTime` | Last modified timestamp |
 
 ### Time Sheet Lines API
@@ -109,7 +108,6 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 | `name` | Resource name |
 | `type` | Person or Machine |
 | `capacity` | Weekly hours capacity |
-| `employeeNo` | Linked employee number |
 | `baseUnitOfMeasure` | Hour/Day units |
 | `lastModifiedDateTime` | Last modified timestamp |
 
