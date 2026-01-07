@@ -108,6 +108,8 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 | `name` | Resource name |
 | `type` | Person or Machine |
 | `capacity` | Weekly hours capacity (FlowField) |
+| `unitCost` | Cost per unit |
+| `unitPrice` | Price per unit |
 | `baseUnitOfMeasure` | Hour/Day units |
 | `resourceGroupNo` | Resource group code |
 | `blocked` | Whether resource is blocked |

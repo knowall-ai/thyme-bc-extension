@@ -44,6 +44,14 @@ page 50104 "Thyme Resources API"
                 {
                     Caption = 'Capacity';
                 }
+                field(unitCost; Rec."Unit Cost")
+                {
+                    Caption = 'Unit Cost';
+                }
+                field(unitPrice; Rec."Unit Price")
+                {
+                    Caption = 'Unit Price';
+                }
                 field(baseUnitOfMeasure; Rec."Base Unit of Measure")
                 {
                     Caption = 'Base Unit of Measure';

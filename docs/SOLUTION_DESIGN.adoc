@@ -150,6 +150,8 @@ Maps to the BC `Resource` table (table 156).
 | name | Name | Resource name
 | type | Type | Enum: Person, Machine
 | capacity | Capacity | Weekly hours target (FlowField)
+| unitCost | Unit Cost | Cost per unit
+| unitPrice | Unit Price | Price per unit
 | baseUnitOfMeasure | Base Unit of Measure | Hour/Day units
 | resourceGroupNo | Resource Group No. | Resource group code
 | blocked | Blocked | Whether resource is blocked
