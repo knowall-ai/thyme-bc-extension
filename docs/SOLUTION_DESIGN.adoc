@@ -3,7 +3,7 @@
 
 == Overview
 
-The Thyme BC Extension provides custom API endpoints that expose Business Central Job and Job Task data with additional fields not available in the standard BC API v2.0.
+The Thyme BC Extension provides custom API endpoints that expose Business Central Job, Job Task, and Time Sheet data with additional fields not available in the standard BC API v2.0.
 
 == Problem Statement
 
@@ -21,6 +21,7 @@ This is insufficient for the Thyme time tracking app which needs:
 * Project status (to filter active projects)
 * Start/end dates (for project timeline)
 * Job tasks (for time entry allocation)
+* Time sheets with approval status (Open, Submitted, Approved, Rejected)
 
 == Architecture
 
@@ -47,6 +48,8 @@ This is insufficient for the Thyme time tracking app which needs:
 ----
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/projects
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/jobTasks
+https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeSheetHeaders
+https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeSheetLines
 ----
 
 === Projects API (Page 50100)
@@ -85,6 +88,52 @@ Maps to the BC `Job Task` table (table 1001).
 | lastModifiedDateTime | SystemModifiedAt | For sync
 |===
 
+=== Time Sheet Headers API (Page 50102)
+
+Maps to the BC `Time Sheet Header` table (table 950).
+
+[cols="1,1,1", options="header"]
+|===
+| API Field | BC Field | Notes
+
+| id | SystemId | Primary key (GUID)
+| number | No. | Time sheet number
+| startingDate | Starting Date | Week start
+| endingDate | Ending Date | Week end
+| resourceNo | Resource No. | Associated resource
+| ownerUserId | Owner User ID | Time sheet owner
+| approverUserId | Approver User ID | Assigned approver
+| status | Status | Enum: Open, Submitted, Rejected, Approved
+| lastModifiedDateTime | SystemModifiedAt | For sync
+|===
+
+=== Time Sheet Lines API (Page 50103)
+
+Maps to the BC `Time Sheet Line` table (table 951).
+
+[cols="1,1,1", options="header"]
+|===
+| API Field | BC Field | Notes
+
+| id | SystemId | Primary key (GUID)
+| timeSheetNo | Time Sheet No. | Parent time sheet
+| lineNo | Line No. | Line number
+| timeSheetStartingDate | Time Sheet Starting Date | Week start
+| type | Type | Enum: Resource, Job, Absence, Assembly Order, Service
+| jobNo | Job No. | Job reference (if type=Job)
+| jobTaskNo | Job Task No. | Task reference (if type=Job)
+| description | Description | Line description
+| causeOfAbsenceCode | Cause of Absence Code | Absence reason (if type=Absence)
+| workTypeCode | Work Type Code | Work type
+| chargeable | Chargeable | Billable flag
+| totalQuantity | Total Quantity | Total hours
+| status | Status | Enum: Open, Submitted, Rejected, Approved
+| approvedBy | Approved By | Approver user ID
+| approvalDate | Approval Date | Date approved
+| posted | Posted | Whether posted to ledger
+| lastModifiedDateTime | SystemModifiedAt | For sync
+|===
+
 == Object ID Ranges
 
 [cols="1,1", options="header"]
@@ -93,18 +142,20 @@ Maps to the BC `Job Task` table (table 1001).
 
 | Thyme Projects API | Page 50100
 | Thyme Job Tasks API | Page 50101
-| (Reserved for future) | 50102-50199
+| Thyme Time Sheet Header API | Page 50102
+| Thyme Time Sheet Line API | Page 50103
+| (Reserved for future) | 50104-50199
 |===
 
 == Security
 
 * APIs inherit BC's standard security model
-* Users need appropriate permissions on Job and Job Task tables
+* Users need appropriate permissions on Job, Job Task, and Time Sheet tables
 * OAuth 2.0 authentication via Azure AD
 * Supports both delegated and application permissions
 
 == Future Enhancements
 
-* **Time Entries API** - POST endpoint to submit time back to BC
+* **Time Entry Submission** - POST endpoint to submit time entries back to BC
 * **Resource API** - Expose employees/resources for time entry allocation
-* **Webhook support** - Real-time notifications when projects change
+* **Webhook support** - Real-time notifications when projects or time sheets change
