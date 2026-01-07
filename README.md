@@ -103,9 +103,13 @@ Create two environments in Settings → Environments:
 **Azure AD App Setup:**
 
 1. Register an app in Azure AD
-2. Grant API permission: `Dynamics 365 Business Central` → `API.ReadWrite.All`
-3. Create a client secret
-4. In BC Admin Center, authorize the app for both environments
+2. Grant API permissions: `Dynamics 365 Business Central` → `API.ReadWrite.All` and `Automation.ReadWrite.All`
+3. Add redirect URI: `https://businesscentral.dynamics.com/OAuthLanding.htm`
+4. Create a client secret
+5. In BC Admin Center → Microsoft Entra Apps → Authorize the app
+6. **Critical**: In Business Central → search "Microsoft Entra applications" → add the app with permission sets `D365 AUTOMATION` and `EXTEN. MGT. - ADMIN`
+
+See [docs/INSTALLATION.adoc](docs/INSTALLATION.adoc) for detailed setup instructions.
 
 ### Deploy via VS Code
 
@@ -131,6 +135,13 @@ thyme-bc-extension/
     ├── launch.json                   # Debug configuration
     └── settings.json                 # Editor settings
 ```
+
+## Documentation
+
+- [Installation Guide](docs/INSTALLATION.adoc) - Complete setup instructions
+- [Solution Design](docs/SOLUTION_DESIGN.adoc) - Architecture and API design
+- [Troubleshooting](docs/TROUBLESHOOTING.adoc) - Common issues and solutions
+- [Testing](docs/TESTING.adoc) - How to test the API
 
 ## Related
 
