@@ -3,7 +3,7 @@
 
 == Overview
 
-The Thyme BC Extension provides custom API endpoints that expose Business Central Job, Job Task, and Time Sheet data with additional fields not available in the standard BC API v2.0.
+The Thyme BC Extension provides custom API endpoints that expose Business Central Job, Job Task, Time Sheet, Resource, and Time Entry data with additional fields not available in the standard BC API v2.0.
 
 == Problem Statement
 
@@ -22,6 +22,8 @@ This is insufficient for the Thyme time tracking app which needs:
 * Start/end dates (for project timeline)
 * Job tasks (for time entry allocation)
 * Time sheets with approval status (Open, Submitted, Approved, Rejected)
+* Resources with capacity/hours targets
+* Posted time entries from Job Ledger
 
 == Architecture
 
@@ -50,6 +52,8 @@ https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/jobTasks
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeSheetHeaders
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeSheetLines
+https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/resources
+https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeEntries
 ----
 
 === Projects API (Page 50100)
@@ -134,6 +138,51 @@ Maps to the BC `Time Sheet Line` table (table 951).
 | lastModifiedDateTime | SystemModifiedAt | For sync
 |===
 
+=== Resources API (Page 50104)
+
+Maps to the BC `Resource` table (table 156).
+
+[cols="1,1,1", options="header"]
+|===
+| API Field | BC Field | Notes
+
+| id | SystemId | Primary key (GUID)
+| number | No. | Resource number
+| name | Name | Resource name
+| type | Type | Enum: Person, Machine
+| capacity | Capacity | Weekly hours target
+| employeeNo | Employee No. | Linked employee
+| baseUnitOfMeasure | Base Unit of Measure | Hour/Day units
+| lastModifiedDateTime | SystemModifiedAt | For sync
+|===
+
+=== Time Entries API (Page 50105)
+
+Maps to the BC `Job Ledger Entry` table (table 169). Filtered to Resource-type entries only.
+
+[cols="1,1,1", options="header"]
+|===
+| API Field | BC Field | Notes
+
+| id | SystemId | Primary key (GUID)
+| entryNo | Entry No. | Ledger entry number
+| jobNo | Job No. | Parent job
+| jobTaskNo | Job Task No. | Task reference
+| postingDate | Posting Date | Entry date
+| type | Type | Entry type (filtered to Resource)
+| number | No. | Resource/item number
+| description | Description | Entry description
+| quantity | Quantity | Hours/units
+| unitCost | Unit Cost (LCY) | Cost per unit
+| totalCost | Total Cost (LCY) | Total cost
+| unitPrice | Unit Price (LCY) | Price per unit
+| totalPrice | Total Price (LCY) | Total price
+| workTypeCode | Work Type Code | Work classification
+| entryType | Entry Type | Usage or Sale
+| documentNo | Document No. | Source document
+| lastModifiedDateTime | SystemModifiedAt | For sync
+|===
+
 == Object ID Ranges
 
 [cols="1,1", options="header"]
@@ -144,18 +193,19 @@ Maps to the BC `Time Sheet Line` table (table 951).
 | Thyme Job Tasks API | Page 50101
 | Thyme Time Sheet Header API | Page 50102
 | Thyme Time Sheet Line API | Page 50103
-| (Reserved for future) | 50104-50199
+| Thyme Resources API | Page 50104
+| Thyme Time Entries API | Page 50105
+| (Reserved for future) | 50106-50199
 |===
 
 == Security
 
 * APIs inherit BC's standard security model
-* Users need appropriate permissions on Job, Job Task, and Time Sheet tables
+* Users need appropriate permissions on Job, Job Task, Time Sheet, Resource, and Job Ledger Entry tables
 * OAuth 2.0 authentication via Azure AD
 * Supports both delegated and application permissions
 
 == Future Enhancements
 
-* **Time Entry Submission** - POST endpoint to submit time entries back to BC
-* **Resource API** - Expose employees/resources for time entry allocation
+* **Time Entry Submission** - POST endpoint to submit new time entries to BC
 * **Webhook support** - Real-time notifications when projects or time sheets change

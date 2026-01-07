@@ -4,7 +4,7 @@
 ///
 /// Endpoint: /api/knowall/thyme/v1.0/companies({companyId})/resources
 /// </summary>
-page 50102 "Thyme Resources API"
+page 50104 "Thyme Resources API"
 {
     APIGroup = 'thyme';
     APIPublisher = 'knowall';

@@ -4,7 +4,7 @@
 ///
 /// Endpoint: /api/knowall/thyme/v1.0/companies({companyId})/timeEntries
 /// </summary>
-page 50103 "Thyme Time Entries API"
+page 50105 "Thyme Time Entries API"
 {
     APIGroup = 'thyme';
     APIPublisher = 'knowall';
@@ -76,10 +76,6 @@ page 50103 "Thyme Time Entries API"
                 field(totalPrice; Rec."Total Price (LCY)")
                 {
                     Caption = 'Total Price';
-                }
-                field(resourceNo; Rec."No.")
-                {
-                    Caption = 'Resource No.';
                 }
                 field(workTypeCode; Rec."Work Type Code")
                 {
