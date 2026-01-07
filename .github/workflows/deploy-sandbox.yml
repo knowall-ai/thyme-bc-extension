@@ -204,9 +204,12 @@ jobs:
                 Write-Host "  Status: $($deployment.status)"
                 Write-Host "  Started: $($deployment.startedOn)"
                 Write-Host "  Operation: $($deployment.operationType)"
-                if ($deployment.errorMessage) {
-                  Write-Host "  ERROR: $($deployment.errorMessage)"
-                }
+                Write-Host "  App ID: $($deployment.appId)"
+                Write-Host "  Publisher: $($deployment.publishedAs)"
+                Write-Host "  Schedule: $($deployment.schedule)"
+                # Show all properties for debugging
+                Write-Host "  All properties:"
+                $deployment | ConvertTo-Json -Depth 3 | Write-Host
               }
             } catch {
               Write-Host "Could not query deployment status: $($_.Exception.Message)"
