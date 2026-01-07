@@ -162,28 +162,54 @@ jobs:
             throw
           }
 
-          # Upload extension
+          # Upload extension (3-step process per Microsoft docs)
           Write-Host "Uploading extension..."
-          $appContent = [System.IO.File]::ReadAllBytes($appFilePath)
-          $base64App = [Convert]::ToBase64String($appContent)
+          $appBytes = [System.IO.File]::ReadAllBytes($appFilePath)
 
-          $uploadBody = @{
+          # Step 1: Create extensionUpload object
+          Write-Host "Step 1: Creating extensionUpload object..."
+          $createBody = @{
             "schedule" = "Current version"
-            "schemaSyncMode" = "Force"
+            "schemaSyncMode" = "Add"
           } | ConvertTo-Json
 
-          $uploadHeaders = @{
+          $createHeaders = @{
+            "Authorization" = "Bearer $accessToken"
+            "Content-Type" = "application/json"
+          }
+
+          $extensionUploadUrl = "$automationApiUrl/companies($($company.id))/extensionUpload"
+          Write-Host "Create URL: $extensionUploadUrl"
+
+          $uploadObject = Invoke-RestMethod -Uri $extensionUploadUrl -Headers $createHeaders -Method Post -Body $createBody
+          $uploadId = $uploadObject.systemId
+          Write-Host "Created extensionUpload with ID: $uploadId"
+
+          # Step 2: Upload the actual .app file content
+          Write-Host "Step 2: Uploading .app file content..."
+          $contentHeaders = @{
             "Authorization" = "Bearer $accessToken"
             "Content-Type" = "application/octet-stream"
             "If-Match" = "*"
           }
 
-          $extensionUploadUrl = "$automationApiUrl/companies($($company.id))/extensionUpload/Microsoft.NAV.upload?SchemaUpdateMode=forcesync"
-          Write-Host "Upload URL: $extensionUploadUrl"
+          $contentUrl = "$automationApiUrl/companies($($company.id))/extensionUpload($uploadId)/extensionContent"
+          Write-Host "Content URL: $contentUrl"
 
-          $appBytes = [System.IO.File]::ReadAllBytes($appFilePath)
-          Invoke-RestMethod -Uri $extensionUploadUrl -Headers $uploadHeaders -Method Post -Body $appBytes
+          Invoke-RestMethod -Uri $contentUrl -Headers $contentHeaders -Method Patch -Body $appBytes
+          Write-Host "File uploaded successfully"
 
+          # Step 3: Trigger the installation
+          Write-Host "Step 3: Triggering installation..."
+          $installHeaders = @{
+            "Authorization" = "Bearer $accessToken"
+            "Content-Type" = "application/json"
+          }
+
+          $installUrl = "$automationApiUrl/companies($($company.id))/extensionUpload($uploadId)/Microsoft.NAV.upload"
+          Write-Host "Install URL: $installUrl"
+
+          Invoke-RestMethod -Uri $installUrl -Headers $installHeaders -Method Post
           Write-Host "Deployed to Sandbox successfully!"
 
       - name: Upload artifact
