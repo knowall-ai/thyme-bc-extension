@@ -107,8 +107,15 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 | `number` | Resource No. |
 | `name` | Resource name |
 | `type` | Person or Machine |
-| `capacity` | Weekly hours capacity |
+| `capacity` | Weekly hours capacity (FlowField) |
 | `baseUnitOfMeasure` | Hour/Day units |
+| `resourceGroupNo` | Resource group code |
+| `blocked` | Whether resource is blocked |
+| `privacyBlocked` | Privacy blocked flag |
+| `useTimeSheet` | Time sheet enabled |
+| `timeSheetOwnerUserId` | Time sheet owner user ID |
+| `timeSheetApproverUserId` | Time sheet approver user ID |
+| `lastDateModified` | Last date modified |
 | `lastModifiedDateTime` | Last modified timestamp |
 
 ### Time Entries API

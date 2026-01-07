@@ -149,8 +149,15 @@ Maps to the BC `Resource` table (table 156).
 | number | No. | Resource number
 | name | Name | Resource name
 | type | Type | Enum: Person, Machine
-| capacity | Capacity | Weekly hours target
+| capacity | Capacity | Weekly hours target (FlowField)
 | baseUnitOfMeasure | Base Unit of Measure | Hour/Day units
+| resourceGroupNo | Resource Group No. | Resource group code
+| blocked | Blocked | Whether resource is blocked
+| privacyBlocked | Privacy Blocked | Privacy blocked flag
+| useTimeSheet | Use Time Sheet | Time sheet enabled
+| timeSheetOwnerUserId | Time Sheet Owner User ID | Owner for time sheets
+| timeSheetApproverUserId | Time Sheet Approver User ID | Approver for time sheets
+| lastDateModified | Last Date Modified | Last modification date
 | lastModifiedDateTime | SystemModifiedAt | For sync
 |===
 
