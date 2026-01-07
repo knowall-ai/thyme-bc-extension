@@ -22,15 +22,20 @@ This extension exposes additional fields needed by Thyme:
 - Person responsible
 - Project status and dates
 - Job tasks
+- Time sheets with approval status (Open, Submitted, Approved, Rejected)
 
 ## API Endpoints
 
 Once deployed, the APIs are available at:
 
 ```
-https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/projects
-https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/jobTasks
+.../api/knowall/thyme/v1.0/companies({companyId})/projects
+.../api/knowall/thyme/v1.0/companies({companyId})/jobTasks
+.../api/knowall/thyme/v1.0/companies({companyId})/timeSheetHeaders
+.../api/knowall/thyme/v1.0/companies({companyId})/timeSheetLines
 ```
+
+Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 
 ### Projects API
 
@@ -56,6 +61,39 @@ https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall
 | `jobTaskNo` | Task number |
 | `description` | Task description |
 | `jobTaskType` | Posting, Heading, Total, Begin-Total, End-Total |
+| `lastModifiedDateTime` | Last modified timestamp |
+
+### Time Sheet Headers API
+
+| Field | Description |
+|-------|-------------|
+| `id` | System GUID |
+| `number` | Time sheet number |
+| `startingDate` | Week starting date |
+| `endingDate` | Week ending date |
+| `resourceNo` | Resource number |
+| `ownerUserId` | Owner user ID |
+| `approverUserId` | Approver user ID |
+| `status` | Open, Submitted, Rejected, Approved |
+| `lastModifiedDateTime` | Last modified timestamp |
+
+### Time Sheet Lines API
+
+| Field | Description |
+|-------|-------------|
+| `id` | System GUID |
+| `timeSheetNo` | Parent time sheet number |
+| `lineNo` | Line number |
+| `timeSheetStartingDate` | Time sheet starting date |
+| `type` | Resource, Job, Absence, Assembly Order, Service |
+| `jobNo` | Job number (if type=Job) |
+| `jobTaskNo` | Job task number (if type=Job) |
+| `description` | Line description |
+| `totalQuantity` | Total hours |
+| `status` | Open, Submitted, Rejected, Approved |
+| `approvedBy` | User who approved |
+| `approvalDate` | Date approved |
+| `posted` | Whether posted to ledger |
 | `lastModifiedDateTime` | Last modified timestamp |
 
 ## Development Setup
@@ -126,14 +164,16 @@ See [docs/INSTALLATION.adoc](docs/INSTALLATION.adoc) for detailed setup instruct
 
 ```
 thyme-bc-extension/
-├── app.json                          # Extension manifest
+├── app.json                               # Extension manifest
 ├── src/
 │   └── api/
-│       ├── ThymeProjectsAPI.Page.al  # Projects endpoint (page 50100)
-│       └── ThymeJobTasksAPI.Page.al  # Job Tasks endpoint (page 50101)
+│       ├── ThymeProjectsAPI.Page.al       # Projects endpoint (page 50100)
+│       ├── ThymeJobTasksAPI.Page.al       # Job Tasks endpoint (page 50101)
+│       ├── ThymeTimeSheetHeaderAPI.Page.al # Time Sheet Headers (page 50102)
+│       └── ThymeTimeSheetLineAPI.Page.al  # Time Sheet Lines (page 50103)
 └── .vscode/
-    ├── launch.json                   # Debug configuration
-    └── settings.json                 # Editor settings
+    ├── launch.json                        # Debug configuration
+    └── settings.json                      # Editor settings
 ```
 
 ## Documentation
