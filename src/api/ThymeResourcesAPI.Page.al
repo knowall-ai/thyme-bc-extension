@@ -44,9 +44,45 @@ page 50104 "Thyme Resources API"
                 {
                     Caption = 'Capacity';
                 }
+                field(unitCost; Rec."Unit Cost")
+                {
+                    Caption = 'Unit Cost';
+                }
+                field(unitPrice; Rec."Unit Price")
+                {
+                    Caption = 'Unit Price';
+                }
                 field(baseUnitOfMeasure; Rec."Base Unit of Measure")
                 {
                     Caption = 'Base Unit of Measure';
+                }
+                field(resourceGroupNo; Rec."Resource Group No.")
+                {
+                    Caption = 'Resource Group No.';
+                }
+                field(blocked; Rec.Blocked)
+                {
+                    Caption = 'Blocked';
+                }
+                field(privacyBlocked; Rec."Privacy Blocked")
+                {
+                    Caption = 'Privacy Blocked';
+                }
+                field(useTimeSheet; Rec."Use Time Sheet")
+                {
+                    Caption = 'Use Time Sheet';
+                }
+                field(timeSheetOwnerUserId; Rec."Time Sheet Owner User ID")
+                {
+                    Caption = 'Time Sheet Owner User ID';
+                }
+                field(timeSheetApproverUserId; Rec."Time Sheet Approver User ID")
+                {
+                    Caption = 'Time Sheet Approver User ID';
+                }
+                field(lastDateModified; Rec."Last Date Modified")
+                {
+                    Caption = 'Last Date Modified';
                 }
                 field(lastModifiedDateTime; Rec.SystemModifiedAt)
                 {
