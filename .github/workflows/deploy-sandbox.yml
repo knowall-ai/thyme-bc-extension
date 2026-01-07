@@ -166,6 +166,34 @@ jobs:
           Write-Host "Uploading extension..."
           $appBytes = [System.IO.File]::ReadAllBytes($appFilePath)
 
+          # First, clean up any existing extensionUpload records
+          Write-Host "Checking for existing extensionUpload records..."
+          $existingUploadsUrl = "$automationApiUrl/companies($($company.id))/extensionUpload"
+          try {
+            $existingUploads = Invoke-RestMethod -Uri $existingUploadsUrl -Headers $headers -Method Get
+            if ($existingUploads.value -and $existingUploads.value.Count -gt 0) {
+              Write-Host "Found $($existingUploads.value.Count) existing upload(s). Cleaning up..."
+              foreach ($upload in $existingUploads.value) {
+                Write-Host "Deleting upload: $($upload.systemId)"
+                $deleteUrl = "$automationApiUrl/companies($($company.id))/extensionUpload($($upload.systemId))"
+                $deleteHeaders = @{
+                  "Authorization" = "Bearer $accessToken"
+                  "If-Match" = "*"
+                }
+                try {
+                  Invoke-RestMethod -Uri $deleteUrl -Headers $deleteHeaders -Method Delete
+                  Write-Host "Deleted successfully"
+                } catch {
+                  Write-Host "Delete warning: $($_.Exception.Message)"
+                }
+              }
+            } else {
+              Write-Host "No existing uploads found"
+            }
+          } catch {
+            Write-Host "Could not check existing uploads: $($_.Exception.Message)"
+          }
+
           # Step 1: Create extensionUpload object
           Write-Host "Step 1: Creating extensionUpload object..."
           $createBody = @{
