@@ -41,7 +41,7 @@ page 50103 "Thyme Time Sheet Line API"
                 {
                     Caption = 'Time Sheet Starting Date';
                 }
-                field(lineType; Rec.Type)
+                field(type; Rec.Type)
                 {
                     Caption = 'Type';
                 }
