@@ -162,105 +162,28 @@ jobs:
             throw
           }
 
-          # Upload extension (3-step process per Microsoft docs)
-          Write-Host "Uploading extension..."
-          $appBytes = [System.IO.File]::ReadAllBytes($appFilePath)
+          # Use BcContainerHelper's Publish-PerTenantExtensionApps (recommended for BC Online)
+          Write-Host "Publishing extension using Publish-PerTenantExtensionApps..."
 
-          # First, clean up any existing extensionUpload records
-          Write-Host "Checking for existing extensionUpload records..."
-          $existingUploadsUrl = "$automationApiUrl/companies($($company.id))/extensionUpload"
-          try {
-            $existingUploads = Invoke-RestMethod -Uri $existingUploadsUrl -Headers $headers -Method Get
-            if ($existingUploads.value -and $existingUploads.value.Count -gt 0) {
-              Write-Host "Found $($existingUploads.value.Count) existing upload(s). Cleaning up..."
-              foreach ($upload in $existingUploads.value) {
-                Write-Host "Deleting upload: $($upload.systemId)"
-                $deleteUrl = "$automationApiUrl/companies($($company.id))/extensionUpload($($upload.systemId))"
-                $deleteHeaders = @{
-                  "Authorization" = "Bearer $accessToken"
-                  "If-Match" = "*"
-                }
-                try {
-                  Invoke-RestMethod -Uri $deleteUrl -Headers $deleteHeaders -Method Delete
-                  Write-Host "Deleted successfully"
-                } catch {
-                  Write-Host "Delete warning: $($_.Exception.Message)"
-                }
-              }
-            } else {
-              Write-Host "No existing uploads found"
-            }
-          } catch {
-            Write-Host "Could not check existing uploads: $($_.Exception.Message)"
-          }
+          # Create auth context for BcContainerHelper
+          $secureSecret = ConvertTo-SecureString $env:BC_CLIENT_SECRET -AsPlainText -Force
+          $authContext = New-BcAuthContext `
+            -tenantID $env:BC_TENANT_ID `
+            -clientID $env:BC_CLIENT_ID `
+            -clientSecret $secureSecret
 
-          # Step 1: Create extensionUpload object
-          Write-Host "Step 1: Creating extensionUpload object..."
-          $createBody = @{
-            "schedule" = "Current version"
-            "schemaSyncMode" = "Add"
-          } | ConvertTo-Json
+          Write-Host "Auth context created"
 
-          $createHeaders = @{
-            "Authorization" = "Bearer $accessToken"
-            "Content-Type" = "application/json"
-          }
+          $environmentUrl = "https://businesscentral.dynamics.com/$($env:BC_TENANT_ID)/Sandbox"
+          Write-Host "Environment URL: $environmentUrl"
 
-          $extensionUploadUrl = "$automationApiUrl/companies($($company.id))/extensionUpload"
-          Write-Host "Create URL: $extensionUploadUrl"
-          Write-Host "Create Body: $createBody"
+          Publish-PerTenantExtensionApps `
+            -bcAuthContext $authContext `
+            -environment "Sandbox" `
+            -appFiles $appFilePath `
+            -schemaSyncMode Force
 
-          try {
-            $uploadObject = Invoke-RestMethod -Uri $extensionUploadUrl -Headers $createHeaders -Method Post -Body $createBody
-            $uploadId = $uploadObject.systemId
-            Write-Host "Created extensionUpload with ID: $uploadId"
-          } catch {
-            Write-Host "Step 1 Error: $($_.Exception.Message)"
-            if ($_.Exception.Response) {
-              $errorStream = $_.Exception.Response.GetResponseStream()
-              $reader = New-Object System.IO.StreamReader($errorStream)
-              $errorBody = $reader.ReadToEnd()
-              Write-Host "Step 1 Error Body: $errorBody"
-            }
-            throw
-          }
-
-          # Step 2: Upload the actual .app file content
-          Write-Host "Step 2: Uploading .app file content..."
-          $contentHeaders = @{
-            "Authorization" = "Bearer $accessToken"
-            "Content-Type" = "application/octet-stream"
-            "If-Match" = "*"
-          }
-
-          $contentUrl = "$automationApiUrl/companies($($company.id))/extensionUpload($uploadId)/extensionContent"
-          Write-Host "Content URL: $contentUrl"
-
-          Invoke-RestMethod -Uri $contentUrl -Headers $contentHeaders -Method Patch -Body $appBytes
-          Write-Host "File uploaded successfully"
-
-          # Step 3: Trigger the installation
-          Write-Host "Step 3: Triggering installation..."
-          $installHeaders = @{
-            "Authorization" = "Bearer $accessToken"
-          }
-
-          $installUrl = "$automationApiUrl/companies($($company.id))/extensionUpload($uploadId)/Microsoft.NAV.upload"
-          Write-Host "Install URL: $installUrl"
-
-          try {
-            Invoke-RestMethod -Uri $installUrl -Headers $installHeaders -Method Post
-            Write-Host "Deployed to Sandbox successfully!"
-          } catch {
-            Write-Host "Installation Error: $($_.Exception.Message)"
-            if ($_.Exception.Response) {
-              $errorStream = $_.Exception.Response.GetResponseStream()
-              $reader = New-Object System.IO.StreamReader($errorStream)
-              $errorBody = $reader.ReadToEnd()
-              Write-Host "Error Body: $errorBody"
-            }
-            throw
-          }
+          Write-Host "Deployed to Sandbox successfully!"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
