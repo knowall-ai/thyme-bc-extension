@@ -23,6 +23,8 @@ This extension exposes additional fields needed by Thyme:
 - Project status and dates
 - Job tasks
 - Time sheets with approval status (Open, Submitted, Approved, Rejected)
+- Resources with capacity information
+- Posted time entries from Job Ledger
 
 ## API Endpoints
 
@@ -33,6 +35,8 @@ Once deployed, the APIs are available at:
 .../api/knowall/thyme/v1.0/companies({companyId})/jobTasks
 .../api/knowall/thyme/v1.0/companies({companyId})/timeSheetHeaders
 .../api/knowall/thyme/v1.0/companies({companyId})/timeSheetLines
+.../api/knowall/thyme/v1.0/companies({companyId})/resources
+.../api/knowall/thyme/v1.0/companies({companyId})/timeEntries
 ```
 
 Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
@@ -95,6 +99,43 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 | `approvalDate` | Date approved |
 | `posted` | Whether posted to ledger |
 | `lastModifiedDateTime` | Last modified timestamp |
+
+### Resources API
+
+| Field | Description |
+|-------|-------------|
+| `id` | System GUID |
+| `number` | Resource No. |
+| `name` | Resource name |
+| `type` | Person or Machine |
+| `capacity` | Weekly hours capacity |
+| `employeeNo` | Linked employee number |
+| `baseUnitOfMeasure` | Hour/Day units |
+| `lastModifiedDateTime` | Last modified timestamp |
+
+### Time Entries API
+
+| Field | Description |
+|-------|-------------|
+| `id` | System GUID |
+| `entryNo` | Ledger entry number |
+| `jobNo` | Parent job number |
+| `jobTaskNo` | Task number |
+| `postingDate` | Entry posting date |
+| `type` | Entry type (Resource) |
+| `number` | Resource/item number |
+| `description` | Entry description |
+| `quantity` | Hours/units |
+| `unitCost` | Cost per unit (LCY) |
+| `totalCost` | Total cost (LCY) |
+| `unitPrice` | Price per unit (LCY) |
+| `totalPrice` | Total price (LCY) |
+| `workTypeCode` | Work type classification |
+| `entryType` | Usage or Sale |
+| `documentNo` | Source document number |
+| `lastModifiedDateTime` | Last modified timestamp |
+
+**Note:** Time Entries are filtered to Resource-type entries only (employee time tracking).
 
 ## Development Setup
 
@@ -170,7 +211,9 @@ thyme-bc-extension/
 │       ├── ThymeProjectsAPI.Page.al       # Projects endpoint (page 50100)
 │       ├── ThymeJobTasksAPI.Page.al       # Job Tasks endpoint (page 50101)
 │       ├── ThymeTimeSheetHeaderAPI.Page.al # Time Sheet Headers (page 50102)
-│       └── ThymeTimeSheetLineAPI.Page.al  # Time Sheet Lines (page 50103)
+│       ├── ThymeTimeSheetLineAPI.Page.al  # Time Sheet Lines (page 50103)
+│       ├── ThymeResourcesAPI.Page.al      # Resources endpoint (page 50104)
+│       └── ThymeTimeEntriesAPI.Page.al    # Time Entries endpoint (page 50105)
 └── .vscode/
     ├── launch.json                        # Debug configuration
     └── settings.json                      # Editor settings
