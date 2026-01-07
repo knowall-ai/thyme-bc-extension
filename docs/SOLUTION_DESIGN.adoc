@@ -42,6 +42,56 @@ This is insufficient for the Thyme time tracking app which needs:
                             - APIVersion: v1.0
 ----
 
+== Time Entry Lifecycle
+
+Understanding the distinction between Time Sheets and Time Entries is crucial for integrating with Business Central.
+
+=== Lifecycle Diagram
+
+[source]
+----
+User enters time    → timeSheetLine (Status: Open)
+        ↓
+User submits        → timeSheetLine (Status: Submitted)
+        ↓
+Manager approves    → timeSheetLine (Status: Approved)
+        ↓
+Posted to ledger    → timeEntry (Job Ledger Entry - permanent record)
+----
+
+=== Time Sheet Lines vs Time Entries
+
+[cols="1,2,2", options="header"]
+|===
+| Aspect | `timeSheetLines` | `timeEntries`
+
+| BC Table
+| Time Sheet Line (table 951)
+| Job Ledger Entry (table 169)
+
+| Stage
+| In approval workflow
+| Posted to ledger (finalized)
+
+| Status
+| Open → Submitted → Approved
+| N/A (already posted)
+
+| Editable
+| Yes (until posted)
+| No (permanent accounting record)
+
+| Purpose
+| Track & approve time before posting
+| Accounting, billing, historical reports
+|===
+
+=== When to Use Each Endpoint
+
+* **`/timeSheets` and `/timeSheetLines`**: Use for approval workflows, viewing pending/submitted time entries, and editing unposted entries. These represent time that is still in the review process.
+
+* **`/timeEntries`**: Use for finalized reports, billing calculations, and historical records. These are permanent ledger entries that cannot be modified.
+
 == API Design
 
 === Endpoint Structure
@@ -50,7 +100,7 @@ This is insufficient for the Thyme time tracking app which needs:
 ----
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/projects
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/jobTasks
-https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeSheetHeaders
+https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeSheets
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeSheetLines
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/resources
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeEntries
@@ -92,7 +142,7 @@ Maps to the BC `Job Task` table (table 1001).
 | lastModifiedDateTime | SystemModifiedAt | For sync
 |===
 
-=== Time Sheet Headers API (Page 50102)
+=== Time Sheets API (Page 50102)
 
 Maps to the BC `Time Sheet Header` table (table 950).
 
@@ -108,6 +158,31 @@ Maps to the BC `Time Sheet Header` table (table 950).
 | ownerUserId | Owner User ID | Time sheet owner
 | approverUserId | Approver User ID | Assigned approver
 | lastModifiedDateTime | SystemModifiedAt | For sync
+|===
+
+==== Bound Actions
+
+The Time Sheets API supports the following bound actions for approval workflow:
+
+[cols="1,2,2", options="header"]
+|===
+| Action | Endpoint | Description
+
+| submit
+| `POST /timeSheets({id})/Microsoft.NAV.submit`
+| Submits the time sheet for approval
+
+| approve
+| `POST /timeSheets({id})/Microsoft.NAV.approve`
+| Approves a submitted time sheet
+
+| reject
+| `POST /timeSheets({id})/Microsoft.NAV.reject`
+| Rejects a submitted time sheet
+
+| reopen
+| `POST /timeSheets({id})/Microsoft.NAV.reopen`
+| Reopens a rejected/approved time sheet for editing
 |===
 
 === Time Sheet Lines API (Page 50103)
@@ -135,6 +210,27 @@ Maps to the BC `Time Sheet Line` table (table 951).
 | approvalDate | Approval Date | Date approved
 | posted | Posted | Whether posted to ledger
 | lastModifiedDateTime | SystemModifiedAt | For sync
+|===
+
+==== Bound Actions
+
+The Time Sheet Lines API supports the following bound actions for line-level approval:
+
+[cols="1,2,2", options="header"]
+|===
+| Action | Endpoint | Description
+
+| approve
+| `POST /timeSheetLines({id})/Microsoft.NAV.approve`
+| Approves a specific time sheet line
+
+| reject
+| `POST /timeSheetLines({id})/Microsoft.NAV.reject`
+| Rejects a specific time sheet line
+
+| reopen
+| `POST /timeSheetLines({id})/Microsoft.NAV.reopen`
+| Reopens a rejected/approved line for editing
 |===
 
 === Resources API (Page 50104)
@@ -189,11 +285,13 @@ Maps to the BC `Job Ledger Entry` table (table 169). Filtered to Resource-type e
 
 | Thyme Projects API | Page 50100
 | Thyme Job Tasks API | Page 50101
-| Thyme Time Sheet Header API | Page 50102
+| Thyme Time Sheet API | Page 50102
 | Thyme Time Sheet Line API | Page 50103
 | Thyme Resources API | Page 50104
 | Thyme Time Entries API | Page 50105
-| (Reserved for future) | 50106-50199
+| Thyme Time Sheet Actions | Codeunit 50100
+| (Reserved for future pages) | Page 50106-50199
+| (Reserved for future codeunits) | Codeunit 50101-50199
 |===
 
 == Security

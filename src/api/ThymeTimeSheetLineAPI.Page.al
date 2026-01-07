@@ -97,4 +97,58 @@ page 50103 "Thyme Time Sheet Line API"
             }
         }
     }
+
+    /// <summary>
+    /// Approves the time sheet line.
+    /// POST /timeSheetLines({id})/Microsoft.NAV.approve
+    /// </summary>
+    [ServiceEnabled]
+    procedure approve(var ActionContext: WebServiceActionContext)
+    var
+        TimeSheetLine: Record "Time Sheet Line";
+        ThymeActions: Codeunit "Thyme Time Sheet Actions";
+    begin
+        TimeSheetLine.Get(Rec."Time Sheet No.", Rec."Line No.");
+        ThymeActions.ApproveTimeSheetLine(TimeSheetLine);
+        ActionContext.SetObjectType(ObjectType::Page);
+        ActionContext.SetObjectId(Page::"Thyme Time Sheet Line API");
+        ActionContext.AddEntityKey(Rec.FieldNo(SystemId), Rec.SystemId);
+        ActionContext.SetResultCode(WebServiceActionResultCode::Updated);
+    end;
+
+    /// <summary>
+    /// Rejects the time sheet line.
+    /// POST /timeSheetLines({id})/Microsoft.NAV.reject
+    /// </summary>
+    [ServiceEnabled]
+    procedure reject(var ActionContext: WebServiceActionContext)
+    var
+        TimeSheetLine: Record "Time Sheet Line";
+        ThymeActions: Codeunit "Thyme Time Sheet Actions";
+    begin
+        TimeSheetLine.Get(Rec."Time Sheet No.", Rec."Line No.");
+        ThymeActions.RejectTimeSheetLine(TimeSheetLine);
+        ActionContext.SetObjectType(ObjectType::Page);
+        ActionContext.SetObjectId(Page::"Thyme Time Sheet Line API");
+        ActionContext.AddEntityKey(Rec.FieldNo(SystemId), Rec.SystemId);
+        ActionContext.SetResultCode(WebServiceActionResultCode::Updated);
+    end;
+
+    /// <summary>
+    /// Reopens a rejected or approved time sheet line for editing.
+    /// POST /timeSheetLines({id})/Microsoft.NAV.reopen
+    /// </summary>
+    [ServiceEnabled]
+    procedure reopen(var ActionContext: WebServiceActionContext)
+    var
+        TimeSheetLine: Record "Time Sheet Line";
+        ThymeActions: Codeunit "Thyme Time Sheet Actions";
+    begin
+        TimeSheetLine.Get(Rec."Time Sheet No.", Rec."Line No.");
+        ThymeActions.ReopenTimeSheetLine(TimeSheetLine);
+        ActionContext.SetObjectType(ObjectType::Page);
+        ActionContext.SetObjectId(Page::"Thyme Time Sheet Line API");
+        ActionContext.AddEntityKey(Rec.FieldNo(SystemId), Rec.SystemId);
+        ActionContext.SetResultCode(WebServiceActionResultCode::Updated);
+    end;
 }

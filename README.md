@@ -33,7 +33,7 @@ Once deployed, the APIs are available at:
 ```
 .../api/knowall/thyme/v1.0/companies({companyId})/projects
 .../api/knowall/thyme/v1.0/companies({companyId})/jobTasks
-.../api/knowall/thyme/v1.0/companies({companyId})/timeSheetHeaders
+.../api/knowall/thyme/v1.0/companies({companyId})/timeSheets
 .../api/knowall/thyme/v1.0/companies({companyId})/timeSheetLines
 .../api/knowall/thyme/v1.0/companies({companyId})/resources
 .../api/knowall/thyme/v1.0/companies({companyId})/timeEntries
@@ -67,7 +67,7 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 | `jobTaskType` | Posting, Heading, Total, Begin-Total, End-Total |
 | `lastModifiedDateTime` | Last modified timestamp |
 
-### Time Sheet Headers API
+### Time Sheets API
 
 | Field | Description |
 |-------|-------------|
@@ -79,6 +79,12 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 | `ownerUserId` | Owner user ID |
 | `approverUserId` | Approver user ID |
 | `lastModifiedDateTime` | Last modified timestamp |
+
+**Bound Actions:**
+- `POST /timeSheets({id})/Microsoft.NAV.submit` - Submit for approval
+- `POST /timeSheets({id})/Microsoft.NAV.approve` - Approve time sheet
+- `POST /timeSheets({id})/Microsoft.NAV.reject` - Reject time sheet
+- `POST /timeSheets({id})/Microsoft.NAV.reopen` - Reopen for editing
 
 ### Time Sheet Lines API
 
@@ -98,6 +104,11 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 | `approvalDate` | Date approved |
 | `posted` | Whether posted to ledger |
 | `lastModifiedDateTime` | Last modified timestamp |
+
+**Bound Actions:**
+- `POST /timeSheetLines({id})/Microsoft.NAV.approve` - Approve line
+- `POST /timeSheetLines({id})/Microsoft.NAV.reject` - Reject line
+- `POST /timeSheetLines({id})/Microsoft.NAV.reopen` - Reopen for editing
 
 ### Resources API
 
@@ -203,18 +214,20 @@ See [docs/INSTALLATION.adoc](docs/INSTALLATION.adoc) for detailed setup instruct
 
 ```
 thyme-bc-extension/
-├── app.json                               # Extension manifest
+├── app.json                                    # Extension manifest
 ├── src/
-│   └── api/
-│       ├── ThymeProjectsAPI.Page.al       # Projects endpoint (page 50100)
-│       ├── ThymeJobTasksAPI.Page.al       # Job Tasks endpoint (page 50101)
-│       ├── ThymeTimeSheetHeaderAPI.Page.al # Time Sheet Headers (page 50102)
-│       ├── ThymeTimeSheetLineAPI.Page.al  # Time Sheet Lines (page 50103)
-│       ├── ThymeResourcesAPI.Page.al      # Resources endpoint (page 50104)
-│       └── ThymeTimeEntriesAPI.Page.al    # Time Entries endpoint (page 50105)
+│   ├── api/
+│   │   ├── ThymeProjectsAPI.Page.al            # Projects endpoint (page 50100)
+│   │   ├── ThymeJobTasksAPI.Page.al            # Job Tasks endpoint (page 50101)
+│   │   ├── ThymeTimeSheetAPI.Page.al           # Time Sheets (page 50102)
+│   │   ├── ThymeTimeSheetLineAPI.Page.al       # Time Sheet Lines (page 50103)
+│   │   ├── ThymeResourcesAPI.Page.al           # Resources endpoint (page 50104)
+│   │   └── ThymeTimeEntriesAPI.Page.al         # Time Entries endpoint (page 50105)
+│   └── codeunit/
+│       └── ThymeTimeSheetActions.Codeunit.al   # Approval workflow actions (codeunit 50100)
 └── .vscode/
-    ├── launch.json                        # Debug configuration
-    └── settings.json                      # Editor settings
+    ├── launch.json                             # Debug configuration
+    └── settings.json                           # Editor settings
 ```
 
 ## Documentation
