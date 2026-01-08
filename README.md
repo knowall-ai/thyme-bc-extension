@@ -35,6 +35,7 @@ Once deployed, the APIs are available at:
 .../api/knowall/thyme/v1.0/companies({companyId})/jobTasks
 .../api/knowall/thyme/v1.0/companies({companyId})/timeSheets
 .../api/knowall/thyme/v1.0/companies({companyId})/timeSheetLines
+.../api/knowall/thyme/v1.0/companies({companyId})/timeSheetDetails
 .../api/knowall/thyme/v1.0/companies({companyId})/resources
 .../api/knowall/thyme/v1.0/companies({companyId})/timeEntries
 ```
@@ -107,14 +108,7 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 | `jobNo` | Job number (if type=Job) |
 | `jobTaskNo` | Job task number (if type=Job) |
 | `description` | Line description |
-| `quantity1` | Hours for day 1 of week |
-| `quantity2` | Hours for day 2 of week |
-| `quantity3` | Hours for day 3 of week |
-| `quantity4` | Hours for day 4 of week |
-| `quantity5` | Hours for day 5 of week |
-| `quantity6` | Hours for day 6 of week |
-| `quantity7` | Hours for day 7 of week |
-| `totalQuantity` | Total hours (computed, read-only) |
+| `totalQuantity` | Total hours (sum of details) |
 | `status` | Open, Submitted, Rejected, Approved |
 | `approvedBy` | User who approved |
 | `approvalDate` | Date approved |
@@ -125,6 +119,32 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 - `POST /timeSheetLines({id})/Microsoft.NAV.approve` - Approve line
 - `POST /timeSheetLines({id})/Microsoft.NAV.reject` - Reject line
 - `POST /timeSheetLines({id})/Microsoft.NAV.reopen` - Reopen for editing
+
+### Time Sheet Details API
+
+Daily hour entries for each time sheet line. One record per day with hours.
+
+| Field | Description |
+|-------|-------------|
+| `id` | System GUID |
+| `timeSheetNo` | Parent time sheet number |
+| `timeSheetLineNo` | Parent line number |
+| `date` | Date for this entry |
+| `type` | Resource, Job, Absence, etc. |
+| `resourceNo` | Resource number |
+| `jobNo` | Job number |
+| `jobTaskNo` | Job task number |
+| `quantity` | Hours worked |
+| `postedQuantity` | Hours already posted |
+| `status` | Open, Submitted, Rejected, Approved |
+| `posted` | Whether posted to ledger |
+| `lastModifiedDateTime` | Last modified timestamp |
+
+**Usage:** To log 4 hours on Jan 8 for a job:
+```
+POST /timeSheetDetails
+{ "timeSheetNo": "TS00001", "timeSheetLineNo": 10000, "date": "2026-01-08", "quantity": 4 }
+```
 
 ### Resources API
 
