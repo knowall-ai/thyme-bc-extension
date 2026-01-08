@@ -157,6 +157,10 @@ Maps to the BC `Time Sheet Header` table (table 950).
 | resourceNo | Resource No. | Associated resource
 | ownerUserId | Owner User ID | Time sheet owner
 | approverUserId | Approver User ID | Assigned approver
+| openExists | Open Exists | True if any line is Open (FlowField)
+| submittedExists | Submitted Exists | True if any line is Submitted (FlowField)
+| rejectedExists | Rejected Exists | True if any line is Rejected (FlowField)
+| approvedExists | Approved Exists | True if any line is Approved (FlowField)
 | lastModifiedDateTime | SystemModifiedAt | For sync
 |===
 

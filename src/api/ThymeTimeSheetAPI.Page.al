@@ -52,6 +52,22 @@ page 50102 "Thyme Time Sheet API"
                 {
                     Caption = 'Approver User ID';
                 }
+                field(openExists; Rec."Open Exists")
+                {
+                    Caption = 'Open Exists';
+                }
+                field(submittedExists; Rec."Submitted Exists")
+                {
+                    Caption = 'Submitted Exists';
+                }
+                field(rejectedExists; Rec."Rejected Exists")
+                {
+                    Caption = 'Rejected Exists';
+                }
+                field(approvedExists; Rec."Approved Exists")
+                {
+                    Caption = 'Approved Exists';
+                }
                 field(lastModifiedDateTime; Rec.SystemModifiedAt)
                 {
                     Caption = 'Last Modified DateTime';

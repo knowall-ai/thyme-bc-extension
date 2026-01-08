@@ -78,6 +78,10 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 | `resourceNo` | Resource number |
 | `ownerUserId` | Owner user ID |
 | `approverUserId` | Approver user ID |
+| `openExists` | True if any line is Open |
+| `submittedExists` | True if any line is Submitted |
+| `rejectedExists` | True if any line is Rejected |
+| `approvedExists` | True if any line is Approved |
 | `lastModifiedDateTime` | Last modified timestamp |
 
 **Bound Actions:**
