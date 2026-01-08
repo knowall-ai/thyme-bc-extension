@@ -1,19 +1,19 @@
 /// <summary>
-/// Custom API page exposing the current user's BC User ID.
-/// Enables Thyme to identify the logged-in user and match them to a Resource.
+/// Custom API page exposing BC Users with current user identification.
+/// Enables Thyme to list users and identify the authenticated user.
 ///
-/// Endpoint: /api/knowall/thyme/v1.0/companies({companyId})/currentUser
+/// Endpoint: /api/knowall/thyme/v1.0/companies({companyId})/users
 /// </summary>
-page 50106 "Thyme Current User API"
+page 50106 "Thyme Users API"
 {
     APIGroup = 'thyme';
     APIPublisher = 'knowall';
     APIVersion = 'v1.0';
-    EntityName = 'currentUser';
-    EntitySetName = 'currentUser';
+    EntityName = 'user';
+    EntitySetName = 'users';
     PageType = API;
     SourceTable = User;
-    SourceTableView = sorting("User Security ID");
+    SourceTableView = sorting("User Name");
     DelayedInsert = false;
     InsertAllowed = false;
     ModifyAllowed = false;
@@ -40,6 +40,11 @@ page 50106 "Thyme Current User API"
                 field(fullName; Rec."Full Name")
                 {
                     Caption = 'Full Name';
+                    Editable = false;
+                }
+                field(isCurrentUser; IsCurrentUser)
+                {
+                    Caption = 'Is Current User';
                     Editable = false;
                 }
                 field(state; Rec.State)
@@ -71,8 +76,11 @@ page 50106 "Thyme Current User API"
         }
     }
 
-    trigger OnOpenPage()
+    trigger OnAfterGetRecord()
     begin
-        Rec.SetRange("User Security ID", UserSecurityId());
+        IsCurrentUser := Rec."User Security ID" = UserSecurityId();
     end;
+
+    var
+        IsCurrentUser: Boolean;
 }
