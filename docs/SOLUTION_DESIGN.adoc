@@ -248,6 +248,7 @@ Maps to the BC `Resource` table (table 156).
 | id | SystemId | Primary key (GUID)
 | number | No. | Resource number
 | name | Name | Resource name
+| searchName | Search Name | Search name for lookup
 | type | Type | Enum: Person, Machine
 | capacity | Capacity | Weekly hours target (FlowField)
 | unitCost | Unit Cost | Cost per unit
@@ -290,6 +291,26 @@ Maps to the BC `Job Ledger Entry` table (table 169). Filtered to Resource-type e
 | lastModifiedDateTime | SystemModifiedAt | For sync
 |===
 
+=== Current User API (Page 50106)
+
+Returns the currently authenticated user's BC information. Useful for matching the logged-in user to their Resource record.
+
+Maps to the BC `User` table (virtual table 2000000120). Filtered to current user via `UserSecurityId()`.
+
+[cols="1,1,1", options="header"]
+|===
+| API Field | BC Field | Notes
+
+| userSecurityId | User Security ID | Primary key (GUID)
+| userName | User Name | BC user name
+| fullName | Full Name | Display name
+| state | State | Enabled or Disabled
+| expiryDate | Expiry Date | Account expiry
+| authenticationEmail | Authentication Email | Auth email
+| contactEmail | Contact Email | Contact email
+| licenseType | License Type | BC license type
+|===
+
 == Object ID Ranges
 
 [cols="1,1", options="header"]
@@ -302,8 +323,9 @@ Maps to the BC `Job Ledger Entry` table (table 169). Filtered to Resource-type e
 | Thyme Time Sheet Line API | Page 50103
 | Thyme Resources API | Page 50104
 | Thyme Time Entries API | Page 50105
+| Thyme Current User API | Page 50106
 | Thyme Time Sheet Actions | Codeunit 50100
-| (Reserved for future pages) | Page 50106-50199
+| (Reserved for future pages) | Page 50107-50199
 | (Reserved for future codeunits) | Codeunit 50101-50199
 |===
 

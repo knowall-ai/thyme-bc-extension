@@ -37,6 +37,7 @@ Once deployed, the APIs are available at:
 .../api/knowall/thyme/v1.0/companies({companyId})/timeSheetLines
 .../api/knowall/thyme/v1.0/companies({companyId})/resources
 .../api/knowall/thyme/v1.0/companies({companyId})/timeEntries
+.../api/knowall/thyme/v1.0/companies({companyId})/currentUser
 ```
 
 Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
@@ -121,6 +122,7 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 | `id` | System GUID |
 | `number` | Resource No. |
 | `name` | Resource name |
+| `searchName` | Search name for lookup |
 | `type` | Person or Machine |
 | `capacity` | Weekly hours capacity (FlowField) |
 | `unitCost` | Cost per unit |
@@ -158,6 +160,23 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 | `lastModifiedDateTime` | Last modified timestamp |
 
 **Note:** Time Entries are filtered to Resource-type entries only (employee time tracking).
+
+### Current User API
+
+Returns the currently authenticated user's information. Useful for matching the logged-in user to their Resource record via `timeSheetOwnerUserId`.
+
+| Field | Description |
+|-------|-------------|
+| `userSecurityId` | User Security ID (GUID) |
+| `userName` | BC User Name |
+| `fullName` | User's full name |
+| `state` | Enabled or Disabled |
+| `expiryDate` | Account expiry date |
+| `authenticationEmail` | Authentication email |
+| `contactEmail` | Contact email |
+| `licenseType` | BC license type |
+
+**Note:** This endpoint returns only the current user (filtered by `UserSecurityId()`).
 
 ## Development Setup
 
@@ -235,7 +254,8 @@ thyme-bc-extension/
 │   │   ├── ThymeTimeSheetAPI.Page.al           # Time Sheets (page 50102)
 │   │   ├── ThymeTimeSheetLineAPI.Page.al       # Time Sheet Lines (page 50103)
 │   │   ├── ThymeResourcesAPI.Page.al           # Resources endpoint (page 50104)
-│   │   └── ThymeTimeEntriesAPI.Page.al         # Time Entries endpoint (page 50105)
+│   │   ├── ThymeTimeEntriesAPI.Page.al         # Time Entries endpoint (page 50105)
+│   │   └── ThymeCurrentUserAPI.Page.al         # Current User endpoint (page 50106)
 │   └── codeunit/
 │       └── ThymeTimeSheetActions.Codeunit.al   # Approval workflow actions (codeunit 50100)
 └── .vscode/

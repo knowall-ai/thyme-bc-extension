@@ -36,6 +36,10 @@ page 50104 "Thyme Resources API"
                 {
                     Caption = 'Name';
                 }
+                field(searchName; Rec."Search Name")
+                {
+                    Caption = 'Search Name';
+                }
                 field(type; Rec.Type)
                 {
                     Caption = 'Type';
