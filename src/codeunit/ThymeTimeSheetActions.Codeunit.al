@@ -5,43 +5,70 @@
 codeunit 50100 "Thyme Time Sheet Actions"
 {
     /// <summary>
-    /// Submits a time sheet for approval.
+    /// Submits a time sheet for approval by submitting all open lines.
     /// </summary>
     procedure SubmitTimeSheet(var TimeSheetHeader: Record "Time Sheet Header")
     var
+        TimeSheetLine: Record "Time Sheet Line";
         TimeSheetApprovalMgt: Codeunit "Time Sheet Approval Management";
     begin
-        TimeSheetApprovalMgt.Submit(TimeSheetHeader);
+        TimeSheetLine.SetRange("Time Sheet No.", TimeSheetHeader."No.");
+        TimeSheetLine.SetRange(Status, TimeSheetLine.Status::Open);
+        if TimeSheetLine.FindSet() then
+            repeat
+                TimeSheetApprovalMgt.Submit(TimeSheetLine);
+            until TimeSheetLine.Next() = 0;
     end;
 
     /// <summary>
-    /// Approves a submitted time sheet.
+    /// Approves a submitted time sheet by approving all submitted lines.
     /// </summary>
     procedure ApproveTimeSheet(var TimeSheetHeader: Record "Time Sheet Header")
     var
+        TimeSheetLine: Record "Time Sheet Line";
         TimeSheetApprovalMgt: Codeunit "Time Sheet Approval Management";
     begin
-        TimeSheetApprovalMgt.Approve(TimeSheetHeader);
+        TimeSheetLine.SetRange("Time Sheet No.", TimeSheetHeader."No.");
+        TimeSheetLine.SetRange(Status, TimeSheetLine.Status::Submitted);
+        if TimeSheetLine.FindSet() then
+            repeat
+                TimeSheetApprovalMgt.Approve(TimeSheetLine);
+            until TimeSheetLine.Next() = 0;
     end;
 
     /// <summary>
-    /// Rejects a submitted time sheet.
+    /// Rejects a submitted time sheet by rejecting all submitted lines.
     /// </summary>
     procedure RejectTimeSheet(var TimeSheetHeader: Record "Time Sheet Header")
     var
+        TimeSheetLine: Record "Time Sheet Line";
         TimeSheetApprovalMgt: Codeunit "Time Sheet Approval Management";
     begin
-        TimeSheetApprovalMgt.Reject(TimeSheetHeader);
+        TimeSheetLine.SetRange("Time Sheet No.", TimeSheetHeader."No.");
+        TimeSheetLine.SetRange(Status, TimeSheetLine.Status::Submitted);
+        if TimeSheetLine.FindSet() then
+            repeat
+                TimeSheetApprovalMgt.Reject(TimeSheetLine);
+            until TimeSheetLine.Next() = 0;
     end;
 
     /// <summary>
-    /// Reopens a rejected or approved time sheet for editing.
+    /// Reopens a rejected or approved time sheet by reopening all non-open lines.
     /// </summary>
     procedure ReopenTimeSheet(var TimeSheetHeader: Record "Time Sheet Header")
     var
+        TimeSheetLine: Record "Time Sheet Line";
         TimeSheetApprovalMgt: Codeunit "Time Sheet Approval Management";
     begin
-        TimeSheetApprovalMgt.ReopenSubmitted(TimeSheetHeader);
+        TimeSheetLine.SetRange("Time Sheet No.", TimeSheetHeader."No.");
+        TimeSheetLine.SetFilter(Status, '%1|%2|%3',
+            TimeSheetLine.Status::Submitted,
+            TimeSheetLine.Status::Rejected,
+            TimeSheetLine.Status::Approved);
+        if TimeSheetLine.FindSet() then
+            repeat
+                TimeSheetApprovalMgt.ReopenSubmitted(TimeSheetLine);
+            until TimeSheetLine.Next() = 0;
     end;
 
     /// <summary>
