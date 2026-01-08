@@ -291,28 +291,17 @@ Maps to the BC `Job Ledger Entry` table (table 169). Filtered to Resource-type e
 | lastModifiedDateTime | SystemModifiedAt | For sync
 |===
 
-=== Users API (Page 50106)
+=== Users (Standard BC API)
 
-Returns all BC users with a computed field identifying the authenticated user.
+For user information, use BC's built-in https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/administration/api/dynamics_user_get[Automation API]:
 
-Maps to the BC `User` table (virtual table 2000000120).
+----
+GET /api/microsoft/automation/v2.0/companies({companyId})/users
+----
 
-[cols="1,1,1", options="header"]
-|===
-| API Field | BC Field | Notes
+Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `contactEmail`.
 
-| userSecurityId | User Security ID | Primary key (GUID)
-| userName | User Name | BC user name
-| fullName | Full Name | Display name
-| isCurrentUser | (computed) | `true` if this is the authenticated user
-| state | State | Enabled or Disabled
-| expiryDate | Expiry Date | Account expiry
-| authenticationEmail | Authentication Email | Auth email
-| contactEmail | Contact Email | Contact email
-| licenseType | License Type | BC license type
-|===
-
-**Usage:** Filter with `$filter=isCurrentUser eq true` to get only the authenticated user.
+**Usage:** Match the user's `userName` to a Resource's `timeSheetOwnerUserId` field.
 
 == Object ID Ranges
 
@@ -326,9 +315,8 @@ Maps to the BC `User` table (virtual table 2000000120).
 | Thyme Time Sheet Line API | Page 50103
 | Thyme Resources API | Page 50104
 | Thyme Time Entries API | Page 50105
-| Thyme Users API | Page 50106
 | Thyme Time Sheet Actions | Codeunit 50100
-| (Reserved for future pages) | Page 50107-50199
+| (Reserved for future pages) | Page 50106-50199
 | (Reserved for future codeunits) | Codeunit 50101-50199
 |===
 
