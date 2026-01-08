@@ -98,6 +98,23 @@ page 50103 "Thyme Time Sheet Line API"
         }
     }
 
+    trigger OnInsertRecord(BelowxRec: Boolean): Boolean
+    var
+        TimeSheetLine: Record "Time Sheet Line";
+        NextLineNo: Integer;
+    begin
+        // Auto-assign Line No. if not provided or is 0
+        if Rec."Line No." = 0 then begin
+            TimeSheetLine.SetRange("Time Sheet No.", Rec."Time Sheet No.");
+            if TimeSheetLine.FindLast() then
+                NextLineNo := TimeSheetLine."Line No." + 10000
+            else
+                NextLineNo := 10000;
+            Rec."Line No." := NextLineNo;
+        end;
+        exit(true); // Continue with default insert
+    end;
+
     /// <summary>
     /// Approves the time sheet line.
     /// POST /timeSheetLines({id})/Microsoft.NAV.approve
