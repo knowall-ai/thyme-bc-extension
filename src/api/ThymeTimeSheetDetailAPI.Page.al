@@ -63,6 +63,7 @@ page 50106 "Thyme Time Sheet Detail API"
                 field(quantity; Rec.Quantity)
                 {
                     Caption = 'Quantity';
+                    Editable = true;
                 }
                 field(postedQuantity; Rec."Posted Quantity")
                 {

@@ -151,4 +151,94 @@ page 50103 "Thyme Time Sheet Line API"
         ActionContext.AddEntityKey(Rec.FieldNo(SystemId), Rec.SystemId);
         ActionContext.SetResultCode(WebServiceActionResultCode::Updated);
     end;
+
+    /// <summary>
+    /// Sets hours for a specific day of the week (1-7).
+    /// POST /timeSheetLines({id})/Microsoft.NAV.setHours
+    /// Body: { "dayOfWeek": 3, "hours": 4.5 }
+    /// </summary>
+    [ServiceEnabled]
+    procedure setHours(var ActionContext: WebServiceActionContext; dayOfWeek: Integer; hours: Decimal)
+    var
+        TimeSheetLine: Record "Time Sheet Line";
+        TimeSheetHeader: Record "Time Sheet Header";
+        TimeSheetDetail: Record "Time Sheet Detail";
+        TimeSheetMgt: Codeunit "Time Sheet Management";
+        AllocatedQty: array[7] of Decimal;
+        i: Integer;
+        DayDate: Date;
+    begin
+        if (dayOfWeek < 1) or (dayOfWeek > 7) then
+            Error('dayOfWeek must be between 1 and 7');
+
+        TimeSheetLine.Get(Rec."Time Sheet No.", Rec."Line No.");
+        TimeSheetHeader.Get(Rec."Time Sheet No.");
+
+        // Get current allocations from existing detail records
+        for i := 1 to 7 do begin
+            DayDate := TimeSheetHeader."Starting Date" + i - 1;
+            if TimeSheetDetail.Get(Rec."Time Sheet No.", Rec."Line No.", DayDate) then
+                AllocatedQty[i] := TimeSheetDetail.Quantity
+            else
+                AllocatedQty[i] := 0;
+        end;
+
+        // Set the quantity for the requested day
+        AllocatedQty[dayOfWeek] := hours;
+
+        // Update through BC's Time Sheet Management
+        TimeSheetMgt.UpdateTimeAllocation(TimeSheetLine, AllocatedQty);
+
+        ActionContext.SetObjectType(ObjectType::Page);
+        ActionContext.SetObjectId(Page::"Thyme Time Sheet Line API");
+        ActionContext.AddEntityKey(Rec.FieldNo(SystemId), Rec.SystemId);
+        ActionContext.SetResultCode(WebServiceActionResultCode::Updated);
+    end;
+
+    /// <summary>
+    /// Sets hours for a specific date.
+    /// POST /timeSheetLines({id})/Microsoft.NAV.setHoursForDate
+    /// Body: { "entryDate": "2026-01-08", "hours": 4.5 }
+    /// </summary>
+    [ServiceEnabled]
+    procedure setHoursForDate(var ActionContext: WebServiceActionContext; entryDate: Date; hours: Decimal)
+    var
+        TimeSheetLine: Record "Time Sheet Line";
+        TimeSheetHeader: Record "Time Sheet Header";
+        TimeSheetDetail: Record "Time Sheet Detail";
+        TimeSheetMgt: Codeunit "Time Sheet Management";
+        AllocatedQty: array[7] of Decimal;
+        i: Integer;
+        DayIndex: Integer;
+        DayDate: Date;
+    begin
+        TimeSheetLine.Get(Rec."Time Sheet No.", Rec."Line No.");
+        TimeSheetHeader.Get(Rec."Time Sheet No.");
+
+        // Calculate which day of the week (1-7) this date falls on
+        DayIndex := entryDate - TimeSheetHeader."Starting Date" + 1;
+        if (DayIndex < 1) or (DayIndex > 7) then
+            Error('Date %1 is outside time sheet period %2 to %3',
+                entryDate, TimeSheetHeader."Starting Date", TimeSheetHeader."Ending Date");
+
+        // Get current allocations from existing detail records
+        for i := 1 to 7 do begin
+            DayDate := TimeSheetHeader."Starting Date" + i - 1;
+            if TimeSheetDetail.Get(Rec."Time Sheet No.", Rec."Line No.", DayDate) then
+                AllocatedQty[i] := TimeSheetDetail.Quantity
+            else
+                AllocatedQty[i] := 0;
+        end;
+
+        // Set the quantity for the requested day
+        AllocatedQty[DayIndex] := hours;
+
+        // Update through BC's Time Sheet Management
+        TimeSheetMgt.UpdateTimeAllocation(TimeSheetLine, AllocatedQty);
+
+        ActionContext.SetObjectType(ObjectType::Page);
+        ActionContext.SetObjectId(Page::"Thyme Time Sheet Line API");
+        ActionContext.AddEntityKey(Rec.FieldNo(SystemId), Rec.SystemId);
+        ActionContext.SetResultCode(WebServiceActionResultCode::Updated);
+    end;
 }
