@@ -69,9 +69,38 @@ page 50103 "Thyme Time Sheet Line API"
                 {
                     Caption = 'Chargeable';
                 }
+                field(quantity1; Rec."Quantity 1")
+                {
+                    Caption = 'Quantity 1';
+                }
+                field(quantity2; Rec."Quantity 2")
+                {
+                    Caption = 'Quantity 2';
+                }
+                field(quantity3; Rec."Quantity 3")
+                {
+                    Caption = 'Quantity 3';
+                }
+                field(quantity4; Rec."Quantity 4")
+                {
+                    Caption = 'Quantity 4';
+                }
+                field(quantity5; Rec."Quantity 5")
+                {
+                    Caption = 'Quantity 5';
+                }
+                field(quantity6; Rec."Quantity 6")
+                {
+                    Caption = 'Quantity 6';
+                }
+                field(quantity7; Rec."Quantity 7")
+                {
+                    Caption = 'Quantity 7';
+                }
                 field(totalQuantity; Rec."Total Quantity")
                 {
                     Caption = 'Total Quantity';
+                    Editable = false;
                 }
                 field(status; Rec.Status)
                 {

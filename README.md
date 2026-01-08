@@ -107,7 +107,14 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 | `jobNo` | Job number (if type=Job) |
 | `jobTaskNo` | Job task number (if type=Job) |
 | `description` | Line description |
-| `totalQuantity` | Total hours |
+| `quantity1` | Hours for day 1 of week |
+| `quantity2` | Hours for day 2 of week |
+| `quantity3` | Hours for day 3 of week |
+| `quantity4` | Hours for day 4 of week |
+| `quantity5` | Hours for day 5 of week |
+| `quantity6` | Hours for day 6 of week |
+| `quantity7` | Hours for day 7 of week |
+| `totalQuantity` | Total hours (computed, read-only) |
 | `status` | Open, Submitted, Rejected, Approved |
 | `approvedBy` | User who approved |
 | `approvalDate` | Date approved |
