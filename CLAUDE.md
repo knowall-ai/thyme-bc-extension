@@ -59,6 +59,7 @@ GitHub Actions workflows deploy to BC Online (SaaS):
 - Use `Publish-PerTenantExtensionApps` (not `Publish-BcContainerApp`)
 - Use `Download-Artifacts` to get `alc.exe` for compilation
 - Download symbols via BC Online dev API, not `Compile-AppInBcContainer`
+- **Always bump the version in `app.json`** when making changes - BC won't update if version is unchanged
 
 Secrets needed per environment:
 - `BC_TENANT_ID` - Azure AD tenant ID
