@@ -52,7 +52,7 @@ page 50107 "Thyme Job Planning Lines API"
                 {
                     Caption = 'Type';
                 }
-                field(resourceNo; Rec."No.")
+                field(number; Rec."No.")
                 {
                     Caption = 'No.';
                 }
