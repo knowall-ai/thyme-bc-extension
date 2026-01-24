@@ -32,9 +32,9 @@ page 50100 "Thyme Projects API"
                 {
                     Caption = 'Number';
                 }
-                field(description; Rec.Description)
+                field(displayName; Rec.Description)
                 {
-                    Caption = 'Description';
+                    Caption = 'Display Name';
                 }
                 field(billToCustomerNo; Rec."Bill-to Customer No.")
                 {
