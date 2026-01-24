@@ -14,6 +14,7 @@ This is a Business Central (BC) AL extension that provides custom API endpoints 
 - `src/api/ThymeTimeSheetDetailAPI.Page.al` - Time Sheet Detail API (page 50106)
 - `src/api/ThymeResourcesAPI.Page.al` - Resources API (page 50104)
 - `src/api/ThymeTimeEntriesAPI.Page.al` - Time Entries API (page 50105)
+- `src/api/ThymeJobPlanningLinesAPI.Page.al` - Job Planning Lines API (page 50107)
 - `src/codeunit/ThymeTimeSheetActions.Codeunit.al` - Time Sheet approval workflow actions (codeunit 50100)
 
 ## API Configuration
@@ -33,6 +34,7 @@ Endpoints available at:
 /api/knowall/thyme/v1.0/companies({id})/timeSheetDetails
 /api/knowall/thyme/v1.0/companies({id})/resources
 /api/knowall/thyme/v1.0/companies({id})/timeEntries
+/api/knowall/thyme/v1.0/companies({id})/jobPlanningLines
 ```
 
 For user information, use BC's standard Automation API:
