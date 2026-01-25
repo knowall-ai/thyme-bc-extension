@@ -1,11 +1,14 @@
 /// <summary>
 /// Custom API page exposing Job Planning Lines for budget data.
-/// Now supports creating planning lines in addition to reading.
+/// Supports reading, creating, and updating planning lines with upsert logic.
 /// Enables Thyme to show budget vs actual comparisons and create resource allocations.
 ///
 /// Endpoint: /api/knowall/thyme/v1.0/companies({companyId})/jobPlanningLines
 ///
-/// POST to create new planning lines. Required fields: jobNo, jobTaskNo, planningDate, number, quantity
+/// POST to create/update planning lines (upsert behavior):
+/// - If a line exists for the same jobNo + jobTaskNo + planningDate + number, quantity is updated
+/// - Otherwise a new line is created
+/// Required fields: jobNo, jobTaskNo, planningDate, number, quantity
 /// Optional: type (defaults to Resource), lineType (defaults to Budget)
 /// lineNo is auto-generated in increments of 10000.
 /// </summary>
@@ -96,9 +99,26 @@ page 50107 "Thyme Job Planning Lines API"
 
     trigger OnInsertRecord(BelowxRec: Boolean): Boolean
     var
+        ExistingLine: Record "Job Planning Line";
         JobPlanningLine: Record "Job Planning Line";
         NextLineNo: Integer;
     begin
+        // Upsert logic: Check if a line already exists for the same job/task/date/resource
+        ExistingLine.SetRange("Job No.", Rec."Job No.");
+        ExistingLine.SetRange("Job Task No.", Rec."Job Task No.");
+        ExistingLine.SetRange("Planning Date", Rec."Planning Date");
+        ExistingLine.SetRange("No.", Rec."No.");
+
+        if ExistingLine.FindFirst() then begin
+            // Update existing line instead of creating duplicate
+            ExistingLine.Validate(Quantity, Rec.Quantity);
+            ExistingLine.Modify(true);
+            // Copy the existing record back to Rec so the API returns the updated record
+            Rec := ExistingLine;
+            exit(false); // Don't do default insert
+        end;
+
+        // No existing line found - create new one
         // Auto-assign Line No. if not provided or is 0
         if Rec."Line No." = 0 then begin
             JobPlanningLine.SetRange("Job No.", Rec."Job No.");
