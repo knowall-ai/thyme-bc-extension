@@ -110,13 +110,8 @@ page 50107 "Thyme Job Planning Lines API"
             Rec."Line No." := NextLineNo;
         end;
 
-        // Default Type to Resource if not specified (for time/resource planning)
-        if Rec.Type = Rec.Type::" " then
-            Rec.Type := Rec.Type::Resource;
-
-        // Default Line Type to Budget if not specified
-        if Rec."Line Type" = Rec."Line Type"::" " then
-            Rec."Line Type" := Rec."Line Type"::Budget;
+        // Type defaults to Resource (enum value 0) - appropriate for time/resource planning
+        // Line Type defaults to Budget (enum value 0) - appropriate for planning
 
         exit(true); // Continue with default insert
     end;
