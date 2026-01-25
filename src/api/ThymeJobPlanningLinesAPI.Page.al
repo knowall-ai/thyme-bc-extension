@@ -103,10 +103,13 @@ page 50107 "Thyme Job Planning Lines API"
         JobPlanningLine: Record "Job Planning Line";
         NextLineNo: Integer;
     begin
-        // Upsert logic: Check if a line already exists for the same job/task/date/resource
+        // Upsert logic: Check if a line already exists for the same job/task/date/resource/type
+        // Lock the table to prevent race conditions with concurrent inserts
+        ExistingLine.LockTable();
         ExistingLine.SetRange("Job No.", Rec."Job No.");
         ExistingLine.SetRange("Job Task No.", Rec."Job Task No.");
         ExistingLine.SetRange("Planning Date", Rec."Planning Date");
+        ExistingLine.SetRange(Type, Rec.Type);
         ExistingLine.SetRange("No.", Rec."No.");
 
         if ExistingLine.FindFirst() then begin
