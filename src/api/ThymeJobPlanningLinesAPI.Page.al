@@ -1,8 +1,13 @@
 /// <summary>
 /// Custom API page exposing Job Planning Lines for budget data.
-/// Enables Thyme to show budget vs actual comparisons in project views.
+/// Supports both reading and creating planning lines.
+/// Enables Thyme to show budget vs actual comparisons and create resource allocations.
 ///
 /// Endpoint: /api/knowall/thyme/v1.0/companies({companyId})/jobPlanningLines
+///
+/// POST to create new planning lines. Required fields: jobNo, jobTaskNo, planningDate, number, quantity
+/// Optional: type (defaults to Resource), lineType (defaults to Budget)
+/// lineNo is auto-generated in increments of 10000.
 /// </summary>
 page 50107 "Thyme Job Planning Lines API"
 {
@@ -16,7 +21,6 @@ page 50107 "Thyme Job Planning Lines API"
     DelayedInsert = true;
     ODataKeyFields = SystemId;
     Extensible = false;
-    Editable = false;
 
     layout
     {
@@ -27,6 +31,7 @@ page 50107 "Thyme Job Planning Lines API"
                 field(id; Rec.SystemId)
                 {
                     Caption = 'Id';
+                    Editable = false;
                 }
                 field(jobNo; Rec."Job No.")
                 {
@@ -83,8 +88,34 @@ page 50107 "Thyme Job Planning Lines API"
                 field(lastModifiedDateTime; Rec.SystemModifiedAt)
                 {
                     Caption = 'Last Modified DateTime';
+                    Editable = false;
                 }
             }
         }
     }
+
+    trigger OnInsertRecord(BelowxRec: Boolean): Boolean
+    var
+        JobPlanningLine: Record "Job Planning Line";
+        NextLineNo: Integer;
+    begin
+        // Auto-assign Line No. if not provided or is 0
+        if Rec."Line No." = 0 then begin
+            JobPlanningLine.SetRange("Job No.", Rec."Job No.");
+            JobPlanningLine.SetRange("Job Task No.", Rec."Job Task No.");
+            if JobPlanningLine.FindLast() then
+                NextLineNo := JobPlanningLine."Line No." + 10000
+            else
+                NextLineNo := 10000;
+            Rec."Line No." := NextLineNo;
+        end;
+
+        // Default Type to Resource if not specified (for time/resource planning)
+        if Rec.Type = Rec.Type::" " then
+            Rec.Type := Rec.Type::Resource;
+
+        // Line Type defaults to Budget (enum value 0) which is correct for planning
+
+        exit(true); // Continue with default insert
+    end;
 }
