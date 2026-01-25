@@ -1,6 +1,6 @@
 /// <summary>
 /// Custom API page exposing Job Planning Lines for budget data.
-/// Supports both reading and creating planning lines.
+/// Now supports creating planning lines in addition to reading.
 /// Enables Thyme to show budget vs actual comparisons and create resource allocations.
 ///
 /// Endpoint: /api/knowall/thyme/v1.0/companies({companyId})/jobPlanningLines
@@ -114,7 +114,9 @@ page 50107 "Thyme Job Planning Lines API"
         if Rec.Type = Rec.Type::" " then
             Rec.Type := Rec.Type::Resource;
 
-        // Line Type defaults to Budget (enum value 0) which is correct for planning
+        // Default Line Type to Budget if not specified
+        if Rec."Line Type" = Rec."Line Type"::" " then
+            Rec."Line Type" := Rec."Line Type"::Budget;
 
         exit(true); // Continue with default insert
     end;
