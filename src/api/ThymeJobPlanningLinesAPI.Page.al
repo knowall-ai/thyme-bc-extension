@@ -2,6 +2,7 @@
 /// Custom API page exposing Job Planning Lines for budget data.
 /// Supports reading, creating, and updating planning lines with upsert logic.
 /// Enables Thyme to show budget vs actual comparisons and create resource allocations.
+/// Use with Resource Units of Measure API to convert quantities to hours.
 ///
 /// Endpoint: /api/knowall/thyme/v1.0/companies({companyId})/jobPlanningLines
 ///
@@ -72,6 +73,10 @@ page 50107 "Thyme Job Planning Lines API"
                 {
                     Caption = 'Quantity';
                 }
+                field(unitOfMeasureCode; Rec."Unit of Measure Code")
+                {
+                    Caption = 'Unit of Measure Code';
+                }
                 field(unitCost; Rec."Unit Cost")
                 {
                     Caption = 'Unit Cost';
@@ -87,6 +92,10 @@ page 50107 "Thyme Job Planning Lines API"
                 field(totalPrice; Rec."Total Price")
                 {
                     Caption = 'Total Price';
+                }
+                field(workTypeCode; Rec."Work Type Code")
+                {
+                    Caption = 'Work Type Code';
                 }
                 field(lastModifiedDateTime; Rec.SystemModifiedAt)
                 {
