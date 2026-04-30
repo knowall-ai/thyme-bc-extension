@@ -52,6 +52,10 @@ page 50100 "Thyme Projects API"
                 {
                     Caption = 'Status';
                 }
+                field(blocked; Rec.Blocked)
+                {
+                    Caption = 'Blocked';
+                }
                 field(startingDate; Rec."Starting Date")
                 {
                     Caption = 'Starting Date';
