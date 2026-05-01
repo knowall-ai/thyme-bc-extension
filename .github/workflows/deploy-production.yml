@@ -37,7 +37,7 @@ jobs:
           Write-Host "Authenticated successfully"
 
           # Get sandbox artifact matching BC Online version
-          $artifactUrl = Get-BCArtifactUrl -type Sandbox -country us -select Latest
+          $artifactUrl = Get-BCArtifactUrl -type Sandbox -country gb -select Latest
           Write-Host "Using artifact: $artifactUrl"
 
           # Create compiler folder from artifacts
