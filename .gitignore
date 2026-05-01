@@ -18,3 +18,7 @@ output/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Generated documentation
+docs/TECHNICAL_SOLUTION_DOCUMENT.pdf
+docs/.asciidoctor/
