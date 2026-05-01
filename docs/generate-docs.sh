@@ -11,14 +11,14 @@ echo ""
 
 if ! command -v asciidoctor-pdf &> /dev/null; then
     echo "Error: asciidoctor-pdf is not installed."
-    echo "Install with: sudo gem install asciidoctor-pdf asciidoctor-diagram"
+    echo "Install with: sudo gem install asciidoctor-pdf"
     exit 1
 fi
 
 cd "$(dirname "$0")"
 
 echo "Generating Technical Solution Document..."
-asciidoctor-pdf -r asciidoctor-diagram \
+asciidoctor-pdf \
     -a pdf-theme=knowall \
     -a pdf-themesdir=../themes \
     TECHNICAL_SOLUTION_DOCUMENT.adoc \

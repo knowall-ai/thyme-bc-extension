@@ -129,7 +129,7 @@ code:
   border_color: cccccc
   border_width: 0.5
 
-literal:
+codespan:
   font_family: Courier
   font_size: 9
 
@@ -141,7 +141,7 @@ admonition:
   font_family: Helvetica
   font_size: 10
 
-blockquote:
+quote:
   font_family: Helvetica
   font_size: 10
 

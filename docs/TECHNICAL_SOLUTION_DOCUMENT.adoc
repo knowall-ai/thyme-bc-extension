@@ -1,4 +1,4 @@
-= Technical Solution Design
+= Technical Solution Document
 Thyme BC Extension - Custom API for Time Tracking
 :doctype: book
 :toc: left
@@ -7,7 +7,6 @@ Thyme BC Extension - Custom API for Time Tracking
 :sectanchors:
 :sectnums!:
 :chapter-signifier:
-:source-highlighter: highlight.js
 :icons: font
 :imagesdir: ../images
 :pdf-theme: knowall
@@ -23,7 +22,7 @@ include::CONFIDENTIALITY.adoc[]
 |===
 |Attribute |Value
 
-|Document Title |Technical Solution Design - Thyme BC Extension
+|Document Title |Technical Solution Document - Thyme BC Extension
 |Version |1.0
 |Status |Implementing
 |Author |KnowAll AI
