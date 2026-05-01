@@ -291,6 +291,7 @@ thyme-bc-extension/
 ## Documentation
 
 - [Installation Guide](docs/INSTALLATION.adoc) - Complete setup instructions
+- [Deployment Guide](docs/DEPLOYMENT.adoc) - Sandbox, production, and versioning
 - [Solution Design](docs/SOLUTION_DESIGN.adoc) - Architecture and API design
 - [Troubleshooting](docs/TROUBLESHOOTING.adoc) - Common issues and solutions
 - [Testing](docs/TESTING.adoc) - How to test the API
