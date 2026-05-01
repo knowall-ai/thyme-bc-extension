@@ -177,7 +177,7 @@ Anyone with `write` access to the repository can trigger a production deploy —
 Specifically:
 
 * `main` branch protection: *not configured* (anyone with write can push directly)
-* GitHub `Production` environment: declared in the workflow but `protection_rules: []`
+* GitHub `Production` environment: declared in the workflow, but the current GitHub Environment settings have no required reviewers or other protection rules configured
 * Production deploys can be initiated by `workflow_dispatch` *or* `release: published`, both of which require only repo write access
 
 This means today, "approval to deploy to production" is informal: whoever clicks the button is the approver.
@@ -283,7 +283,7 @@ If the issue is severe and a forward-fix is not feasible, BC's *Extension Manage
 Most common cause: the version in `app.json` was not bumped, so BC silently skipped the upgrade. Confirm by:
 
 . Querying the deployed version via the BC Admin Center → *Extension Management*, or
-. Checking the workflow log for `extensionDeploymentStatus` output (printed on failure but useful even on success)
+. If the publish step failed, checking the workflow log for `extensionDeploymentStatus` output (the sandbox workflow only prints this output inside the publish-step catch block, so it is only available on failure today)
 
 === Workflow fails with `Token Error` or `Companies API Error`
 
@@ -297,14 +297,20 @@ The deploy workflow prints a troubleshooting block with these steps when authent
 
 === Symbols version mismatch
 
-The workflow downloads the *latest* sandbox artifact via `Get-BCArtifactUrl -country gb -select Latest`. If this drifts ahead of the target tenant's BC version, compilation against newer symbols may use APIs that do not exist in the deployed environment.
+The deploy workflows currently download different artifact locales: `deploy-sandbox.yml` uses `Get-BCArtifactUrl -country gb -select Latest`, while `deploy-production.yml` uses `Get-BCArtifactUrl -country us -select Latest`. If either artifact stream drifts ahead of the target tenant's BC version, compilation against newer symbols may use APIs that do not exist in the deployed environment.
 
-If this becomes an issue, pin the artifact version to match the production tenant's BC version explicitly:
+If this becomes an issue, pin each workflow's artifact version explicitly to match its target tenant's BC version and locale:
 
 [source,powershell]
 ----
+# In deploy-sandbox.yml
 $artifactUrl = Get-BCArtifactUrl -type Sandbox -country gb -version 27.0.x.x
+
+# In deploy-production.yml
+$artifactUrl = Get-BCArtifactUrl -type Sandbox -country us -version 27.0.x.x
 ----
+
+NOTE: The country-code divergence between the two workflows is itself worth reviewing. If both tenants are in the same locale, aligning the workflows on a single country code removes a class of "works in sandbox, fails in production" symbol-mismatch bugs.
 
 == Related documentation
 
