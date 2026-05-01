@@ -200,7 +200,7 @@ The workflow at `.github/workflows/deploy-production.yml` already declares `envi
 . A release is published (`gh release create v1.9.3.0 --target main --generate-notes`) or someone runs `workflow_dispatch`
 . The workflow run starts but the `deploy` job pauses immediately, *before* any steps run
 . Reviewers receive an email from GitHub and a notification at `https://github.com/notifications`
-. The reviewer opens the run page, e.g. `https://github.com/knowall-ai/thyme-bc-extension/actions/runs/<run_id>`
+. The reviewer opens the run page, e.g. `https://github.com/knowall-ai/thyme-bc-extension/actions/runs/{run_id}`
 . A yellow banner appears at the top of the page: *Waiting for review* with a *Review deployments* button
 . Clicking *Review deployments* opens a modal containing:
   ** A checkbox for the `Production` environment
