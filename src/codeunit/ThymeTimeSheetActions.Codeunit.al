@@ -28,15 +28,19 @@ codeunit 50100 "Thyme Time Sheet Actions"
         Resource.Get(TimeSheetHeader."Resource No.");
         Resource.TestField("Use Time Sheet");
 
-        if TimeSheetHeader."Ending Date" <= TimeSheetHeader."Starting Date" then
-            TimeSheetHeader."Ending Date" := TimeSheetHeader."Starting Date" + 6;
+        // Always a one week period, as the batch job produces. Any endingDate supplied by
+        // the caller is overwritten rather than honoured, so the period cannot drift away
+        // from the contract and undermine the overlap check below.
+        TimeSheetHeader."Ending Date" := TimeSheetHeader."Starting Date" + 6;
 
         // Reject a period that overlaps an existing sheet. This catches both a duplicate
         // week and a starting date that is not aligned to the resource's week boundary.
+        // Lock first so concurrent POSTs for the same period cannot both pass the check.
+        ExistingTimeSheet.LockTable();
         ExistingTimeSheet.SetRange("Resource No.", TimeSheetHeader."Resource No.");
         ExistingTimeSheet.SetFilter("Ending Date", '>=%1', TimeSheetHeader."Starting Date");
         ExistingTimeSheet.SetFilter("Starting Date", '<=%1', TimeSheetHeader."Ending Date");
-        if not ExistingTimeSheet.IsEmpty() then
+        if ExistingTimeSheet.FindFirst() then
             Error(TimeSheetOverlapErr, TimeSheetHeader."Resource No.", TimeSheetHeader."Starting Date");
 
         if TimeSheetHeader."No." = '' then begin
