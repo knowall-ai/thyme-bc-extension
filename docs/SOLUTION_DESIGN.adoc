@@ -164,6 +164,20 @@ Maps to the BC `Time Sheet Header` table (table 950).
 | lastModifiedDateTime | SystemModifiedAt | For sync
 |===
 
+==== Creating a Time Sheet
+
+`POST /timeSheets` with `resourceNo` and `startingDate` creates a time sheet header
+equivalent to the one BC's *Create Time Sheets* batch job produces. The extension
+supplies the rest on insert:
+
+* `number` from the **Time Sheet Nos.** series on Resources Setup
+* `endingDate` as `startingDate + 6` days
+* `ownerUserId` and `approverUserId` from the resource card
+
+The insert is rejected if the resource does not have **Use Time Sheet** enabled, if no
+time sheet number series is configured, or if the period overlaps an existing time
+sheet for that resource.
+
 ==== Bound Actions
 
 The Time Sheets API supports the following bound actions for approval workflow:
