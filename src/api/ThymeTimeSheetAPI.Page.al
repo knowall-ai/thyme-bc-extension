@@ -86,8 +86,7 @@ page 50102 "Thyme Time Sheet API"
         ThymeActions: Codeunit "Thyme Time Sheet Actions";
     begin
         ThymeActions.InitTimeSheetFromApi(Rec);
-        Rec.Insert(true);
-        exit(false);
+        exit(true);
     end;
 
     /// <summary>
