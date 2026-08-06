@@ -75,6 +75,15 @@
 
 | Extension upload fails with generic error, no details in API
 | *Placeholder app ID*: If your `app.json` has a placeholder ID like `"id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"`, BC will reject the upload. Generate a proper unique GUID using `uuidgen` (Linux/Mac) or `[guid]::NewGuid()` (PowerShell) and replace the placeholder.
+
+| `POST /timeSheets` returns a record with a blank `number` and `endingDate` of `0001-01-01`
+| Extension version is older than 1.10.0.0, which had no insert logic on the Time Sheets API - the record was written straight to the `Time Sheet Header` table without the number series or week end date, leaving an unusable row. Upgrade the extension, then delete the blank-numbered rows in BC (Time Sheets list) and recreate them. Thyme shows "No Timesheet Available" for the affected weeks.
+
+| `POST /timeSheets` fails with "Time Sheet Nos. must have a value in Resources Setup"
+| The company has no time sheet number series. In BC go to *Resources Setup* → set *Time Sheet Nos.* to a number series (create one under *No. Series* if needed), then retry.
+
+| `POST /timeSheets` fails with "A time sheet already exists for resource ... covering ..."
+| A time sheet already covers that period. Either the week was already created, or the `startingDate` is not aligned to the resource's week boundary and overlaps the neighbouring sheet. Check the existing sheets with `GET /timeSheets?$filter=resourceNo eq 'R0010'` and use a starting date that matches their weekday.
 |===
 
 == Getting Help

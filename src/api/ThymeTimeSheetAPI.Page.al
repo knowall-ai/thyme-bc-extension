@@ -78,6 +78,19 @@ page 50102 "Thyme Time Sheet API"
     }
 
     /// <summary>
+    /// Applies the same setup as BC's "Create Time Sheets" batch job before inserting,
+    /// so POST /timeSheets produces a usable header instead of one with a blank No.
+    /// </summary>
+    trigger OnInsertRecord(BelowxRec: Boolean): Boolean
+    var
+        ThymeActions: Codeunit "Thyme Time Sheet Actions";
+    begin
+        ThymeActions.InitTimeSheetFromApi(Rec);
+        Rec.Insert(true);
+        exit(false);
+    end;
+
+    /// <summary>
     /// Submits the time sheet for approval.
     /// POST /timeSheets({id})/Microsoft.NAV.submit
     /// </summary>
