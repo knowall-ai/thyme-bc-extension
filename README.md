@@ -2,6 +2,8 @@
   <img src="images/hero.svg" alt="Thyme BC Extension" width="100%">
 </p>
 
+[![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/knowall-ai/thyme-bc-extension?label=CodeRabbit+Reviews&labelColor=171717&color=FF570A)](https://coderabbit.ai)
+
 <p align="center">
   <a href="https://github.com/knowall-ai/thyme">Thyme App</a> •
   <a href="https://thyme.knowall.ai">Website</a> •
