@@ -6,6 +6,7 @@ codeunit 50100 "Thyme Time Sheet Actions"
 {
     var
         TimeSheetOverlapErr: Label 'A time sheet already exists for resource %1 covering %2. Overlapping time sheets are not allowed.', Comment = '%1 = resource number, %2 = starting date';
+        NotAllowedToCreateErr: Label 'You are not allowed to create a time sheet for resource %1. Only the resource''s time sheet owner or approver, or a time sheet administrator, can create one.', Comment = '%1 = resource number';
 
     /// <summary>
     /// Prepares a new Time Sheet Header created through the API so that it matches
@@ -27,6 +28,7 @@ codeunit 50100 "Thyme Time Sheet Actions"
 
         Resource.Get(TimeSheetHeader."Resource No.");
         Resource.TestField("Use Time Sheet");
+        CheckMayCreateTimeSheet(Resource);
 
         // Always a one week period, as the batch job produces. Any endingDate supplied by
         // the caller is overwritten rather than honoured, so the period cannot drift away
@@ -56,6 +58,25 @@ codeunit 50100 "Thyme Time Sheet Actions"
 
         TimeSheetHeader.TestField("Owner User ID");
         TimeSheetHeader.TestField("Approver User ID");
+    end;
+
+    /// <summary>
+    /// Mirrors who BC lets create time sheets: the resource's own time sheet owner, its
+    /// approver, or a time sheet administrator (User Setup). Without this, any user with
+    /// API access could create time sheets for any resource.
+    /// </summary>
+    local procedure CheckMayCreateTimeSheet(Resource: Record Resource)
+    var
+        UserSetup: Record "User Setup";
+    begin
+        if (Resource."Time Sheet Owner User ID" <> '') and (UpperCase(Resource."Time Sheet Owner User ID") = UpperCase(UserId())) then
+            exit;
+        if (Resource."Time Sheet Approver User ID" <> '') and (UpperCase(Resource."Time Sheet Approver User ID") = UpperCase(UserId())) then
+            exit;
+        if UserSetup.Get(UserId()) then
+            if UserSetup."Time Sheet Admin." then
+                exit;
+        Error(NotAllowedToCreateErr, Resource."No.");
     end;
 
     /// <summary>
