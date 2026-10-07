@@ -88,6 +88,15 @@
 | `timesheetReviews`, `timesheetReviewLines` or `timeSuggestions` returns an error saying you do not have permission to read or insert into a `Thyme` table
 | The extension's own tables are not covered by the standard D365 permission sets. In BC, assign `THYME AI AGENT` to the AI agent's Microsoft Entra application (search *Microsoft Entra applications* → open the app → *User Permission Sets*), and `THYME USER` to Thyme users (search *Users* → open the user → *User Permission Sets*).
 
+| A user doesn't see a timesheet review or time suggestion that exists, or `GET /timesheetReviews({id})` or `/timeSuggestions({id})` returns 404
+| Row-level security (1.15.0.1 and later) hides reviews from everyone except the time sheet's owner and approver, and suggestions from everyone except the resource's time sheet owner. Check the *Owner User ID* and *Approver User ID* on the time sheet (or *Time Sheet Owner User ID* on the resource card for suggestions). A user who should see every review and suggestion needs the `THYME ADMIN` permission set or *Time Sheet Admin.* ticked in *User Setup*. `SUPER` alone isn't enough. The AI agent's Microsoft Entra application needs `THYME AI AGENT`, or it only sees records for its own user.
+
+| `POST` or `PATCH` on `timesheetReviews` or `timesheetReviewLines` fails with "You are not allowed to change timesheet reviews"
+| Only the AI agent (`THYME AI AGENT`) or a Thyme administrator can write reviews. Assign `THYME AI AGENT` to the agent's Microsoft Entra application in BC (search *Microsoft Entra applications* → open the app → *User Permission Sets*).
+
+| `POST` or `PATCH` on `timeSuggestions` fails with "You are not allowed to change time suggestions for resource ..."
+| A user can only create or change suggestions for a resource whose *Time Sheet Owner User ID* is them, and can't move a suggestion to another resource. The AI agent and Thyme administrators aren't limited.
+
 | `POST /timeSuggestions` fails with "A suggestion for resource ... already exists"
 | A suggestion with the same `resourceNo`, `source`, `sourceRef` and `date` already exists. Find it with `GET /timeSuggestions?$filter=resourceNo eq 'R0010' and sourceRef eq '...'` and `PATCH` it instead.
 

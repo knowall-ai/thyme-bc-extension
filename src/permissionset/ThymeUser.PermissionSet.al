@@ -31,5 +31,6 @@ permissionset 50101 "THYME USER"
         page "Thyme TS Review Lines API" = X,
         page "Thyme Time Suggestions API" = X,
         page "Thyme Setup API" = X,
-        codeunit "Thyme Time Sheet Actions" = X;
+        codeunit "Thyme Time Sheet Actions" = X,
+        codeunit "Thyme Record Security" = X;
 }

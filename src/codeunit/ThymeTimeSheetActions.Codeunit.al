@@ -67,15 +67,14 @@ codeunit 50100 "Thyme Time Sheet Actions"
     /// </summary>
     local procedure CheckMayCreateTimeSheet(Resource: Record Resource)
     var
-        UserSetup: Record "User Setup";
+        RecordSecurity: Codeunit "Thyme Record Security";
     begin
         if (Resource."Time Sheet Owner User ID" <> '') and (UpperCase(Resource."Time Sheet Owner User ID") = UpperCase(UserId())) then
             exit;
         if (Resource."Time Sheet Approver User ID" <> '') and (UpperCase(Resource."Time Sheet Approver User ID") = UpperCase(UserId())) then
             exit;
-        if UserSetup.Get(UserId()) then
-            if UserSetup."Time Sheet Admin." then
-                exit;
+        if RecordSecurity.IsTimeSheetAdmin() then
+            exit;
         Error(NotAllowedToCreateErr, Resource."No.");
     end;
 

@@ -48,6 +48,31 @@ table 50100 "Thyme Timesheet Review"
         {
             Caption = 'Reviewed At';
         }
+        // Used by "Thyme Record Security" to show a review only to the reviewed time sheet's
+        // owner and approver. AL filters can't OR two fields, so the check is inverted:
+        // with "User ID Filter" set to <>(current user), "Hidden From User Filter" is true
+        // when the time sheet's owner AND approver are both someone else.
+        field(8; "User ID Filter"; Code[50])
+        {
+            Caption = 'User ID Filter';
+            FieldClass = FlowFilter;
+        }
+        field(9; "Hidden From User Filter"; Boolean)
+        {
+            Caption = 'Hidden From User Filter';
+            FieldClass = FlowField;
+            CalcFormula = exist("Time Sheet Header" where("No." = field("Time Sheet No."),
+                                                          "Owner User ID" = field("User ID Filter"),
+                                                          "Approver User ID" = field("User ID Filter")));
+            Editable = false;
+        }
+        field(10; "Time Sheet Exists"; Boolean)
+        {
+            Caption = 'Time Sheet Exists';
+            FieldClass = FlowField;
+            CalcFormula = exist("Time Sheet Header" where("No." = field("Time Sheet No.")));
+            Editable = false;
+        }
     }
 
     keys

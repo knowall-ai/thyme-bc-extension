@@ -116,4 +116,37 @@ page 50111 "Thyme Time Suggestions API"
             }
         }
     }
+
+    trigger OnOpenPage()
+    var
+        RecordSecurity: Codeunit "Thyme Record Security";
+    begin
+        RecordSecurity.ApplySuggestionFilter(Rec);
+    end;
+
+    trigger OnInsertRecord(BelowxRec: Boolean): Boolean
+    var
+        RecordSecurity: Codeunit "Thyme Record Security";
+    begin
+        RecordSecurity.CheckCanWriteSuggestion(Rec);
+        exit(true);
+    end;
+
+    // Checks the new values: the read filter already limits which suggestions can be
+    // reached, and this stops one being moved to a resource the caller doesn't own.
+    trigger OnModifyRecord(): Boolean
+    var
+        RecordSecurity: Codeunit "Thyme Record Security";
+    begin
+        RecordSecurity.CheckCanWriteSuggestion(Rec);
+        exit(true);
+    end;
+
+    trigger OnDeleteRecord(): Boolean
+    var
+        RecordSecurity: Codeunit "Thyme Record Security";
+    begin
+        RecordSecurity.CheckCanWriteSuggestion(Rec);
+        exit(true);
+    end;
 }

@@ -28,6 +28,7 @@ This is a Business Central (BC) AL extension that provides custom API endpoints 
 - `src/codeunit/ThymeTimeSheetActions.Codeunit.al` - Time Sheet approval workflow actions (codeunit 50100)
 - `src/codeunit/ThymeInstall.Codeunit.al` / `ThymeUpgrade.Codeunit.al` - Create the Thyme Setup record on install / upgrade (codeunits 50101, 50102)
 - `src/codeunit/ThymeCompanyInitialize.Codeunit.al` - Creates the Thyme Setup record in new companies (codeunit 50103)
+- `src/codeunit/ThymeRecordSecurity.Codeunit.al` - Row-level security for reviews, review lines and suggestions, plus the shared time sheet admin check (codeunit 50104). The API pages call it in OnOpenPage (filters in FilterGroup 2) and in their insert/modify/delete triggers. Note: `FilterGroup(-1)` (cross-column OR) is NOT applied on API page reads, so OR conditions must be expressed with AND-only filters (see the `Hidden From User Filter` FlowFields).
 
 ## API Configuration
 

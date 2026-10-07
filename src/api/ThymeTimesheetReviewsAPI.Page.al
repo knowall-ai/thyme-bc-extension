@@ -70,4 +70,35 @@ page 50109 "Thyme Timesheet Reviews API"
             }
         }
     }
+
+    trigger OnOpenPage()
+    var
+        RecordSecurity: Codeunit "Thyme Record Security";
+    begin
+        RecordSecurity.ApplyReviewFilter(Rec);
+    end;
+
+    trigger OnInsertRecord(BelowxRec: Boolean): Boolean
+    var
+        RecordSecurity: Codeunit "Thyme Record Security";
+    begin
+        RecordSecurity.CheckCanWriteReviews();
+        exit(true);
+    end;
+
+    trigger OnModifyRecord(): Boolean
+    var
+        RecordSecurity: Codeunit "Thyme Record Security";
+    begin
+        RecordSecurity.CheckCanWriteReviews();
+        exit(true);
+    end;
+
+    trigger OnDeleteRecord(): Boolean
+    var
+        RecordSecurity: Codeunit "Thyme Record Security";
+    begin
+        RecordSecurity.CheckCanWriteReviews();
+        exit(true);
+    end;
 }

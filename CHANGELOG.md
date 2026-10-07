@@ -2,6 +2,23 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
+## 1.15.0.1
+
+### Security
+
+- Row-level security on `timesheetReviews`, `timesheetReviewLines` and `timeSuggestions`. A review
+  and its lines are visible only to the time sheet's owner and approver, Thyme administrators
+  (*Time Sheet Admin.* in User Setup, or the `THYME ADMIN` permission set) and the AI agent
+  (`THYME AI AGENT`). A suggestion is visible to, and changeable by, only its resource's time
+  sheet owner, administrators and the AI agent. Records outside the caller's scope are left out
+  of lists and `$filter` results, and return 404 by `id`.
+- Only the AI agent or a Thyme administrator can create, change or delete reviews and review
+  lines. A user can't create a suggestion for, or move one to, a resource they don't own.
+- New `Thyme Record Security` codeunit (50104) holds these rules. The time sheet admin check
+  used when creating time sheets through the API now comes from it too, so both stay in step.
+- `SUPER` on its own no longer sees other users' reviews and suggestions through the API.
+  Assign `THYME ADMIN` or *Time Sheet Admin.* to anyone who should.
+
 ## 1.14.0.1
 
 ### Added
