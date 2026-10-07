@@ -2,7 +2,7 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
-## 1.14.0.0
+## 1.14.0.1
 
 ### Added
 
@@ -13,6 +13,13 @@ Notable changes to the Thyme BC Extension. Versions match `app.json`.
 - Local-currency amounts on `jobPlanningLines`: `unitCostLCY`, `totalCostLCY`, `unitPriceLCY` and
   `totalPriceLCY` (read-only), plus `currencyCode`. The existing cost and price fields stay in the
   project currency.
+
+### Fixed
+
+- Planning lines created through `jobPlanningLines` on a project in another currency were priced
+  in local currency but labelled with the project currency (BC only copies the project's currency
+  onto a line when it's inserted, after the API has priced it). The currency is now set as soon as
+  `jobNo` is applied, so the line is priced in the project currency.
 
 This lets Thyme show a project priced in another currency (for example EUR in a GBP company) in
 that currency, instead of labelling its prices with the company currency.

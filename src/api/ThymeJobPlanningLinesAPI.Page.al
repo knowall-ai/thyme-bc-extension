@@ -40,6 +40,16 @@ page 50107 "Thyme Job Planning Lines API"
                 field(jobNo; Rec."Job No.")
                 {
                     Caption = 'Job No.';
+
+                    trigger OnValidate()
+                    begin
+                        // BC only copies the project's currency onto a planning line in OnInsert,
+                        // after the API has already priced the line, so a line on a project in
+                        // another currency would hold local-currency amounts labelled with the
+                        // project currency. jobNo is the first field applied, so setting the
+                        // currency here prices the rest of the line in the project currency.
+                        SetCurrencyFromJob();
+                    end;
                 }
                 field(jobTaskNo; Rec."Job Task No.")
                 {
@@ -133,6 +143,18 @@ page 50107 "Thyme Job Planning Lines API"
             }
         }
     }
+
+    local procedure SetCurrencyFromJob()
+    var
+        Job: Record Job;
+    begin
+        if not Job.Get(Rec."Job No.") then
+            exit;
+        if Rec."Currency Code" = Job."Currency Code" then
+            exit;
+        Rec."Currency Code" := Job."Currency Code";
+        Rec.UpdateCurrencyFactor();
+    end;
 
     trigger OnInsertRecord(BelowxRec: Boolean): Boolean
     var

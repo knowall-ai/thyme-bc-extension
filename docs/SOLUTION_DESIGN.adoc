@@ -344,7 +344,7 @@ fields with `(LCY)`).
 
 The original API fields were mapped before projects in other currencies were considered, so
 they differ: `jobPlanningLines` exposed the project-currency fields and `timeEntries` the LCY
-ones. They keep that meaning for compatibility, and version 1.14.0.0 adds the other
+ones. They keep that meaning for compatibility, and version 1.14.0.1 adds the other
 currency to each:
 
 [cols="1,1,1", options="header"]
