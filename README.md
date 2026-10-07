@@ -23,7 +23,7 @@ This extension exposes additional fields needed by Thyme:
 - Project status and dates
 - Job tasks
 - Time sheets with approval status (Open, Submitted, Approved, Rejected)
-- Resources with capacity information
+- Resources with capacity information and per-person billable targets
 - Posted time entries from Job Ledger
 - AI timesheet reviews and AI time-entry suggestions (stored by this extension)
 
@@ -44,6 +44,7 @@ Once deployed, the APIs are available at:
 .../api/knowall/thyme/v1.0/companies({companyId})/timesheetReviews
 .../api/knowall/thyme/v1.0/companies({companyId})/timesheetReviewLines
 .../api/knowall/thyme/v1.0/companies({companyId})/timeSuggestions
+.../api/knowall/thyme/v1.0/companies({companyId})/thymeSetup
 ```
 
 For user information, use BC's standard Automation API:
@@ -171,8 +172,19 @@ POST /timeSheetDetails
 | `useTimeSheet` | Time sheet enabled |
 | `timeSheetOwnerUserId` | Time sheet owner user ID |
 | `timeSheetApproverUserId` | Time sheet approver user ID |
+| `billableTargetPercent` | Person's billable target, 0-100 (only meaningful when `billableTargetSet` is `true`) |
+| `billableTargetSet` | Whether the person has their own billable target; when `false`, use `defaultBillableTargetPercent` from `thymeSetup` |
 | `lastDateModified` | Last date modified |
 | `lastModifiedDateTime` | Last modified timestamp |
+
+**Billable targets:** `billableTargetSet` tells "not set" apart from a real 0% target.
+Setting `billableTargetPercent` (including `0`) also sets `billableTargetSet` to `true`;
+setting `billableTargetSet` to `false` clears the person's target so the company default applies.
+Values outside 0-100 are rejected.
+```
+PATCH /resources({id})          { "billableTargetPercent": 60 }      // own target of 60%
+PATCH /resources({id})          { "billableTargetSet": false }       // back to the company default
+```
 
 ### Time Entries API
 
@@ -271,6 +283,26 @@ GET /timeSuggestions?$filter=resourceNo eq 'R0010' and date ge 2026-01-05 and da
 A second suggestion with the same `resourceNo`, `source`, `sourceRef` and `date` is rejected,
 so re-runs should `PATCH` the existing one (suggestions with a blank `sourceRef` are not checked).
 
+### Thyme Setup API
+
+Company-wide Thyme settings: a single record that can be read and updated, but not created or deleted.
+
+| Field | Description |
+|-------|-------------|
+| `id` | System GUID (read-only) |
+| `defaultBillableTargetPercent` | Billable target, 0-100, for people without their own target (defaults to 75) |
+| `lastModifiedDateTime` | Last modified timestamp (read-only) |
+
+**Usage:**
+```
+GET   /thymeSetup                  // returns one record
+PATCH /thymeSetup({id})            { "defaultBillableTargetPercent": 70 }
+```
+The record is created on install, on upgrade and when a company is initialised. If it is ever
+missing, `GET` returns an empty list for read-only callers until a user with write permission
+(`THYME ADMIN`) opens the Thyme Setup page or calls `GET /thymeSetup`, which creates it.
+Updating it needs the `THYME ADMIN` permission set.
+
 ### Users (Standard BC API)
 
 For user information, use BC's built-in [Automation API](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/administration/api/dynamics_user_get):
@@ -334,12 +366,13 @@ Create two environments in Settings → Environments:
 5. In BC Admin Center → Microsoft Entra Apps → Authorize the app
 6. **Critical**: In Business Central → search "Microsoft Entra applications" → add the app with permission sets `D365 AUTOMATION` and `EXTEN. MGT. - ADMIN`
 
-**Permission sets for the stored data:** the reviews and suggestions live in this extension's own tables, which the standard D365 permission sets don't cover. Assign:
+**Permission sets for the stored data:** the reviews, suggestions and Thyme Setup live in this extension's own tables, which the standard D365 permission sets don't cover. Assign:
 
 | Permission set | Assign to | Grants |
 |----------------|-----------|--------|
 | `THYME AI AGENT` | The AI agent's Microsoft Entra application | Full access to reviews, review lines and suggestions (includes `THYME USER`) |
-| `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; run the Thyme API pages |
+| `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; read the default billable target; run the Thyme API pages |
+| `THYME ADMIN` | Thyme administrators | Everything in `THYME USER`, plus changing the default billable target (Thyme Setup) |
 
 See [docs/INSTALLATION.adoc](docs/INSTALLATION.adoc) for detailed setup instructions.
 
@@ -372,12 +405,20 @@ thyme-bc-extension/
 │   │   ├── ThymeResourceUnitsOfMeasureAPI.Page.al # Resource Units of Measure (page 50108)
 │   │   ├── ThymeTimesheetReviewsAPI.Page.al    # Timesheet Reviews (page 50109)
 │   │   ├── ThymeTimesheetReviewLinesAPI.Page.al # Timesheet Review Lines (page 50110)
-│   │   └── ThymeTimeSuggestionsAPI.Page.al     # Time Suggestions (page 50111)
-│   ├── table/                                  # Review, review line, suggestion (tables 50100-50102)
+│   │   ├── ThymeTimeSuggestionsAPI.Page.al     # Time Suggestions (page 50111)
+│   │   └── ThymeSetupAPI.Page.al               # Thyme Setup (page 50112)
+│   ├── page/
+│   │   └── ThymeSetup.Page.al                  # Thyme Setup card (page 50113)
+│   ├── table/                                  # Review, review line, suggestion, Thyme Setup (tables 50100-50103)
+│   ├── tableextension/                         # Resource billable target fields (50100)
+│   ├── pageextension/                          # Thyme group on the Resource Card (50100)
 │   ├── enum/                                   # Verdict, severity, suggestion enums (enums 50100-50104)
-│   ├── permissionset/                          # THYME AI AGENT, THYME USER (50100-50101)
+│   ├── permissionset/                          # THYME AI AGENT, THYME USER, THYME ADMIN (50100-50102)
 │   └── codeunit/
-│       └── ThymeTimeSheetActions.Codeunit.al   # Approval workflow actions (codeunit 50100)
+│       ├── ThymeTimeSheetActions.Codeunit.al   # Approval workflow actions (codeunit 50100)
+│       ├── ThymeInstall.Codeunit.al            # Creates Thyme Setup on install (codeunit 50101)
+│       ├── ThymeUpgrade.Codeunit.al            # Creates Thyme Setup on upgrade (codeunit 50102)
+│       └── ThymeCompanyInitialize.Codeunit.al  # Creates Thyme Setup in new companies (codeunit 50103)
 └── .vscode/
     ├── launch.json                             # Debug configuration
     └── settings.json                           # Editor settings
