@@ -423,9 +423,10 @@ primary key. Insert and delete are not allowed; read with `GET /thymeSetup` and 
 |===
 
 The install (codeunit 50101) and upgrade (codeunit 50102) codeunits create the record in
-every company. For companies created later, the Thyme Setup page (50113) and the API page
-create it when first opened by a user with write permission; a read-only user sees an empty
-result instead of an error until then.
+every existing company, and codeunit 50103 subscribes to `OnCompanyInitialize` to create it
+in companies added later. As a fallback, the Thyme Setup page (50113) and the API page create
+it when opened by a user with write permission; a read-only user sees an empty result instead
+of an error.
 
 === Users (Standard BC API)
 
@@ -476,8 +477,9 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Time Sheet Actions | Codeunit 50100
 | Thyme Install | Codeunit 50101
 | Thyme Upgrade | Codeunit 50102
+| Thyme Company Initialize | Codeunit 50103
 | (Reserved for future pages) | Page 50114-50199
-| (Reserved for future codeunits) | Codeunit 50103-50199
+| (Reserved for future codeunits) | Codeunit 50104-50199
 |===
 
 == Security

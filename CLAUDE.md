@@ -27,6 +27,7 @@ This is a Business Central (BC) AL extension that provides custom API endpoints 
 - `src/permissionset/` - `THYME AI AGENT` (50100), `THYME USER` (50101) and `THYME ADMIN` (50102); add new tables/pages to these
 - `src/codeunit/ThymeTimeSheetActions.Codeunit.al` - Time Sheet approval workflow actions (codeunit 50100)
 - `src/codeunit/ThymeInstall.Codeunit.al` / `ThymeUpgrade.Codeunit.al` - Create the Thyme Setup record on install / upgrade (codeunits 50101, 50102)
+- `src/codeunit/ThymeCompanyInitialize.Codeunit.al` - Creates the Thyme Setup record in new companies (codeunit 50103)
 
 ## API Configuration
 

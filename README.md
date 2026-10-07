@@ -298,6 +298,9 @@ Company-wide Thyme settings: a single record that can be read and updated, but n
 GET   /thymeSetup                  // returns one record
 PATCH /thymeSetup({id})            { "defaultBillableTargetPercent": 70 }
 ```
+The record is created on install, on upgrade and when a company is initialised. If it is ever
+missing, `GET` returns an empty list for read-only callers until a user with write permission
+(`THYME ADMIN`) opens the Thyme Setup page or calls `GET /thymeSetup`, which creates it.
 Updating it needs the `THYME ADMIN` permission set.
 
 ### Users (Standard BC API)
@@ -414,7 +417,8 @@ thyme-bc-extension/
 │   └── codeunit/
 │       ├── ThymeTimeSheetActions.Codeunit.al   # Approval workflow actions (codeunit 50100)
 │       ├── ThymeInstall.Codeunit.al            # Creates Thyme Setup on install (codeunit 50101)
-│       └── ThymeUpgrade.Codeunit.al            # Creates Thyme Setup on upgrade (codeunit 50102)
+│       ├── ThymeUpgrade.Codeunit.al            # Creates Thyme Setup on upgrade (codeunit 50102)
+│       └── ThymeCompanyInitialize.Codeunit.al  # Creates Thyme Setup in new companies (codeunit 50103)
 └── .vscode/
     ├── launch.json                             # Debug configuration
     └── settings.json                           # Editor settings
