@@ -2,6 +2,26 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
+## 1.20.0.0
+
+### Added
+
+- `projectSourceLinks` endpoint (page 50116, table 50106 `Thyme Project Source Link`, enum 50106):
+  a project's linked sources, i.e. the GitHub repos, Azure DevOps projects, meeting keywords and
+  attendee domains whose time belongs to it, each optionally with a posting task and *Use Monthly
+  Block*. The AI agent reads them to map activity to projects, replacing the `projects[]` rules
+  in its config file, per company. Values are normalised on save (a GitHub URL becomes
+  `owner/repo`, `owner/*` for a whole owner; a DevOps URL becomes the project name; an e-mail
+  address becomes its domain).
+- Every Thyme user can read them. Thyme administrators and the project's manager (*Project
+  Manager*, or the time sheet owner of the *Person Responsible*) can change them. The AI agent can
+  add links it learned from approved time (`learned` = true) and change or remove only those.
+- *Thyme Linked Sources* part on the Project Card (page 50117, page extension 50101), so the
+  links can be edited in BC too.
+- `canEditSourceLinks` on `projects` (read-only, per caller), so Thyme shows the edit controls only
+  to people who may use them.
+- Deleting a project deletes its linked sources (codeunit 50105).
+
 ## 1.19.0.0
 
 ### Added

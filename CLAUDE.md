@@ -21,6 +21,7 @@ This is a Business Central (BC) AL extension that provides custom API endpoints 
 - `src/api/ThymeTimeSuggestionsAPI.Page.al` - Time Suggestions API (page 50111, table 50102)
 - `src/api/ThymeSuggestionRequestsAPI.Page.al` - Suggestion Requests API: ask the agent for suggestions now (page 50114, table 50104, status enum 50105)
 - `src/api/ThymeAgentHeartbeatsAPI.Page.al` - Agent Heartbeats API: when the AI agent was last seen (page 50115, table 50105)
+- `src/api/ThymeProjectSourceLinksAPI.Page.al` - Project Source Links API: repos, DevOps projects, meeting keywords and attendee domains per project, read by the AI agent to map time (page 50116, table 50106, type enum 50106); `src/page/ThymeProjectSourceLinks.Page.al` is the ListPart on the Project Card (page 50117, page extension 50101 `src/pageextension/ThymeJobCard.PageExt.al`); codeunit 50105 deletes a project's links with it
 - `src/api/ThymeSetupAPI.Page.al` - Thyme Setup API, single record (page 50112, table 50103 `Thyme Setup`)
 - `src/page/ThymeSetup.Page.al` - Thyme Setup card (page 50113)
 - `src/tableextension/ThymeResource.TableExt.al` - Resource billable target fields 50100-50101 and weekly capacity / flexible working days fields 50102-50104 (table extension 50100)
@@ -56,6 +57,7 @@ Endpoints available at:
 /api/knowall/thyme/v1.0/companies({id})/timeSuggestions
 /api/knowall/thyme/v1.0/companies({id})/suggestionRequests
 /api/knowall/thyme/v1.0/companies({id})/agentHeartbeats
+/api/knowall/thyme/v1.0/companies({id})/projectSourceLinks
 /api/knowall/thyme/v1.0/companies({id})/thymeSetup
 ```
 
