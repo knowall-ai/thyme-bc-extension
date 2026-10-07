@@ -84,6 +84,12 @@
 
 | `POST /timeSheets` fails with "A time sheet already exists for resource ... covering ..."
 | A time sheet already covers that period. Either the week was already created, or the `startingDate` is not aligned to the resource's week boundary and overlaps the neighbouring sheet. Check the existing sheets with `GET /timeSheets?$filter=resourceNo eq 'R0010'` and use a starting date that matches their weekday.
+
+| `timesheetReviews`, `timesheetReviewLines` or `timeSuggestions` returns an error saying you do not have permission to read or insert into a `Thyme` table
+| The extension's own tables are not covered by the standard D365 permission sets. In BC, assign `THYME AI AGENT` to the AI agent's Microsoft Entra application (search *Microsoft Entra applications* → open the app → *User Permission Sets*), and `THYME USER` to Thyme users (search *Users* → open the user → *User Permission Sets*).
+
+| `POST /timeSuggestions` fails with "A suggestion for resource ... already exists"
+| A suggestion with the same `resourceNo`, `source`, `sourceRef` and `date` already exists. Find it with `GET /timeSuggestions?$filter=resourceNo eq 'R0010' and sourceRef eq '...'` and `PATCH` it instead.
 |===
 
 == Getting Help

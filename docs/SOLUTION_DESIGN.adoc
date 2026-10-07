@@ -104,6 +104,9 @@ https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeSheetLines
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/resources
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeEntries
+https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timesheetReviews
+https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timesheetReviewLines
+https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeSuggestions
 ----
 
 === Projects API (Page 50100)
@@ -305,6 +308,84 @@ Maps to the BC `Job Ledger Entry` table (table 169). Filtered to Resource-type e
 | lastModifiedDateTime | SystemModifiedAt | For sync
 |===
 
+=== Timesheet Reviews API (Page 50109)
+
+Maps to the extension's own `Thyme Timesheet Review` table (table 50100). Written by an AI
+agent (insert/modify/delete) and read by Thyme.
+
+[cols="1,1,1", options="header"]
+|===
+| API Field | Table Field | Notes
+
+| id | SystemId | Primary key (GUID), read-only
+| entryNo | Entry No. | AutoIncrement primary key, read-only
+| timeSheetNo | Time Sheet No. | Required; relates to Time Sheet Header
+| versionStamp | Version Stamp | Required; latest lastModifiedDateTime across the time sheet's lines and details when reviewed
+| verdict | Verdict | Enum `Thyme Review Verdict`: Approve, Check, Query (defaults to Check)
+| summary | Summary | Text[2048]
+| reviewer | Reviewer | Text[100]
+| reviewedAt | Reviewed At | Defaults to the current date/time on insert
+| lastModifiedDateTime | SystemModifiedAt | For sync
+|===
+
+A secondary key on (Time Sheet No., Reviewed At) serves the "latest review" query
+`$filter=timeSheetNo eq 'TS00001'&$orderby=reviewedAt desc&$top=1`. Deleting a review
+deletes its review lines.
+
+=== Timesheet Review Lines API (Page 50110)
+
+Maps to the `Thyme Timesheet Review Line` table (table 50101), keyed on (Review Entry No., Line No.).
+
+[cols="1,1,1", options="header"]
+|===
+| API Field | Table Field | Notes
+
+| id | SystemId | Primary key (GUID), read-only
+| reviewEntryNo | Review Entry No. | Required; the review must exist
+| lineNo | Line No. | Assigned in steps of 10000 when 0
+| timeSheetNo | Time Sheet No. | Filled from the review when blank; must match the review
+| timeSheetLineNo | Time Sheet Line No. | 0 = whole time sheet
+| severity | Severity | Enum `Thyme Review Severity`: Info, Warning, Issue
+| note | Note | Text[500]
+| lastModifiedDateTime | SystemModifiedAt | For sync
+|===
+
+=== Time Suggestions API (Page 50111)
+
+Maps to the `Thyme Time Suggestion` table (table 50102). Written by an AI agent; read,
+accepted and dismissed by Thyme.
+
+[cols="1,1,1", options="header"]
+|===
+| API Field | Table Field | Notes
+
+| id | SystemId | Primary key (GUID), read-only
+| entryNo | Entry No. | AutoIncrement primary key, read-only
+| resourceNo | Resource No. | Required; relates to Resource
+| date | Date | Required
+| quantity | Quantity | Hours
+| jobNo | Job No. | Relates to Job
+| jobTaskNo | Job Task No. | Relates to Job Task within Job No.
+| description | Description | Text[250]
+| source | Source | Enum `Thyme Suggestion Source`: Calendar, GitHub, DevOps, Other
+| sourceRef | Source Ref | Text[250], e.g. meeting or pull request ID
+| sourceUrl | Source Url | Text[2048]
+| evidence | Evidence | Text[2048], short reasoning
+| confidence | Confidence | Enum `Thyme Suggestion Confidence`: High, Medium, Low
+| status | Status | Enum `Thyme Suggestion Status`: Pending (default), Accepted, Dismissed
+| timeSheetNo | Time Sheet No. | Set when accepted
+| timeSheetLineNo | Time Sheet Line No. | Set when accepted
+| createdBy | Created By | Text[100]
+| createdAt | Created At | Defaults to the current date/time on insert
+| actionedAt | Actioned At | Stamped when status leaves Pending, if blank
+| lastModifiedDateTime | SystemModifiedAt | For sync
+|===
+
+Keys on (Resource No., Date) for the week view and (Resource No., Source, Source Ref, Date)
+for upserts. Inserting a suggestion that matches an existing one on those four fields is
+rejected so the agent can re-run without duplicates; it should `PATCH` the existing row.
+Suggestions with a blank Source Ref are not checked.
+
 === Users (Standard BC API)
 
 For user information, use BC's built-in https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/administration/api/dynamics_user_get[Automation API]:
@@ -329,8 +410,24 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Time Sheet Line API | Page 50103
 | Thyme Resources API | Page 50104
 | Thyme Time Entries API | Page 50105
+| Thyme Time Sheet Detail API | Page 50106
+| Thyme Job Planning Lines API | Page 50107
+| Thyme Resource UoM API | Page 50108
+| Thyme Timesheet Reviews API | Page 50109
+| Thyme TS Review Lines API | Page 50110
+| Thyme Time Suggestions API | Page 50111
+| Thyme Timesheet Review | Table 50100
+| Thyme Timesheet Review Line | Table 50101
+| Thyme Time Suggestion | Table 50102
+| Thyme Review Verdict | Enum 50100
+| Thyme Review Severity | Enum 50101
+| Thyme Suggestion Source | Enum 50102
+| Thyme Suggestion Confidence | Enum 50103
+| Thyme Suggestion Status | Enum 50104
+| THYME AI AGENT | Permission Set 50100
+| THYME USER | Permission Set 50101
 | Thyme Time Sheet Actions | Codeunit 50100
-| (Reserved for future pages) | Page 50106-50199
+| (Reserved for future pages) | Page 50112-50199
 | (Reserved for future codeunits) | Codeunit 50101-50199
 |===
 
@@ -338,6 +435,7 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 
 * APIs inherit BC's standard security model
 * Users need appropriate permissions on Job, Job Task, Time Sheet, Resource, and Job Ledger Entry tables
+* The extension's own tables (reviews, review lines, suggestions) are not covered by the standard D365 permission sets. Assign `THYME AI AGENT` to the AI agent's Microsoft Entra application (full access) and `THYME USER` to Thyme users (read reviews; read and update suggestions)
 * OAuth 2.0 authentication via Azure AD
 * Supports both delegated and application permissions
 

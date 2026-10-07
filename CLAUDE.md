@@ -16,6 +16,11 @@ This is a Business Central (BC) AL extension that provides custom API endpoints 
 - `src/api/ThymeTimeEntriesAPI.Page.al` - Time Entries API (page 50105)
 - `src/api/ThymeJobPlanningLinesAPI.Page.al` - Job Planning Lines API (page 50107)
 - `src/api/ThymeResourceUnitsOfMeasureAPI.Page.al` - Resource Units of Measure API (page 50108)
+- `src/api/ThymeTimesheetReviewsAPI.Page.al` - Timesheet Reviews API (page 50109, table 50100)
+- `src/api/ThymeTimesheetReviewLinesAPI.Page.al` - Timesheet Review Lines API (page 50110, table 50101)
+- `src/api/ThymeTimeSuggestionsAPI.Page.al` - Time Suggestions API (page 50111, table 50102)
+- `src/enum/` - Review verdict/severity and suggestion source/confidence/status enums (50100-50104)
+- `src/permissionset/` - `THYME AI AGENT` (50100) and `THYME USER` (50101); add new tables/pages to these
 - `src/codeunit/ThymeTimeSheetActions.Codeunit.al` - Time Sheet approval workflow actions (codeunit 50100)
 
 ## API Configuration
@@ -37,6 +42,9 @@ Endpoints available at:
 /api/knowall/thyme/v1.0/companies({id})/timeEntries
 /api/knowall/thyme/v1.0/companies({id})/jobPlanningLines
 /api/knowall/thyme/v1.0/companies({id})/resourceUnitsOfMeasure
+/api/knowall/thyme/v1.0/companies({id})/timesheetReviews
+/api/knowall/thyme/v1.0/companies({id})/timesheetReviewLines
+/api/knowall/thyme/v1.0/companies({id})/timeSuggestions
 ```
 
 For user information, use BC's standard Automation API:
