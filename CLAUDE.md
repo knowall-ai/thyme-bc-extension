@@ -19,16 +19,18 @@ This is a Business Central (BC) AL extension that provides custom API endpoints 
 - `src/api/ThymeTimesheetReviewsAPI.Page.al` - Timesheet Reviews API (page 50109, table 50100)
 - `src/api/ThymeTimesheetReviewLinesAPI.Page.al` - Timesheet Review Lines API (page 50110, table 50101)
 - `src/api/ThymeTimeSuggestionsAPI.Page.al` - Time Suggestions API (page 50111, table 50102)
+- `src/api/ThymeSuggestionRequestsAPI.Page.al` - Suggestion Requests API: ask the agent for suggestions now (page 50114, table 50104, status enum 50105)
+- `src/api/ThymeAgentHeartbeatsAPI.Page.al` - Agent Heartbeats API: when the AI agent was last seen (page 50115, table 50105)
 - `src/api/ThymeSetupAPI.Page.al` - Thyme Setup API, single record (page 50112, table 50103 `Thyme Setup`)
 - `src/page/ThymeSetup.Page.al` - Thyme Setup card (page 50113)
 - `src/tableextension/ThymeResource.TableExt.al` - Resource billable target fields 50100-50101 (table extension 50100)
 - `src/pageextension/ThymeResourceCard.PageExt.al` - Thyme group on the Resource Card (page extension 50100)
-- `src/enum/` - Review verdict/severity and suggestion source/confidence/status enums (50100-50104)
+- `src/enum/` - Review verdict/severity and suggestion source/confidence/status and suggestion request status enums (50100-50105)
 - `src/permissionset/` - `THYME AI AGENT` (50100), `THYME USER` (50101) and `THYME ADMIN` (50102); add new tables/pages to these
 - `src/codeunit/ThymeTimeSheetActions.Codeunit.al` - Time Sheet approval workflow actions (codeunit 50100)
 - `src/codeunit/ThymeInstall.Codeunit.al` / `ThymeUpgrade.Codeunit.al` - Create the Thyme Setup record on install / upgrade (codeunits 50101, 50102)
 - `src/codeunit/ThymeCompanyInitialize.Codeunit.al` - Creates the Thyme Setup record in new companies (codeunit 50103)
-- `src/codeunit/ThymeRecordSecurity.Codeunit.al` - Row-level security for reviews, review lines and suggestions, plus the shared time sheet admin check (codeunit 50104). The API pages call it in OnOpenPage (filters in FilterGroup 2) and in their insert/modify/delete triggers. Note: `FilterGroup(-1)` (cross-column OR) is NOT applied on API page reads, so OR conditions must be expressed with AND-only filters (see the `Hidden From User Filter` FlowFields).
+- `src/codeunit/ThymeRecordSecurity.Codeunit.al` - Row-level security for reviews, review lines, suggestions and suggestion requests, plus the shared time sheet admin check (codeunit 50104). The API pages call it in OnOpenPage (filters in FilterGroup 2) and in their insert/modify/delete triggers. Note: `FilterGroup(-1)` (cross-column OR) is NOT applied on API page reads, so OR conditions must be expressed with AND-only filters (see the `Hidden From User Filter` FlowFields).
 
 ## API Configuration
 
@@ -52,6 +54,8 @@ Endpoints available at:
 /api/knowall/thyme/v1.0/companies({id})/timesheetReviews
 /api/knowall/thyme/v1.0/companies({id})/timesheetReviewLines
 /api/knowall/thyme/v1.0/companies({id})/timeSuggestions
+/api/knowall/thyme/v1.0/companies({id})/suggestionRequests
+/api/knowall/thyme/v1.0/companies({id})/agentHeartbeats
 /api/knowall/thyme/v1.0/companies({id})/thymeSetup
 ```
 

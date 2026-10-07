@@ -2,6 +2,31 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
+## 1.18.0.0
+
+### Added
+
+- `suggestionRequests` endpoint (page 50114, table 50104 `Thyme Suggestion Request`, enum 50105):
+  ask the AI agent to generate time suggestions for a resource and period (at most 7 days, not
+  in the future) now, instead of waiting for its scheduled runs. Thyme creates the request and
+  polls it; the agent claims it (`Running`), reports `progress`, and finishes it as `Done` with
+  `createdCount`/`updatedCount` or `Failed` with an `errorMessage`. One open request per
+  resource and period.
+- Who can request: the resource's time sheet owner and approver, Thyme administrators and the AI
+  agent. They can also read those requests. Only the AI agent can change or delete one.
+- `canRequestSuggestions` on `resources` (read-only, per caller), so Thyme can show the
+  *Request suggestions* button only to people who may use it.
+- `agentHeartbeats` endpoint (page 50115, table 50105 `Thyme Agent Heartbeat`): when each AI
+  agent was last seen (stamped by BC), its status text and version. Every Thyme user can read it,
+  so Thyme can show whether the agent is online and disable requests while it isn't. Only the AI
+  agent writes it.
+
+### Unchanged on purpose
+
+- Suggestions themselves stay visible only to the person they're for, administrators and the
+  AI agent. An approver who requests them for someone sees the request's progress and counts,
+  not the suggestions.
+
 ## 1.15.0.1
 
 ### Security

@@ -6,6 +6,11 @@
 ///   administrator and the AI agent.
 /// - A time suggestion: the user it is for (the time sheet owner of its resource), a
 ///   Thyme administrator and the AI agent.
+/// - A suggestion request (asking the agent to generate suggestions now): the resource's
+///   time sheet owner and approver, a Thyme administrator and the AI agent. The same people
+///   can create one; only the AI agent can change or delete one. An approver who requests
+///   suggestions still can't see them: they stay with the person they are for.
+/// - An agent heartbeat (when the agent was last seen): every Thyme user; only the AI agent writes.
 ///
 /// A Thyme administrator is a time sheet administrator (User Setup, the same rule that
 /// governs creating time sheets through the API) or a user with the THYME ADMIN
@@ -26,6 +31,9 @@ codeunit 50104 "Thyme Record Security"
         ThymeAdminRoleTok: Label 'THYME ADMIN', Locked = true;
         ThymeAIAgentRoleTok: Label 'THYME AI AGENT', Locked = true;
         NotAllowedToWriteReviewsErr: Label 'You are not allowed to change timesheet reviews. Only the AI agent or a Thyme administrator can.';
+        NotAllowedToRequestSuggestionsErr: Label 'You are not allowed to request time suggestions for resource %1. You can request them for yourself, for people whose time sheets you approve, or for anyone as a Thyme administrator.', Comment = '%1 = resource number';
+        NotAllowedToWriteHeartbeatErr: Label 'Only the AI agent can update agent heartbeats.';
+        NotAllowedToChangeRequestsErr: Label 'You are not allowed to change suggestion requests. Only the AI agent can.';
         NotAllowedToWriteSuggestionErr: Label 'You are not allowed to change time suggestions for resource %1. You can only change suggestions for a resource whose time sheets you own.', Comment = '%1 = resource number';
 
     /// <summary>
@@ -134,6 +142,79 @@ codeunit 50104 "Thyme Record Security"
             exit;
         if not IsOwnResource(Suggestion."Resource No.") then
             Error(NotAllowedToWriteSuggestionErr, Suggestion."Resource No.");
+    end;
+
+    /// <summary>
+    /// Limits suggestion requests to resources whose time sheets the caller owns or approves,
+    /// unless they can access all.
+    /// </summary>
+    procedure ApplySuggestionRequestFilter(var Request: Record "Thyme Suggestion Request")
+    begin
+        if CanAccessAll() then
+            exit;
+
+        // Owner = me OR approver = me, written as: the resource exists AND it is not the case
+        // that both its owner and its approver are someone else (see the table fields).
+        Request.FilterGroup(2);
+        Request.SetFilter("User ID Filter", '<>%1', CurrentUserCode());
+        Request.SetRange("Hidden From User Filter", false);
+        Request.SetRange("Resource Exists", true);
+        Request.FilterGroup(0);
+    end;
+
+    /// <summary>
+    /// True if the caller may ask the agent for suggestions for this resource: its time sheet
+    /// owner or approver, a Thyme administrator or the AI agent. The resource must use time sheets.
+    /// </summary>
+    procedure CanRequestSuggestions(ResourceNo: Code[20]): Boolean
+    var
+        Resource: Record Resource;
+    begin
+        if ResourceNo = '' then
+            exit(false);
+        if not Resource.Get(ResourceNo) then
+            exit(false);
+        exit(CanRequestSuggestions(Resource, CanAccessAll()));
+    end;
+
+    /// <summary>
+    /// As CanRequestSuggestions(ResourceNo), for a resource already read and with the caller's
+    /// CanAccessAll() worked out once (the resources API asks this for every row).
+    /// </summary>
+    procedure CanRequestSuggestions(Resource: Record Resource; CallerCanAccessAll: Boolean): Boolean
+    var
+        Me: Code[50];
+    begin
+        if not Resource."Use Time Sheet" then
+            exit(false);
+        if CallerCanAccessAll then
+            exit(true);
+        Me := CurrentUserCode();
+        exit((UpperCase(Resource."Time Sheet Owner User ID") = Me) or (UpperCase(Resource."Time Sheet Approver User ID") = Me));
+    end;
+
+    procedure CheckCanRequestSuggestions(ResourceNo: Code[20])
+    begin
+        if not CanRequestSuggestions(ResourceNo) then
+            Error(NotAllowedToRequestSuggestionsErr, ResourceNo);
+    end;
+
+    /// <summary>
+    /// Only the AI agent moves a request through Running to Done or Failed, or removes one.
+    /// </summary>
+    procedure CheckCanChangeSuggestionRequests()
+    begin
+        if not IsAIAgent() then
+            Error(NotAllowedToChangeRequestsErr);
+    end;
+
+    /// <summary>
+    /// Agent heartbeats are readable by every Thyme user and written only by the AI agent.
+    /// </summary>
+    procedure CheckCanWriteHeartbeat()
+    begin
+        if not IsAIAgent() then
+            Error(NotAllowedToWriteHeartbeatErr);
     end;
 
     local procedure IsOwnResource(ResourceNo: Code[20]): Boolean
