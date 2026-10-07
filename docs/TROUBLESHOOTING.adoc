@@ -90,6 +90,15 @@
 
 | `POST /timeSuggestions` fails with "A suggestion for resource ... already exists"
 | A suggestion with the same `resourceNo`, `source`, `sourceRef` and `date` already exists. Find it with `GET /timeSuggestions?$filter=resourceNo eq 'R0010' and sourceRef eq '...'` and `PATCH` it instead.
+
+| `PATCH /thymeSetup({id})` fails with a permission error on `Thyme Setup`
+| Changing the default billable target needs the `THYME ADMIN` permission set (`THYME USER` can only read it). Assign `THYME ADMIN` to the user or Microsoft Entra application.
+
+| `GET /thymeSetup` returns an empty list
+| The setup record hasn't been created in this company yet (it is created on install or upgrade, so this happens in companies added later). Open *Thyme Setup* in BC, or call `GET /thymeSetup` once as a user with `THYME ADMIN`; the record is created with a 75% default.
+
+| A person shows a 0% billable target but should use the company default
+| Their own target is set to 0. Untick *Thyme Billable Target Set* on the Resource Card (or `PATCH /resources({id})` with `{ "billableTargetSet": false }`) so Thyme falls back to the default.
 |===
 
 == Getting Help

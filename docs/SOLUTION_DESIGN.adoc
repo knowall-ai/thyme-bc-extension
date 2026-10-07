@@ -107,6 +107,7 @@ https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timesheetReviews
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timesheetReviewLines
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeSuggestions
+https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/thymeSetup
 ----
 
 === Projects API (Page 50100)
@@ -277,9 +278,29 @@ Maps to the BC `Resource` table (table 156).
 | useTimeSheet | Use Time Sheet | Time sheet enabled
 | timeSheetOwnerUserId | Time Sheet Owner User ID | Owner for time sheets
 | timeSheetApproverUserId | Time Sheet Approver User ID | Approver for time sheets
+| billableTargetPercent | Thyme Billable Target % | Extension field 50100; 0-100, only meaningful when billableTargetSet is true
+| billableTargetSet | Thyme Billable Target Set | Extension field 50101; false = use the company default
 | lastDateModified | Last Date Modified | Last modification date
 | lastModifiedDateTime | SystemModifiedAt | For sync
 |===
+
+==== Billable targets: "not set" versus 0%
+
+A Decimal field can't be null in AL, so a blank target and a real 0% target would both read
+as `0`. The table extension `Thyme Resource` (50100) therefore pairs the percentage with a
+Boolean:
+
+* `Thyme Billable Target Set` = false: the person has no target of their own. Thyme uses
+  `Default Billable Target %` from Thyme Setup. The percentage is held at 0.
+* `Thyme Billable Target Set` = true: `Thyme Billable Target %` is the person's target, and
+  0 means 0%.
+
+Validating the percentage (on the Resource Card or through the API, including a value of 0)
+sets the flag to true. Validating the flag to false resets the percentage to 0. The
+percentage must be between 0 and 100 (MinValue/MaxValue). On the API page the percentage
+comes before the flag, so when a PATCH sends both, the flag is applied last and wins.
+
+Both fields appear in a *Thyme* group on the Resource Card (page extension 50100).
 
 === Time Entries API (Page 50105)
 
@@ -386,6 +407,26 @@ for upserts. Inserting a suggestion that matches an existing one on those four f
 rejected so the agent can re-run without duplicates; it should `PATCH` the existing row.
 Suggestions with a blank Source Ref are not checked.
 
+=== Thyme Setup API (Page 50112)
+
+Maps to the extension's `Thyme Setup` table (table 50103), a single record with a blank
+primary key. Insert and delete are not allowed; read with `GET /thymeSetup` and update with
+`PATCH /thymeSetup({id})`.
+
+[cols="1,1,1", options="header"]
+|===
+| API Field | Table Field | Notes
+
+| id | SystemId | Primary key (GUID), read-only
+| defaultBillableTargetPercent | Default Billable Target % | 0-100, defaults to 75; used for people whose billableTargetSet is false
+| lastModifiedDateTime | SystemModifiedAt | For sync
+|===
+
+The install (codeunit 50101) and upgrade (codeunit 50102) codeunits create the record in
+every company. For companies created later, the Thyme Setup page (50113) and the API page
+create it when first opened by a user with write permission; a read-only user sees an empty
+result instead of an error until then.
+
 === Users (Standard BC API)
 
 For user information, use BC's built-in https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/administration/api/dynamics_user_get[Automation API]:
@@ -416,9 +457,14 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Timesheet Reviews API | Page 50109
 | Thyme TS Review Lines API | Page 50110
 | Thyme Time Suggestions API | Page 50111
+| Thyme Setup API | Page 50112
+| Thyme Setup | Page 50113
 | Thyme Timesheet Review | Table 50100
 | Thyme Timesheet Review Line | Table 50101
 | Thyme Time Suggestion | Table 50102
+| Thyme Setup | Table 50103
+| Thyme Resource (extends Resource) | Table Extension 50100 (fields 50100-50101)
+| Thyme Resource Card (extends Resource Card) | Page Extension 50100
 | Thyme Review Verdict | Enum 50100
 | Thyme Review Severity | Enum 50101
 | Thyme Suggestion Source | Enum 50102
@@ -426,16 +472,19 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Suggestion Status | Enum 50104
 | THYME AI AGENT | Permission Set 50100
 | THYME USER | Permission Set 50101
+| THYME ADMIN | Permission Set 50102
 | Thyme Time Sheet Actions | Codeunit 50100
-| (Reserved for future pages) | Page 50112-50199
-| (Reserved for future codeunits) | Codeunit 50101-50199
+| Thyme Install | Codeunit 50101
+| Thyme Upgrade | Codeunit 50102
+| (Reserved for future pages) | Page 50114-50199
+| (Reserved for future codeunits) | Codeunit 50103-50199
 |===
 
 == Security
 
 * APIs inherit BC's standard security model
 * Users need appropriate permissions on Job, Job Task, Time Sheet, Resource, and Job Ledger Entry tables
-* The extension's own tables (reviews, review lines, suggestions) are not covered by the standard D365 permission sets. Assign `THYME AI AGENT` to the AI agent's Microsoft Entra application (full access) and `THYME USER` to Thyme users (read reviews; read and update suggestions)
+* The extension's own tables (reviews, review lines, suggestions) are not covered by the standard D365 permission sets. Assign `THYME AI AGENT` to the AI agent's Microsoft Entra application (full access) and `THYME USER` to Thyme users (read reviews; read and update suggestions; read Thyme Setup). Assign `THYME ADMIN` to people who change the default billable target. Per-person targets are Resource fields, so they follow the standard Resource permissions
 * OAuth 2.0 authentication via Azure AD
 * Supports both delegated and application permissions
 

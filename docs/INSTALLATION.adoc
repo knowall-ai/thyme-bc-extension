@@ -65,10 +65,11 @@ IMPORTANT: This step is *in addition to* the BC Admin Center authorization. The 
    * `EXTEN. MGT. - ADMIN` - Required for extension management
 8. Close the card
 
-To use the timesheet review and time suggestion endpoints, assign the extension's own permission sets as well (the standard D365 sets don't cover the extension's tables):
+To use the timesheet review, time suggestion and Thyme Setup endpoints, assign the extension's own permission sets as well (the standard D365 sets don't cover the extension's tables):
 
 * `THYME AI AGENT` - to the AI agent's Microsoft Entra application (full access to reviews and suggestions)
-* `THYME USER` - to Thyme users (read reviews; read and update suggestions)
+* `THYME USER` - to Thyme users (read reviews; read and update suggestions; read the default billable target)
+* `THYME ADMIN` - to Thyme administrators who change the default billable target (includes `THYME USER`)
 
 TIP: Without this step, you will get `Authentication_InvalidCredentials` errors even if the Azure AD app has correct permissions and BC Admin Center shows the app.
 

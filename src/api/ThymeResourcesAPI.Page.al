@@ -1,6 +1,11 @@
 /// <summary>
 /// Custom API page exposing Resources with capacity data.
-/// Enables Thyme to fetch weekly hours targets per employee.
+/// Enables Thyme to fetch weekly hours targets and billable targets per employee.
+///
+/// billableTargetPercent (0..100) is only meaningful when billableTargetSet is true;
+/// otherwise Thyme uses defaultBillableTargetPercent from the thymeSetup endpoint.
+/// billableTargetPercent comes before billableTargetSet so that, when a PATCH sends both,
+/// the flag is applied last (setting a percentage marks the target as set).
 ///
 /// Endpoint: /api/knowall/thyme/v1.0/companies({companyId})/resources
 /// </summary>
@@ -83,6 +88,14 @@ page 50104 "Thyme Resources API"
                 field(timeSheetApproverUserId; Rec."Time Sheet Approver User ID")
                 {
                     Caption = 'Time Sheet Approver User ID';
+                }
+                field(billableTargetPercent; Rec."Thyme Billable Target %")
+                {
+                    Caption = 'Billable Target %';
+                }
+                field(billableTargetSet; Rec."Thyme Billable Target Set")
+                {
+                    Caption = 'Billable Target Set';
                 }
                 field(lastDateModified; Rec."Last Date Modified")
                 {
