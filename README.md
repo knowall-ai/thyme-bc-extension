@@ -254,6 +254,10 @@ GET /timesheetReviews?$filter=timeSheetNo eq 'TS00001'&$orderby=reviewedAt desc&
 If the time sheet's lines or details have changed since `versionStamp`, the review is stale.
 Deleting a review also deletes its review lines.
 
+**Who can see reviews:** a review and its lines are returned only to the time sheet's owner and
+approver, Thyme administrators and the AI agent (see [Row-level security](#row-level-security)).
+Only the AI agent or a Thyme administrator can create, change or delete them.
+
 ### Timesheet Review Lines API
 
 Individual findings within a review.
@@ -302,6 +306,30 @@ GET /timeSuggestions?$filter=resourceNo eq 'R0010' and date ge 2026-01-05 and da
 ```
 A second suggestion with the same `resourceNo`, `source`, `sourceRef` and `date` is rejected,
 so re-runs should `PATCH` the existing one (suggestions with a blank `sourceRef` are not checked).
+
+**Who can see suggestions:** a suggestion is returned to, and can be changed by, only the
+resource's time sheet owner (the user it's for), Thyme administrators and the AI agent. A user
+can't create a suggestion for, or move one to, a resource whose time sheets they don't own.
+
+### Row-level security
+
+The reviews, review lines and suggestions endpoints only return records the caller may see.
+Records outside that scope are left out of lists and `$filter` results, and `GET`, `PATCH` or
+`DELETE` by `id` returns 404, as if the record didn't exist.
+
+| Caller | Reviews and review lines | Suggestions |
+|--------|--------------------------|-------------|
+| AI agent (`THYME AI AGENT`) | All; can write | All; can write |
+| Thyme administrator: *Time Sheet Admin.* in User Setup, or `THYME ADMIN` | All; can write (needs table permission) | All |
+| Time sheet owner or approver | Reviews of their own and approved time sheets; read only | Suggestions for resources whose time sheets they own |
+| Anyone else | None | None |
+
+The permission sets count whether they are assigned directly or through a security group.
+`SUPER` on its own does not bypass these rules, so give a superuser who should see everything
+`THYME ADMIN` or *Time Sheet Admin.* The owner and approver are read live from the time sheet,
+and the suggestion owner from the resource card, so reassigning them takes effect immediately.
+Reviews of time sheets that no longer exist (for example after archiving) are visible only to
+administrators and the AI agent. The rules live in the `Thyme Record Security` codeunit (50104).
 
 ### Thyme Setup API
 
@@ -392,7 +420,10 @@ Create two environments in Settings → Environments:
 |----------------|-----------|--------|
 | `THYME AI AGENT` | The AI agent's Microsoft Entra application | Full access to reviews, review lines and suggestions (includes `THYME USER`) |
 | `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; read the default billable target; run the Thyme API pages |
-| `THYME ADMIN` | Thyme administrators | Everything in `THYME USER`, plus changing the default billable target (Thyme Setup) |
+| `THYME ADMIN` | Thyme administrators | Everything in `THYME USER`, plus changing the default billable target (Thyme Setup) and seeing every user's reviews and suggestions |
+
+Users with `THYME USER` only see reviews of time sheets they own or approve and their own
+suggestions; see [Row-level security](#row-level-security).
 
 See [docs/INSTALLATION.adoc](docs/INSTALLATION.adoc) for detailed setup instructions.
 
@@ -438,6 +469,7 @@ thyme-bc-extension/
 │       ├── ThymeTimeSheetActions.Codeunit.al   # Approval workflow actions (codeunit 50100)
 │       ├── ThymeInstall.Codeunit.al            # Creates Thyme Setup on install (codeunit 50101)
 │       ├── ThymeUpgrade.Codeunit.al            # Creates Thyme Setup on upgrade (codeunit 50102)
+│       ├── ThymeRecordSecurity.Codeunit.al     # Row-level security for reviews and suggestions (codeunit 50104)
 │       └── ThymeCompanyInitialize.Codeunit.al  # Creates Thyme Setup in new companies (codeunit 50103)
 └── .vscode/
     ├── launch.json                             # Debug configuration

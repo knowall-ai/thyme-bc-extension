@@ -513,8 +513,9 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Install | Codeunit 50101
 | Thyme Upgrade | Codeunit 50102
 | Thyme Company Initialize | Codeunit 50103
+| Thyme Record Security | Codeunit 50104
 | (Reserved for future pages) | Page 50114-50199
-| (Reserved for future codeunits) | Codeunit 50104-50199
+| (Reserved for future codeunits) | Codeunit 50105-50199
 |===
 
 == Security
@@ -522,6 +523,7 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 * APIs inherit BC's standard security model
 * Users need appropriate permissions on Job, Job Task, Time Sheet, Resource, and Job Ledger Entry tables
 * The extension's own tables (reviews, review lines, suggestions) are not covered by the standard D365 permission sets. Assign `THYME AI AGENT` to the AI agent's Microsoft Entra application (full access) and `THYME USER` to Thyme users (read reviews; read and update suggestions; read Thyme Setup). Assign `THYME ADMIN` to people who change the default billable target. Per-person targets are Resource fields, so they follow the standard Resource permissions
+* Row-level security (codeunit `Thyme Record Security`): a timesheet review and its lines are visible only to the time sheet's owner and approver, Thyme administrators (*Time Sheet Admin.* in User Setup, or `THYME ADMIN`) and the AI agent (`THYME AI AGENT`); a time suggestion only to its resource's time sheet owner, administrators and the AI agent. The API pages filter in SQL through FlowFields in filter group 2, so lists, `$filter` and by-id requests all respect it. Only the AI agent or an administrator can write reviews, and users can only create or change suggestions for resources they own. `SUPER` alone does not bypass these rules
 * OAuth 2.0 authentication via Azure AD
 * Supports both delegated and application permissions
 

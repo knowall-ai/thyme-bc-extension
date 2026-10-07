@@ -69,7 +69,9 @@ To use the timesheet review, time suggestion and Thyme Setup endpoints, assign t
 
 * `THYME AI AGENT` - to the AI agent's Microsoft Entra application (full access to reviews and suggestions)
 * `THYME USER` - to Thyme users (read reviews; read and update suggestions; read the default billable target)
-* `THYME ADMIN` - to Thyme administrators who change the default billable target (includes `THYME USER`)
+* `THYME ADMIN` - to Thyme administrators who change the default billable target or need to see every user's reviews and suggestions (includes `THYME USER`)
+
+Thyme users only see reviews of time sheets they own or approve, and suggestions for resources whose time sheets they own. Users with *Time Sheet Admin.* ticked in *User Setup* see everything, like `THYME ADMIN`.
 
 TIP: Without this step, you will get `Authentication_InvalidCredentials` errors even if the Azure AD app has correct permissions and BC Admin Center shows the app.
 
