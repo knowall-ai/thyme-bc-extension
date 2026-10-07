@@ -71,10 +71,22 @@ table 50100 "Thyme Timesheet Review"
             "Reviewed At" := CurrentDateTime();
     end;
 
+    /// <summary>
+    /// If the review is moved to another time sheet, moves its findings with it so
+    /// filtering review lines by time sheet stays correct.
+    /// </summary>
     trigger OnModify()
+    var
+        StoredReview: Record "Thyme Timesheet Review";
+        ReviewLine: Record "Thyme Timesheet Review Line";
     begin
         TestField("Time Sheet No.");
         TestField("Version Stamp");
+        if StoredReview.Get("Entry No.") then
+            if StoredReview."Time Sheet No." <> "Time Sheet No." then begin
+                ReviewLine.SetRange("Review Entry No.", "Entry No.");
+                ReviewLine.ModifyAll("Time Sheet No.", "Time Sheet No.", false);
+            end;
     end;
 
     /// <summary>

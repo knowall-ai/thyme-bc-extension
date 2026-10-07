@@ -125,13 +125,15 @@ table 50102 "Thyme Time Suggestion"
 
     trigger OnModify()
     begin
+        CheckNotDuplicate();
         SetActionedAt();
     end;
 
     /// <summary>
-    /// Rejects a second suggestion for the same resource, source, source reference and
-    /// date, so the agent can re-run without creating duplicates. Suggestions without
-    /// a source reference cannot be matched, so they are not checked.
+    /// Rejects a second suggestion (on insert, or a PATCH that would create one) for the
+    /// same resource, source, source reference and date, so the agent can re-run
+    /// without creating duplicates. Suggestions without a source reference cannot be
+    /// matched, so they are not checked.
     /// </summary>
     local procedure CheckNotDuplicate()
     var
@@ -145,6 +147,7 @@ table 50102 "Thyme Time Suggestion"
         Existing.SetRange(Source, Source);
         Existing.SetRange("Source Ref", "Source Ref");
         Existing.SetRange(Date, Date);
+        Existing.SetFilter("Entry No.", '<>%1', "Entry No.");
         if Existing.FindFirst() then
             Error(DuplicateSuggestionErr, "Resource No.", Source, "Source Ref", Date, Existing."Entry No.");
     end;
