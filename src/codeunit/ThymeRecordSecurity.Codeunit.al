@@ -15,7 +15,7 @@
 ///
 /// The API pages apply the filters below in OnOpenPage, so collection reads, $filter
 /// queries and GET/PATCH/DELETE by id all only reach records the caller may see. The
-/// filters run in SQL (FlowField lookups), not as per-record checks.
+/// filters run in SQL (FlowFields), not as per-record checks.
 /// </summary>
 codeunit 50104 "Thyme Record Security"
 {
@@ -72,17 +72,16 @@ codeunit 50104 "Thyme Record Security"
     /// Limits reviews to time sheets the caller owns or approves, unless they can access all.
     /// </summary>
     procedure ApplyReviewFilter(var Review: Record "Thyme Timesheet Review")
-    var
-        CurrentUser: Code[50];
     begin
         if CanAccessAll() then
             exit;
 
-        // FilterGroup -1 ORs the two conditions: owner = me OR approver = me.
-        CurrentUser := CurrentUserCode();
-        Review.FilterGroup(-1);
-        Review.SetRange("Time Sheet Owner User ID", CurrentUser);
-        Review.SetRange("Time Sheet Approver User ID", CurrentUser);
+        // Owner = me OR approver = me, written as: the time sheet exists AND it is not the
+        // case that both its owner and its approver are someone else (see the table fields).
+        Review.FilterGroup(2);
+        Review.SetFilter("User ID Filter", '<>%1', CurrentUserCode());
+        Review.SetRange("Hidden From User Filter", false);
+        Review.SetRange("Time Sheet Exists", true);
         Review.FilterGroup(0);
     end;
 
@@ -90,16 +89,14 @@ codeunit 50104 "Thyme Record Security"
     /// Limits review findings to time sheets the caller owns or approves, unless they can access all.
     /// </summary>
     procedure ApplyReviewLineFilter(var ReviewLine: Record "Thyme Timesheet Review Line")
-    var
-        CurrentUser: Code[50];
     begin
         if CanAccessAll() then
             exit;
 
-        CurrentUser := CurrentUserCode();
-        ReviewLine.FilterGroup(-1);
-        ReviewLine.SetRange("Time Sheet Owner User ID", CurrentUser);
-        ReviewLine.SetRange("Time Sheet Approver User ID", CurrentUser);
+        ReviewLine.FilterGroup(2);
+        ReviewLine.SetFilter("User ID Filter", '<>%1', CurrentUserCode());
+        ReviewLine.SetRange("Hidden From User Filter", false);
+        ReviewLine.SetRange("Time Sheet Exists", true);
         ReviewLine.FilterGroup(0);
     end;
 
