@@ -242,7 +242,11 @@ table 50106 "Thyme Project Source Link"
         Org := Parts.Get(1).Trim();
         Project := Parts.Get(2).Trim();
         // A typed org/project/x is a mistake; a URL may go deeper (…/_workitems, …/_boards).
-        if (Org = '') or (Project = '') or Project.StartsWith('_') or ((Parts.Count() > 2) and not Parts.Get(3).StartsWith('_') and (GitPos = 0)) then
+        // (AL evaluates every operand of and/or, so the third part is only read when it exists.)
+        if (Parts.Count() > 2) and (GitPos = 0) then
+            if not Parts.Get(3).StartsWith('_') then
+                Error(DevOpsFormatErr, RawValue);
+        if (Org = '') or (Project = '') or Project.StartsWith('_') then
             Error(DevOpsFormatErr, RawValue);
         exit(Org + '/' + Project);
     end;
