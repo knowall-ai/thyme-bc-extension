@@ -6,6 +6,14 @@
 ///   from Thyme Setup ("Default Billable Target %"). The percentage is kept at 0.
 /// - Set = true: "Thyme Billable Target %" is the resource's target, and 0 means 0%.
 /// Entering a percentage marks the target as set; clearing the flag resets the percentage to 0.
+///
+/// Weekly capacity works the same way:
+/// - "Thyme Weekly Capacity Set" = false: Thyme uses hours per day (from the resource's HOUR
+///   unit of measure) x 5. The hours are kept at 0.
+/// - Set = true: "Thyme Weekly Capacity (Hours)" is the person's weekly capacity. 0 is a real
+///   value: the person is listed in Thyme but not counted (for example an AI agent).
+/// "Thyme Flexible Working Days" means the person works their weekly capacity on any days
+/// rather than fixed weekdays, so Thyme judges their week as a whole.
 /// </summary>
 tableextension 50100 "Thyme Resource" extends Resource
 {
@@ -19,8 +27,11 @@ tableextension 50100 "Thyme Resource" extends Resource
             MinValue = 0;
             MaxValue = 100;
 
+            // MinValue/MaxValue aren't enforced through API pages, so check explicitly
             trigger OnValidate()
             begin
+                if (Rec."Thyme Billable Target %" < 0) or (Rec."Thyme Billable Target %" > 100) then
+                    Error(BillableTargetRangeErr);
                 Rec."Thyme Billable Target Set" := true;
             end;
         }
@@ -35,5 +46,40 @@ tableextension 50100 "Thyme Resource" extends Resource
                     Rec."Thyme Billable Target %" := 0;
             end;
         }
+        field(50102; "Thyme Weekly Capacity (Hours)"; Decimal)
+        {
+            Caption = 'Thyme Weekly Capacity (Hours)';
+            DataClassification = CustomerContent;
+            DecimalPlaces = 0 : 2;
+            MinValue = 0;
+            MaxValue = 168;
+
+            trigger OnValidate()
+            begin
+                if (Rec."Thyme Weekly Capacity (Hours)" < 0) or (Rec."Thyme Weekly Capacity (Hours)" > 168) then
+                    Error(WeeklyCapacityRangeErr);
+                Rec."Thyme Weekly Capacity Set" := true;
+            end;
+        }
+        field(50103; "Thyme Weekly Capacity Set"; Boolean)
+        {
+            Caption = 'Thyme Weekly Capacity Set';
+            DataClassification = CustomerContent;
+
+            trigger OnValidate()
+            begin
+                if not Rec."Thyme Weekly Capacity Set" then
+                    Rec."Thyme Weekly Capacity (Hours)" := 0;
+            end;
+        }
+        field(50104; "Thyme Flexible Working Days"; Boolean)
+        {
+            Caption = 'Thyme Flexible Working Days';
+            DataClassification = CustomerContent;
+        }
     }
+
+    var
+        BillableTargetRangeErr: Label 'The billable target must be from 0 to 100.';
+        WeeklyCapacityRangeErr: Label 'The weekly capacity must be from 0 to 168 hours.';
 }

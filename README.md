@@ -177,6 +177,9 @@ POST /timeSheetDetails
 | `timeSheetApproverUserId` | Time sheet approver user ID |
 | `billableTargetPercent` | Person's billable target, 0-100 (only meaningful when `billableTargetSet` is `true`) |
 | `billableTargetSet` | Whether the person has their own billable target; when `false`, use `defaultBillableTargetPercent` from `thymeSetup` |
+| `weeklyCapacityHours` | Hours the person works per week (only meaningful when `weeklyCapacitySet` is `true`) |
+| `weeklyCapacitySet` | Whether the person has their own weekly capacity; when `false`, use hours per day x 5 |
+| `flexibleWorkingDays` | Whether the person works their weekly capacity on any days rather than fixed weekdays |
 | `lastDateModified` | Last date modified |
 | `lastModifiedDateTime` | Last modified timestamp |
 
@@ -187,6 +190,16 @@ Values outside 0-100 are rejected.
 ```
 PATCH /resources({id})          { "billableTargetPercent": 60 }      // own target of 60%
 PATCH /resources({id})          { "billableTargetSet": false }       // back to the company default
+```
+
+**Weekly capacity:** works like the billable target. Setting `weeklyCapacityHours` (including `0`)
+also sets `weeklyCapacitySet` to `true`; setting `weeklyCapacitySet` to `false` clears it so Thyme
+falls back to hours per day x 5. An explicit `0` keeps the person listed but not counted (for
+example an AI agent). Values outside 0-168 are rejected.
+```
+PATCH /resources({id})          { "weeklyCapacityHours": 15, "flexibleWorkingDays": true }  // 2 days a week, any days
+PATCH /resources({id})          { "weeklyCapacityHours": 0 }         // listed, not counted
+PATCH /resources({id})          { "weeklyCapacitySet": false }       // back to hours per day x 5
 ```
 
 ### Time Entries API
@@ -517,7 +530,7 @@ thyme-bc-extension/
 │   ├── page/
 │   │   └── ThymeSetup.Page.al                  # Thyme Setup card (page 50113)
 │   ├── table/                                  # Review, review line, suggestion, Thyme Setup (tables 50100-50103)
-│   ├── tableextension/                         # Resource billable target fields (50100)
+│   ├── tableextension/                         # Resource billable target and capacity fields (50100)
 │   ├── pageextension/                          # Thyme group on the Resource Card (50100)
 │   ├── enum/                                   # Verdict, severity, suggestion enums (enums 50100-50104)
 │   ├── permissionset/                          # THYME AI AGENT, THYME USER, THYME ADMIN (50100-50102)

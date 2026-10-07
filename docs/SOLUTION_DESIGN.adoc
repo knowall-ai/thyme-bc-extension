@@ -283,6 +283,9 @@ Maps to the BC `Resource` table (table 156).
 | timeSheetApproverUserId | Time Sheet Approver User ID | Approver for time sheets
 | billableTargetPercent | Thyme Billable Target % | Extension field 50100; 0-100, only meaningful when billableTargetSet is true
 | billableTargetSet | Thyme Billable Target Set | Extension field 50101; false = use the company default
+| weeklyCapacityHours | Thyme Weekly Capacity (Hours) | Extension field 50102; 0-168, only meaningful when weeklyCapacitySet is true
+| weeklyCapacitySet | Thyme Weekly Capacity Set | Extension field 50103; false = hours per day x 5
+| flexibleWorkingDays | Thyme Flexible Working Days | Extension field 50104; works the weekly capacity on any days
 | lastDateModified | Last Date Modified | Last modification date
 | lastModifiedDateTime | SystemModifiedAt | For sync
 |===
@@ -304,6 +307,30 @@ percentage must be between 0 and 100 (MinValue/MaxValue). On the API page the pe
 comes before the flag, so when a PATCH sends both, the flag is applied last and wins.
 
 Both fields appear in a *Thyme* group on the Resource Card (page extension 50100).
+
+==== Weekly capacity and flexible working days
+
+Thyme used to derive weekly capacity as hours per day (from the resource's HOUR unit of
+measure) x 5, which overstates part-timers. The same "set" pattern as the billable target
+applies:
+
+* `Thyme Weekly Capacity Set` = false: Thyme uses hours per day x 5. The hours are held at 0.
+* `Thyme Weekly Capacity Set` = true: `Thyme Weekly Capacity (Hours)` is the person's weekly
+  capacity. 0 is a real value: the person stays listed in Thyme but is left out of team
+  capacity, completion and the billable target (used for AI agents and anyone else who
+  shouldn't count).
+
+Validating the hours (including 0) sets the flag; validating the flag to false resets the
+hours. The hours must be between 0 and 168.
+
+`Thyme Flexible Working Days` says the person works their weekly capacity on any days rather
+than fixed weekdays (for example 15 hours on any two days). Thyme and the AI timesheet review
+then judge their week as a whole: no "missing day" findings, and a single day is only flagged
+when it exceeds a full day's hours. People who aren't flexible but work fewer than five days
+keep hours per day as their daily capacity, with the week capped at their weekly capacity.
+
+All three fields appear in the *Thyme* group on the Resource Card and are editable through the
+`resources` API with the standard Resource permissions.
 
 === Time Entries API (Page 50105)
 
@@ -555,7 +582,7 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Setup | Table 50103
 | Thyme Suggestion Request | Table 50104
 | Thyme Agent Heartbeat | Table 50105
-| Thyme Resource (extends Resource) | Table Extension 50100 (fields 50100-50101)
+| Thyme Resource (extends Resource) | Table Extension 50100 (fields 50100-50104)
 | Thyme Resource Card (extends Resource Card) | Page Extension 50100
 | Thyme Review Verdict | Enum 50100
 | Thyme Review Severity | Enum 50101

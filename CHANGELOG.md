@@ -2,6 +2,26 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
+## 1.19.0.0
+
+### Added
+
+- Per-person weekly capacity on Resource: "Thyme Weekly Capacity (Hours)" (field 50102, 0-168)
+  and "Thyme Weekly Capacity Set" (field 50103), so part-timers are measured against the hours
+  they actually work. "Not set" falls back to hours per day x 5; an explicit 0 keeps the person
+  listed in Thyme but leaves them out of team capacity, completion and targets (for example AI
+  agents). Entering hours sets the flag; clearing the flag resets the hours.
+- "Thyme Flexible Working Days" (field 50104): the person works their weekly capacity on any
+  days rather than fixed weekdays, so Thyme and the timesheet review judge the week as a whole.
+- `weeklyCapacityHours`, `weeklyCapacitySet` and `flexibleWorkingDays` on `resources`, editable
+  via PATCH with the same Resource permissions as the billable target. All three show in the
+  Thyme group on the Resource Card.
+
+### Fixed
+
+- `billableTargetPercent` outside 0-100 is now rejected through the API too (MinValue/MaxValue
+  only applied on pages); the same check guards `weeklyCapacityHours` (0-168).
+
 ## 1.18.0.0
 
 ### Added
