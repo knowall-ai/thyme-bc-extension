@@ -164,17 +164,20 @@ table 50106 "Thyme Project Source Link"
         Parts: List of [Text];
         Owner: Text;
         Repo: Text;
+        HasScheme: Boolean;
         IsUrl: Boolean;
     begin
         RawValue := RawValue.ToLower();
-        IsUrl := RawValue.StartsWith('https://') or RawValue.StartsWith('http://');
+        HasScheme := RawValue.StartsWith('https://') or RawValue.StartsWith('http://');
         RawValue := StripScheme(RawValue);
         if RawValue.StartsWith('www.') then
             RawValue := RawValue.Substring(5);
-        if RawValue.StartsWith('github.com/') then begin
+        IsUrl := RawValue.StartsWith('github.com/');
+        // A URL must be a GitHub one: a GitLab or DevOps URL would otherwise pass as owner/repo.
+        if HasScheme and not IsUrl then
+            Error(NotGitHubUrlErr, RawValue);
+        if IsUrl then
             RawValue := RawValue.Substring(12);
-            IsUrl := true;
-        end;
         RawValue := RawValue.TrimEnd('/');
         Parts := RawValue.Split('/');
         // A URL may go deeper (…/owner/repo/pull/12); owner/repo as typed may not.
@@ -338,6 +341,7 @@ table 50106 "Thyme Project Source Link"
     var
         ValueRequiredErr: Label 'Enter a value for the linked source.';
         ValueTooLongErr: Label 'The value can be at most 250 characters.';
+        NotGitHubUrlErr: Label '"%1" is not a GitHub URL. Enter owner/repo or https://github.com/owner/repo.', Comment = '%1 = the value entered';
         GitHubFormatErr: Label '"%1" is not a GitHub repository. Enter owner/repo, owner/* for every repo of an owner, owner/prefix-* for repos starting with a prefix, or the repository''s URL.', Comment = '%1 = the value entered';
         DevOpsFormatErr: Label '"%1" is not an Azure DevOps project. Enter organisation/project, the project name, or its URL (https://dev.azure.com/organisation/project).', Comment = '%1 = the value entered';
         DevOpsRepoFormatErr: Label '"%1" is not an Azure DevOps repo. Enter organisation/project/repo or its URL (https://dev.azure.com/organisation/project/_git/repo).', Comment = '%1 = the value entered';
