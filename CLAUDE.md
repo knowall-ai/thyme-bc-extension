@@ -23,7 +23,7 @@ This is a Business Central (BC) AL extension that provides custom API endpoints 
 - `src/api/ThymeAgentHeartbeatsAPI.Page.al` - Agent Heartbeats API: when the AI agent was last seen (page 50115, table 50105)
 - `src/api/ThymeSetupAPI.Page.al` - Thyme Setup API, single record (page 50112, table 50103 `Thyme Setup`)
 - `src/page/ThymeSetup.Page.al` - Thyme Setup card (page 50113)
-- `src/tableextension/ThymeResource.TableExt.al` - Resource billable target fields 50100-50101 (table extension 50100)
+- `src/tableextension/ThymeResource.TableExt.al` - Resource billable target fields 50100-50101 and weekly capacity / flexible working days fields 50102-50104 (table extension 50100)
 - `src/pageextension/ThymeResourceCard.PageExt.al` - Thyme group on the Resource Card (page extension 50100)
 - `src/enum/` - Review verdict/severity and suggestion source/confidence/status and suggestion request status enums (50100-50105)
 - `src/permissionset/` - `THYME AI AGENT` (50100), `THYME USER` (50101) and `THYME ADMIN` (50102); add new tables/pages to these

@@ -106,6 +106,12 @@
 | `GET /thymeSetup` returns an empty list
 | The setup record hasn't been created in this company yet. It is normally created on install, on upgrade and when a company is initialised, so this is rare. Creating it needs write permission on `Thyme Setup`: as a user with `THYME ADMIN`, open *Thyme Setup* in BC or call `GET /thymeSetup` once, and the record is created with a 75% default. Opening it as a user with only `THYME USER` doesn't create it.
 
+| A part-timer's capacity in Thyme is too high (for example 37.5h a week for someone who works two days)
+| Thyme defaults to hours per day x 5. Set *Thyme Weekly Capacity (Hours)* on the Resource Card (or `PATCH /resources({id})` with `{ "weeklyCapacityHours": 15 }`). If they work on any days rather than fixed weekdays, also tick *Thyme Flexible Working Days*.
+
+| A person shows 0 capacity and is greyed out in Thyme, but should count
+| Their weekly capacity is set to 0. Untick *Thyme Weekly Capacity Set* on the Resource Card (or `PATCH /resources({id})` with `{ "weeklyCapacitySet": false }`) to fall back to hours per day x 5, or enter their real weekly hours.
+
 | A person shows a 0% billable target but should use the company default
 | Their own target is set to 0. Untick *Thyme Billable Target Set* on the Resource Card (or `PATCH /resources({id})` with `{ "billableTargetSet": false }`) so Thyme falls back to the default.
 |===

@@ -1,5 +1,5 @@
 /// <summary>
-/// Shows the Thyme billable target on the Resource Card.
+/// Shows the Thyme billable target, weekly capacity and flexible working days on the Resource Card.
 /// </summary>
 pageextension 50100 "Thyme Resource Card" extends "Resource Card"
 {
@@ -20,6 +20,21 @@ pageextension 50100 "Thyme Resource Card" extends "Resource Card"
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies whether this person has their own billable target. When this is off, Thyme uses the Default Billable Target % from Thyme Setup. Turning it off clears the person''s target.';
+                }
+                field("Thyme Weekly Capacity (Hours)"; Rec."Thyme Weekly Capacity (Hours)")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies how many hours a week this person works, for example 15 for two days a week. Entering a value, including 0, turns on Weekly Capacity Set. 0 keeps the person listed in Thyme but leaves them out of team capacity and targets.';
+                }
+                field("Thyme Weekly Capacity Set"; Rec."Thyme Weekly Capacity Set")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies whether this person has their own weekly capacity. When this is off, Thyme uses their hours per day times 5. Turning it off clears the person''s weekly capacity.';
+                }
+                field("Thyme Flexible Working Days"; Rec."Thyme Flexible Working Days")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies whether this person works their weekly capacity on any days rather than fixed weekdays. Thyme then checks their week as a whole instead of expecting hours every day.';
                 }
             }
         }

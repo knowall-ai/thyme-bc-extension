@@ -10,6 +10,11 @@
 /// billableTargetPercent comes before billableTargetSet so that, when a PATCH sends both,
 /// the flag is applied last (setting a percentage marks the target as set).
 ///
+/// weeklyCapacityHours is only meaningful when weeklyCapacitySet is true; otherwise Thyme uses
+/// hours per day x 5. An explicit 0 means the person is listed but not counted. The same
+/// ordering rule applies: the flag comes after the hours. flexibleWorkingDays means the person
+/// works their weekly capacity on any days, so Thyme judges the week rather than each day.
+///
 /// Endpoint: /api/knowall/thyme/v1.0/companies({companyId})/resources
 /// </summary>
 page 50104 "Thyme Resources API"
@@ -106,6 +111,18 @@ page 50104 "Thyme Resources API"
                 field(billableTargetSet; Rec."Thyme Billable Target Set")
                 {
                     Caption = 'Billable Target Set';
+                }
+                field(weeklyCapacityHours; Rec."Thyme Weekly Capacity (Hours)")
+                {
+                    Caption = 'Weekly Capacity (Hours)';
+                }
+                field(weeklyCapacitySet; Rec."Thyme Weekly Capacity Set")
+                {
+                    Caption = 'Weekly Capacity Set';
+                }
+                field(flexibleWorkingDays; Rec."Thyme Flexible Working Days")
+                {
+                    Caption = 'Flexible Working Days';
                 }
                 field(lastDateModified; Rec."Last Date Modified")
                 {
