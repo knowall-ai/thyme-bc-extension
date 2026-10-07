@@ -384,7 +384,7 @@ The agent sends its own `lastSeenAt` with each `PATCH` so the record always chan
 
 ### Project Source Links API
 
-Which work belongs to a project: GitHub repos, Azure DevOps projects, meeting subject keywords
+Which work belongs to a project: GitHub repos, Azure DevOps projects and repos, meeting subject keywords
 and external attendee domains, optionally with the task to log that time against. The AI agent
 reads them to map activity to projects when it suggests time entries (they replace the
 `projects[]` rules in its config file). Thyme shows and edits them on the project page; in BC
@@ -395,7 +395,7 @@ they are the *Thyme Linked Sources* part on the Project Card.
 | `id` | SystemId (GUID) |
 | `jobNo` | Project (Job No.) |
 | `lineNo` | Line number, assigned on insert. Read-only |
-| `type` | `GitHubRepo`, `DevOpsProject`, `MeetingKeyword` or `AttendeeDomain` |
+| `type` | `GitHubRepo`, `DevOpsProject`, `DevOpsRepo`, `MeetingKeyword` or `AttendeeDomain` |
 | `value` | What to match (≤ 250), normalised on save, see below |
 | `jobTaskNo` | Optional task; must be a Posting task of the project |
 | `useMonthlyBlock` | Log against the posting task named after the month ("Block 7 - October"). With `jobTaskNo`, that task is the fallback until the month's block exists; without one, unticked lets the agent detect monthly blocks |
@@ -407,9 +407,13 @@ Values are normalised, so the agent matches them the same way however they were 
 | Type | Accepts | Stored as |
 |------|---------|-----------|
 | `GitHubRepo` | `owner/repo`, `owner/*` (every repo of the owner), `owner/prefix-*`, or a URL such as `https://github.com/contoso/app/pull/12` | `contoso/app` (lower case) |
-| `DevOpsProject` | The project name, or `https://dev.azure.com/contoso/Contoso App/...` | `Contoso App` |
+| `DevOpsProject` | `organisation/project`, a URL such as `https://dev.azure.com/contoso/Contoso%20App/_workitems` (or `https://contoso.visualstudio.com/Contoso App`), or just the project name | `contoso/Contoso App` (a bare name stays as typed) |
+| `DevOpsRepo` | `organisation/project/repo` or `https://dev.azure.com/contoso/Contoso App/_git/app-api` | `contoso/Contoso App/app-api` |
 | `MeetingKeyword` | A word or phrase in the meeting subject (at least 3 characters); a leading `Meeting: ` is dropped | As entered |
 | `AttendeeDomain` | `contoso.com` or an attendee's address `someone@contoso.com` | `contoso.com` |
+
+A DevOps repo link beats its project's link: pull requests in that repo (and work items linked
+to them) go to the repo's project; other work in the DevOps project goes to the project link.
 
 The same type and value can be linked to a project only once (case-insensitive); the same value
 on two projects is allowed and makes the agent ask which one.

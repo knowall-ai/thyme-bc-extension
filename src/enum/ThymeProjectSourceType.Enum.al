@@ -1,6 +1,7 @@
 /// <summary>
-/// What a project source link matches: work in a GitHub repo, work in an Azure DevOps project,
-/// a meeting whose subject contains a keyword, or a meeting with an attendee from a domain.
+/// What a project source link matches: work in a GitHub repo, work in an Azure DevOps project or
+/// one of its Git repos, a meeting whose subject contains a keyword, or a meeting with an
+/// attendee from a domain.
 /// Value names deliberately have no spaces so the API exposes them unchanged.
 /// </summary>
 enum 50106 "Thyme Project Source Type"
@@ -16,11 +17,15 @@ enum 50106 "Thyme Project Source Type"
     {
         Caption = 'DevOps Project';
     }
-    value(2; MeetingKeyword)
+    value(2; DevOpsRepo)
+    {
+        Caption = 'DevOps Repo';
+    }
+    value(3; MeetingKeyword)
     {
         Caption = 'Meeting Keyword';
     }
-    value(3; AttendeeDomain)
+    value(4; AttendeeDomain)
     {
         Caption = 'Attendee Domain';
     }

@@ -1,5 +1,5 @@
 /// <summary>
-/// Custom API page for project source links: the GitHub repos, Azure DevOps projects, meeting
+/// Custom API page for project source links: the GitHub repos, Azure DevOps projects and repos, meeting
 /// keywords and attendee domains that belong to a project, optionally with the task to log
 /// that time against. The AI agent reads them to map activity to projects when it suggests
 /// time entries; Thyme shows and edits them on the project page.

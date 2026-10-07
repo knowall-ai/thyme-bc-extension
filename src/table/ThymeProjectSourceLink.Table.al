@@ -9,8 +9,9 @@
 /// remove only those. A person who edits a learned link adopts it (Learned becomes false).
 ///
 /// Values are normalised on save: a GitHub URL becomes owner/repo (owner/* or owner/prefix-*
-/// for a whole organisation or a name prefix), a DevOps URL becomes the project name, an
-/// attendee e-mail address becomes its domain, and "Meeting: " is dropped from a keyword.
+/// for a whole organisation or a name prefix), a DevOps project URL becomes organisation/project
+/// and a DevOps repo URL organisation/project/repo, an attendee e-mail address becomes its
+/// domain, and "Meeting: " is dropped from a keyword.
 /// </summary>
 table 50106 "Thyme Project Source Link"
 {
@@ -145,7 +146,9 @@ table 50106 "Thyme Project Source Link"
             LinkType::GitHubRepo:
                 Result := NormaliseGitHubRepo(Result);
             LinkType::DevOpsProject:
-                Result := NormaliseDevOpsProject(Result);
+                Result := NormaliseDevOps(Result, false);
+            LinkType::DevOpsRepo:
+                Result := NormaliseDevOps(Result, true);
             LinkType::MeetingKeyword:
                 Result := NormaliseKeyword(Result);
             LinkType::AttendeeDomain:
@@ -192,30 +195,56 @@ table 50106 "Thyme Project Source Link"
         exit(Owner + '/' + Repo);
     end;
 
-    local procedure NormaliseDevOpsProject(RawValue: Text): Text
+    /// <summary>
+    /// A DevOps project as organisation/project (a bare project name is kept as typed), or a
+    /// repo as organisation/project/repo. Accepts https://dev.azure.com/org/project[/_git/repo]
+    /// and https://org.visualstudio.com/[DefaultCollection/]project[/_git/repo] URLs.
+    /// </summary>
+    local procedure NormaliseDevOps(RawValue: Text; IsRepo: Boolean): Text
     var
         Parts: List of [Text];
-        Lower: Text;
+        Org: Text;
+        Project: Text;
+        Repo: Text;
+        Rest: Text;
+        GitPos: Integer;
     begin
         RawValue := RawValue.Replace('%20', ' ');
-        Lower := StripScheme(RawValue.ToLower());
-        if Lower.StartsWith('dev.azure.com/') then begin
-            // dev.azure.com/{org}/{project}/...
-            Parts := StripScheme(RawValue).Split('/');
-            if (Parts.Count() < 3) or (Parts.Get(3) = '') then
-                Error(DevOpsFormatErr, RawValue);
-            exit(Parts.Get(3).Trim());
+        Rest := StripScheme(RawValue).TrimEnd('/');
+        if Rest.ToLower().StartsWith('dev.azure.com/') then
+            Rest := Rest.Substring(15)
+        else
+            if Rest.ToLower().Contains('.visualstudio.com/') then begin
+                // org.visualstudio.com/[DefaultCollection/]project/... → org/project/...
+                Org := Rest.Substring(1, Rest.ToLower().IndexOf('.visualstudio.com/') - 1);
+                Rest := Rest.Substring(Rest.ToLower().IndexOf('.visualstudio.com/') + 18);
+                if Rest.ToLower().StartsWith('defaultcollection/') then
+                    Rest := Rest.Substring(19);
+                Rest := Org + '/' + Rest;
+            end;
+        // org/project/_git/repo/... → org/project/repo
+        GitPos := Rest.ToLower().IndexOf('/_git/');
+        if GitPos > 0 then
+            Rest := Rest.Substring(1, GitPos - 1) + '/' + Rest.Substring(GitPos + 6).Split('/').Get(1);
+        Parts := Rest.Split('/');
+        if IsRepo then begin
+            if (Parts.Count() < 3) or ((GitPos = 0) and (Parts.Count() <> 3)) then
+                Error(DevOpsRepoFormatErr, RawValue);
+            Org := Parts.Get(1).Trim();
+            Project := Parts.Get(2).Trim();
+            Repo := Parts.Get(3).Trim();
+            if (Org = '') or (Project = '') or (Repo = '') or Project.StartsWith('_') then
+                Error(DevOpsRepoFormatErr, RawValue);
+            exit(Org + '/' + Project + '/' + Repo);
         end;
-        if Lower.Contains('.visualstudio.com/') then begin
-            // {org}.visualstudio.com/{project}/...
-            Parts := StripScheme(RawValue).Split('/');
-            if (Parts.Count() < 2) or (Parts.Get(2) = '') then
-                Error(DevOpsFormatErr, RawValue);
-            exit(Parts.Get(2).Trim());
-        end;
-        if RawValue.Contains('/') then
+        if Parts.Count() = 1 then
+            exit(Rest.Trim());
+        Org := Parts.Get(1).Trim();
+        Project := Parts.Get(2).Trim();
+        // A typed org/project/x is a mistake; a URL may go deeper (…/_workitems, …/_boards).
+        if (Org = '') or (Project = '') or Project.StartsWith('_') or ((Parts.Count() > 2) and not Parts.Get(3).StartsWith('_') and (GitPos = 0)) then
             Error(DevOpsFormatErr, RawValue);
-        exit(RawValue);
+        exit(Org + '/' + Project);
     end;
 
     local procedure NormaliseKeyword(RawValue: Text): Text
@@ -306,7 +335,8 @@ table 50106 "Thyme Project Source Link"
         ValueRequiredErr: Label 'Enter a value for the linked source.';
         ValueTooLongErr: Label 'The value can be at most 250 characters.';
         GitHubFormatErr: Label '"%1" is not a GitHub repository. Enter owner/repo, owner/* for every repo of an owner, owner/prefix-* for repos starting with a prefix, or the repository''s URL.', Comment = '%1 = the value entered';
-        DevOpsFormatErr: Label '"%1" is not an Azure DevOps project. Enter the project name or its URL (https://dev.azure.com/organisation/project).', Comment = '%1 = the value entered';
+        DevOpsFormatErr: Label '"%1" is not an Azure DevOps project. Enter organisation/project, the project name, or its URL (https://dev.azure.com/organisation/project).', Comment = '%1 = the value entered';
+        DevOpsRepoFormatErr: Label '"%1" is not an Azure DevOps repo. Enter organisation/project/repo or its URL (https://dev.azure.com/organisation/project/_git/repo).', Comment = '%1 = the value entered';
         KeywordTooShortErr: Label 'A meeting keyword must be at least 3 characters.';
         DomainFormatErr: Label '"%1" is not a domain. Enter a domain such as contoso.com, or an attendee''s e-mail address.', Comment = '%1 = the value entered';
         TaskNotFoundErr: Label 'Task %1 does not exist on project %2.', Comment = '%1 = job task number, %2 = job number';
