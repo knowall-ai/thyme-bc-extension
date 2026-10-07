@@ -25,6 +25,7 @@ This extension exposes additional fields needed by Thyme:
 - Time sheets with approval status (Open, Submitted, Approved, Rejected)
 - Resources with capacity information
 - Posted time entries from Job Ledger
+- AI timesheet reviews and AI time-entry suggestions (stored by this extension)
 
 ## API Endpoints
 
@@ -38,6 +39,11 @@ Once deployed, the APIs are available at:
 .../api/knowall/thyme/v1.0/companies({companyId})/timeSheetDetails
 .../api/knowall/thyme/v1.0/companies({companyId})/resources
 .../api/knowall/thyme/v1.0/companies({companyId})/timeEntries
+.../api/knowall/thyme/v1.0/companies({companyId})/jobPlanningLines
+.../api/knowall/thyme/v1.0/companies({companyId})/resourceUnitsOfMeasure
+.../api/knowall/thyme/v1.0/companies({companyId})/timesheetReviews
+.../api/knowall/thyme/v1.0/companies({companyId})/timesheetReviewLines
+.../api/knowall/thyme/v1.0/companies({companyId})/timeSuggestions
 ```
 
 For user information, use BC's standard Automation API:
@@ -192,6 +198,79 @@ POST /timeSheetDetails
 
 **Note:** Time Entries are filtered to Resource-type entries only (employee time tracking).
 
+### Timesheet Reviews API
+
+AI reviews of a time sheet. Written by an AI agent (insert/modify/delete), read by Thyme.
+Unlike the other endpoints, this data is stored in the extension's own table.
+
+| Field | Description |
+|-------|-------------|
+| `id` | System GUID (read-only) |
+| `entryNo` | Auto-assigned entry number (read-only) |
+| `timeSheetNo` | Time sheet reviewed (required) |
+| `versionStamp` | Latest `lastModifiedDateTime` across the time sheet's lines and details when reviewed (required) |
+| `verdict` | `Approve`, `Check` or `Query` (defaults to `Check`) |
+| `summary` | Review summary (up to 2048 characters) |
+| `reviewer` | Who wrote the review, e.g. the agent's name |
+| `reviewedAt` | When reviewed (defaults to now) |
+| `lastModifiedDateTime` | Last modified timestamp (read-only) |
+
+**Usage:** Latest review for a time sheet:
+```
+GET /timesheetReviews?$filter=timeSheetNo eq 'TS00001'&$orderby=reviewedAt desc&$top=1
+```
+If the time sheet's lines or details have changed since `versionStamp`, the review is stale.
+Deleting a review also deletes its review lines.
+
+### Timesheet Review Lines API
+
+Individual findings within a review.
+
+| Field | Description |
+|-------|-------------|
+| `id` | System GUID (read-only) |
+| `reviewEntryNo` | Parent review's `entryNo` (required) |
+| `lineNo` | Line number (assigned in steps of 10000 if 0 or omitted) |
+| `timeSheetNo` | Time sheet number (filled from the review if omitted; must match it) |
+| `timeSheetLineNo` | Time sheet line the finding is about (`0` = whole time sheet) |
+| `severity` | `Info`, `Warning` or `Issue` |
+| `note` | Finding text (up to 500 characters) |
+| `lastModifiedDateTime` | Last modified timestamp (read-only) |
+
+### Time Suggestions API
+
+AI time-entry suggestions. Written by an AI agent, read and accepted/dismissed in Thyme.
+
+| Field | Description |
+|-------|-------------|
+| `id` | System GUID (read-only) |
+| `entryNo` | Auto-assigned entry number (read-only) |
+| `resourceNo` | Resource the time is suggested for (required) |
+| `date` | Date of the suggested time (required) |
+| `quantity` | Hours |
+| `jobNo` | Suggested job |
+| `jobTaskNo` | Suggested job task (within `jobNo`) |
+| `description` | Suggested line description |
+| `source` | `Calendar`, `GitHub`, `DevOps` or `Other` |
+| `sourceRef` | Source reference, e.g. meeting ID or pull request ID |
+| `sourceUrl` | Link to the source |
+| `evidence` | Short reasoning, e.g. "attended 11:31-12:02" |
+| `confidence` | `High`, `Medium` or `Low` |
+| `status` | `Pending` (default), `Accepted` or `Dismissed` |
+| `timeSheetNo` | Time sheet the suggestion was accepted into |
+| `timeSheetLineNo` | Time sheet line the suggestion was accepted into |
+| `createdBy` | Who created the suggestion |
+| `createdAt` | When created (defaults to now) |
+| `actionedAt` | When accepted or dismissed (stamped automatically if left blank) |
+| `lastModifiedDateTime` | Last modified timestamp (read-only) |
+
+**Usage:** Pending suggestions for a resource's week:
+```
+GET /timeSuggestions?$filter=resourceNo eq 'R0010' and date ge 2026-01-05 and date le 2026-01-11 and status eq 'Pending'
+```
+A second suggestion with the same `resourceNo`, `source`, `sourceRef` and `date` is rejected,
+so re-runs should `PATCH` the existing one (suggestions with a blank `sourceRef` are not checked).
+
 ### Users (Standard BC API)
 
 For user information, use BC's built-in [Automation API](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/administration/api/dynamics_user_get):
@@ -255,6 +334,13 @@ Create two environments in Settings → Environments:
 5. In BC Admin Center → Microsoft Entra Apps → Authorize the app
 6. **Critical**: In Business Central → search "Microsoft Entra applications" → add the app with permission sets `D365 AUTOMATION` and `EXTEN. MGT. - ADMIN`
 
+**Permission sets for the stored data:** the reviews and suggestions live in this extension's own tables, which the standard D365 permission sets don't cover. Assign:
+
+| Permission set | Assign to | Grants |
+|----------------|-----------|--------|
+| `THYME AI AGENT` | The AI agent's Microsoft Entra application | Full access to reviews, review lines and suggestions (includes `THYME USER`) |
+| `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; run the Thyme API pages |
+
 See [docs/INSTALLATION.adoc](docs/INSTALLATION.adoc) for detailed setup instructions.
 
 ### Deploy via VS Code
@@ -280,7 +366,16 @@ thyme-bc-extension/
 │   │   ├── ThymeTimeSheetAPI.Page.al           # Time Sheets (page 50102)
 │   │   ├── ThymeTimeSheetLineAPI.Page.al       # Time Sheet Lines (page 50103)
 │   │   ├── ThymeResourcesAPI.Page.al           # Resources endpoint (page 50104)
-│   │   └── ThymeTimeEntriesAPI.Page.al         # Time Entries endpoint (page 50105)
+│   │   ├── ThymeTimeEntriesAPI.Page.al         # Time Entries endpoint (page 50105)
+│   │   ├── ThymeTimeSheetDetailAPI.Page.al     # Time Sheet Details (page 50106)
+│   │   ├── ThymeJobPlanningLinesAPI.Page.al    # Job Planning Lines (page 50107)
+│   │   ├── ThymeResourceUnitsOfMeasureAPI.Page.al # Resource Units of Measure (page 50108)
+│   │   ├── ThymeTimesheetReviewsAPI.Page.al    # Timesheet Reviews (page 50109)
+│   │   ├── ThymeTimesheetReviewLinesAPI.Page.al # Timesheet Review Lines (page 50110)
+│   │   └── ThymeTimeSuggestionsAPI.Page.al     # Time Suggestions (page 50111)
+│   ├── table/                                  # Review, review line, suggestion (tables 50100-50102)
+│   ├── enum/                                   # Verdict, severity, suggestion enums (enums 50100-50104)
+│   ├── permissionset/                          # THYME AI AGENT, THYME USER (50100-50101)
 │   └── codeunit/
 │       └── ThymeTimeSheetActions.Codeunit.al   # Approval workflow actions (codeunit 50100)
 └── .vscode/
@@ -295,6 +390,7 @@ thyme-bc-extension/
 - [Solution Design](docs/SOLUTION_DESIGN.adoc) - Architecture and API design
 - [Troubleshooting](docs/TROUBLESHOOTING.adoc) - Common issues and solutions
 - [Testing](docs/TESTING.adoc) - How to test the API
+- [Changelog](CHANGELOG.md) - Release notes
 
 ## Related
 
