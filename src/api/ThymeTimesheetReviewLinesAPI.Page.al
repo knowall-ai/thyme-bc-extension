@@ -67,4 +67,35 @@ page 50110 "Thyme TS Review Lines API"
             }
         }
     }
+
+    trigger OnOpenPage()
+    var
+        RecordSecurity: Codeunit "Thyme Record Security";
+    begin
+        RecordSecurity.ApplyReviewLineFilter(Rec);
+    end;
+
+    trigger OnInsertRecord(BelowxRec: Boolean): Boolean
+    var
+        RecordSecurity: Codeunit "Thyme Record Security";
+    begin
+        RecordSecurity.CheckCanWriteReviews();
+        exit(true);
+    end;
+
+    trigger OnModifyRecord(): Boolean
+    var
+        RecordSecurity: Codeunit "Thyme Record Security";
+    begin
+        RecordSecurity.CheckCanWriteReviews();
+        exit(true);
+    end;
+
+    trigger OnDeleteRecord(): Boolean
+    var
+        RecordSecurity: Codeunit "Thyme Record Security";
+    begin
+        RecordSecurity.CheckCanWriteReviews();
+        exit(true);
+    end;
 }

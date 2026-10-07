@@ -48,6 +48,22 @@ table 50100 "Thyme Timesheet Review"
         {
             Caption = 'Reviewed At';
         }
+        // Owner and approver of the reviewed time sheet, used by "Thyme Record Security"
+        // to show a review only to the people it concerns.
+        field(8; "Time Sheet Owner User ID"; Code[50])
+        {
+            Caption = 'Time Sheet Owner User ID';
+            FieldClass = FlowField;
+            CalcFormula = lookup("Time Sheet Header"."Owner User ID" where("No." = field("Time Sheet No.")));
+            Editable = false;
+        }
+        field(9; "Time Sheet Approver User ID"; Code[50])
+        {
+            Caption = 'Time Sheet Approver User ID';
+            FieldClass = FlowField;
+            CalcFormula = lookup("Time Sheet Header"."Approver User ID" where("No." = field("Time Sheet No.")));
+            Editable = false;
+        }
     }
 
     keys

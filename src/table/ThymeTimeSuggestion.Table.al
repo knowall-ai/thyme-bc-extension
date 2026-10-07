@@ -95,6 +95,15 @@ table 50102 "Thyme Time Suggestion"
         {
             Caption = 'Actioned At';
         }
+        // Time sheet owner of the suggestion's resource: the user the suggestion is for.
+        // Used by "Thyme Record Security" to show a suggestion only to that user.
+        field(19; "Resource Owner User ID"; Code[50])
+        {
+            Caption = 'Resource Owner User ID';
+            FieldClass = FlowField;
+            CalcFormula = lookup(Resource."Time Sheet Owner User ID" where("No." = field("Resource No.")));
+            Editable = false;
+        }
     }
 
     keys
