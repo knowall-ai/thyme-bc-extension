@@ -40,6 +40,16 @@ page 50107 "Thyme Job Planning Lines API"
                 field(jobNo; Rec."Job No.")
                 {
                     Caption = 'Job No.';
+
+                    trigger OnValidate()
+                    begin
+                        // BC only copies the project's currency onto a planning line in OnInsert,
+                        // after the API has already priced the line, so a line on a project in
+                        // another currency would hold local-currency amounts labelled with the
+                        // project currency. jobNo is the first field applied, so setting the
+                        // currency here prices the rest of the line in the project currency.
+                        SetCurrencyFromJob();
+                    end;
                 }
                 field(jobTaskNo; Rec."Job Task No.")
                 {
@@ -93,6 +103,34 @@ page 50107 "Thyme Job Planning Lines API"
                 {
                     Caption = 'Total Price';
                 }
+                // The cost and price fields above are in the project's currency (currencyCode;
+                // blank = LCY). These are the same amounts in the company's local currency, for
+                // internal cost reporting. All read-only: BC calculates them from the line.
+                field(currencyCode; Rec."Currency Code")
+                {
+                    Caption = 'Currency Code';
+                    Editable = false;
+                }
+                field(unitCostLCY; Rec."Unit Cost (LCY)")
+                {
+                    Caption = 'Unit Cost (LCY)';
+                    Editable = false;
+                }
+                field(totalCostLCY; Rec."Total Cost (LCY)")
+                {
+                    Caption = 'Total Cost (LCY)';
+                    Editable = false;
+                }
+                field(unitPriceLCY; Rec."Unit Price (LCY)")
+                {
+                    Caption = 'Unit Price (LCY)';
+                    Editable = false;
+                }
+                field(totalPriceLCY; Rec."Total Price (LCY)")
+                {
+                    Caption = 'Total Price (LCY)';
+                    Editable = false;
+                }
                 field(workTypeCode; Rec."Work Type Code")
                 {
                     Caption = 'Work Type Code';
@@ -105,6 +143,18 @@ page 50107 "Thyme Job Planning Lines API"
             }
         }
     }
+
+    local procedure SetCurrencyFromJob()
+    var
+        Job: Record Job;
+    begin
+        if not Job.Get(Rec."Job No.") then
+            exit;
+        if Rec."Currency Code" = Job."Currency Code" then
+            exit;
+        Rec."Currency Code" := Job."Currency Code";
+        Rec.UpdateCurrencyFactor();
+    end;
 
     trigger OnInsertRecord(BelowxRec: Boolean): Boolean
     var
