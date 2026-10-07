@@ -121,17 +121,7 @@ table 50104 "Thyme Suggestion Request"
 
     trigger OnInsert()
     begin
-        TestField("Resource No.");
-        TestField("From Date");
-        TestField("To Date");
-        if "To Date" < "From Date" then
-            Error(ToBeforeFromErr, "To Date", "From Date");
-        if "To Date" - "From Date" > MaxDays() - 1 then
-            Error(RangeTooLongErr, MaxDays());
-        // A day's leeway: BC's Today() is the server (UTC) date, and a user east of UTC may
-        // already be in the new week.
-        if "From Date" > Today() + 1 then
-            Error(FutureErr, "From Date");
+        CheckPeriod();
 
         // A new request always starts from scratch, whatever the caller sent.
         Status := Status::Requested;
@@ -149,6 +139,11 @@ table 50104 "Thyme Suggestion Request"
 
     trigger OnModify()
     begin
+        CheckPeriod();
+        // Re-opening a finished request (or moving one to another period) must not make a
+        // second open request for the same resource and period.
+        if Status in [Status::Requested, Status::Running] then
+            CheckNoOpenRequest();
         if (Status in [Status::Running, Status::Done, Status::Failed]) and ("Started At" = 0DT) then
             "Started At" := CurrentDateTime();
         if (Status in [Status::Done, Status::Failed]) and ("Finished At" = 0DT) then
@@ -163,15 +158,37 @@ table 50104 "Thyme Suggestion Request"
         exit(7);
     end;
 
+    local procedure CheckPeriod()
+    begin
+        TestField("Resource No.");
+        TestField("From Date");
+        TestField("To Date");
+        if "To Date" < "From Date" then
+            Error(ToBeforeFromErr, "To Date", "From Date");
+        if "To Date" - "From Date" > MaxDays() - 1 then
+            Error(RangeTooLongErr, MaxDays());
+        // A day's leeway: BC's Today() is the server (UTC) date, and a user east of UTC may
+        // already be in the new week.
+        if "From Date" > Today() + 1 then
+            Error(FutureErr, "From Date");
+    end;
+
     local procedure CheckNoOpenRequest()
     var
         Existing: Record "Thyme Suggestion Request";
+        Resource: Record Resource;
     begin
+        // Two requests arriving together could both find no open request. Locking the
+        // resource row first serialises them: the second waits, then sees the first.
+        Resource.LockTable();
+        if Resource.Get("Resource No.") then;
+
         Existing.SetCurrentKey("Resource No.", "From Date", "To Date", Status);
         Existing.SetRange("Resource No.", "Resource No.");
         Existing.SetRange("From Date", "From Date");
         Existing.SetRange("To Date", "To Date");
         Existing.SetFilter(Status, '%1|%2', Status::Requested, Status::Running);
+        Existing.SetFilter("Entry No.", '<>%1', "Entry No.");
         if Existing.FindFirst() then
             Error(OpenRequestExistsErr, "Resource No.", "From Date", "To Date", Existing."Entry No.");
     end;

@@ -45,6 +45,7 @@ Once deployed, the APIs are available at:
 .../api/knowall/thyme/v1.0/companies({companyId})/timesheetReviewLines
 .../api/knowall/thyme/v1.0/companies({companyId})/timeSuggestions
 .../api/knowall/thyme/v1.0/companies({companyId})/suggestionRequests
+.../api/knowall/thyme/v1.0/companies({companyId})/agentHeartbeats
 .../api/knowall/thyme/v1.0/companies({companyId})/thymeSetup
 ```
 
@@ -338,8 +339,8 @@ POST /suggestionRequests  { "resourceNo": "R0010", "fromDate": "2026-01-05", "to
 GET  /suggestionRequests?$filter=resourceNo eq 'R0010' and fromDate eq 2026-01-05 and toDate eq 2026-01-11&$orderby=requestedAt desc&$top=1
 GET  /suggestionRequests?$filter=status eq 'Requested'&$orderby=requestedAt     (agent: waiting requests)
 ```
-Only one open (`Requested` or `Running`) request per resource and period is allowed; a second
-is rejected, so poll the open one instead. The agent claims a request with `PATCH` and the
+Only one open (`Requested` or `Running`) request per resource and period is allowed. A second
+is rejected, including by re-opening one with `PATCH`, so poll the open one instead. The agent claims a request with `PATCH` and the
 row's ETag, so two pollers can't both run it.
 
 **Who can request:** the resource's time sheet owner (for themselves), its time sheet approver,
@@ -349,6 +350,22 @@ Only the AI agent can change or delete a request. An approver who requests sugge
 someone sees the request's progress and counts, but not the suggestions themselves: those stay
 visible only to the person they are for (and administrators), because they can include that
 person's meeting subjects and other activity they haven't chosen to log yet.
+
+### Agent Heartbeats API
+
+When each AI agent was last seen, so Thyme can show whether it's online and disable
+*Request suggestions* while it isn't (Thyme treats more than 5 minutes as offline).
+
+| Field | Description |
+|-------|-------------|
+| `id` | SystemId (GUID) |
+| `agentName` | The agent (primary key), e.g. `POPPIE` |
+| `lastSeenAt` | Stamped by BC with the server time on every insert and PATCH (whatever is sent) |
+| `status` | What the agent is doing, e.g. "Idle", "Working on 1 request", "Paused" (≤ 250) |
+| `version` | Optional agent version |
+
+Every Thyme user can read it; only the AI agent (`THYME AI AGENT`) can create, change or delete.
+The agent sends its own `lastSeenAt` with each `PATCH` so the record always changes.
 
 ### Row-level security
 
@@ -457,8 +474,8 @@ Create two environments in Settings → Environments:
 
 | Permission set | Assign to | Grants |
 |----------------|-----------|--------|
-| `THYME AI AGENT` | The AI agent's Microsoft Entra application | Full access to reviews, review lines, suggestions and suggestion requests (includes `THYME USER`) |
-| `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; read and create suggestion requests; read the default billable target; run the Thyme API pages |
+| `THYME AI AGENT` | The AI agent's Microsoft Entra application | Full access to reviews, review lines, suggestions, suggestion requests and its heartbeat (includes `THYME USER`) |
+| `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; read and create suggestion requests; read agent heartbeats; read the default billable target; run the Thyme API pages |
 | `THYME ADMIN` | Thyme administrators | Everything in `THYME USER`, plus changing the default billable target (Thyme Setup) and seeing every user's reviews and suggestions |
 
 Users with `THYME USER` only see reviews of time sheets they own or approve and their own

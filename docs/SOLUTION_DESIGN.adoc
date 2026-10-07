@@ -108,6 +108,7 @@ https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timesheetReviewLines
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeSuggestions
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/suggestionRequests
+https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/agentHeartbeats
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/thymeSetup
 ----
 
@@ -472,7 +473,9 @@ them and reports progress.
 
 Keys on (Resource No., From Date, To Date, Status) for Thyme's lookup and the one-open-request
 check, and (Status, Requested At) for the agent's queue. Inserting a second Requested or
-Running request for the same resource and period is rejected.
+Running request for the same resource and period is rejected, and so is re-opening one with a
+PATCH. The check locks the Resource row first, so two simultaneous inserts can't both pass. The
+period rules apply on insert and modify.
 
 Security (codeunit `Thyme Record Security`): read and create for the resource's time sheet
 owner and approver (from the Resource card), Thyme administrators and the AI agent; change and
@@ -480,6 +483,16 @@ delete for the AI agent only. Suggestions are not opened up to approvers: an app
 requests them sees the request's progress and counts, but the suggestions stay with the person
 they are for. The read-only `canRequestSuggestions` field on the Resources API answers "may I
 request for this resource?" per caller.
+
+=== Agent Heartbeats API (Page 50115)
+
+Maps to the `Thyme Agent Heartbeat` table (table 50105), one record per AI agent (primary key
+Agent Name). The agent PATCHes its record on every poll; BC stamps Last Seen At with the server
+time on insert and modify, whatever the agent sends. Thyme reads every record and treats the
+agent as online when the newest Last Seen At is under 5 minutes old; otherwise it disables
+*Request suggestions*. Fields: `agentName`, `lastSeenAt`, `status` (Text[250], e.g. "Idle"),
+`version`. Readable by every Thyme user (`THYME USER`); insert, modify and delete only for the AI
+agent.
 
 === Thyme Setup API (Page 50112)
 
@@ -535,11 +548,13 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Setup API | Page 50112
 | Thyme Setup | Page 50113
 | Thyme Suggestion Requests API | Page 50114
+| Thyme Agent Heartbeats API | Page 50115
 | Thyme Timesheet Review | Table 50100
 | Thyme Timesheet Review Line | Table 50101
 | Thyme Time Suggestion | Table 50102
 | Thyme Setup | Table 50103
 | Thyme Suggestion Request | Table 50104
+| Thyme Agent Heartbeat | Table 50105
 | Thyme Resource (extends Resource) | Table Extension 50100 (fields 50100-50101)
 | Thyme Resource Card (extends Resource Card) | Page Extension 50100
 | Thyme Review Verdict | Enum 50100
@@ -556,7 +571,7 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Upgrade | Codeunit 50102
 | Thyme Company Initialize | Codeunit 50103
 | Thyme Record Security | Codeunit 50104
-| (Reserved for future pages) | Page 50114-50199
+| (Reserved for future pages) | Page 50116-50199
 | (Reserved for future codeunits) | Codeunit 50105-50199
 |===
 

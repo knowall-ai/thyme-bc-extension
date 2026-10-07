@@ -2,7 +2,7 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
-## 1.16.0.0
+## 1.18.0.0
 
 ### Added
 
@@ -16,6 +16,10 @@ Notable changes to the Thyme BC Extension. Versions match `app.json`.
   agent. They can also read those requests. Only the AI agent can change or delete one.
 - `canRequestSuggestions` on `resources` (read-only, per caller), so Thyme can show the
   *Request suggestions* button only to people who may use it.
+- `agentHeartbeats` endpoint (page 50115, table 50105 `Thyme Agent Heartbeat`): when each AI
+  agent was last seen (stamped by BC), its status text and version. Every Thyme user can read it,
+  so Thyme can show whether the agent is online and disable requests while it isn't. Only the AI
+  agent writes it.
 
 ### Unchanged on purpose
 

@@ -10,6 +10,7 @@
 ///   time sheet owner and approver, a Thyme administrator and the AI agent. The same people
 ///   can create one; only the AI agent can change or delete one. An approver who requests
 ///   suggestions still can't see them: they stay with the person they are for.
+/// - An agent heartbeat (when the agent was last seen): every Thyme user; only the AI agent writes.
 ///
 /// A Thyme administrator is a time sheet administrator (User Setup, the same rule that
 /// governs creating time sheets through the API) or a user with the THYME ADMIN
@@ -31,6 +32,7 @@ codeunit 50104 "Thyme Record Security"
         ThymeAIAgentRoleTok: Label 'THYME AI AGENT', Locked = true;
         NotAllowedToWriteReviewsErr: Label 'You are not allowed to change timesheet reviews. Only the AI agent or a Thyme administrator can.';
         NotAllowedToRequestSuggestionsErr: Label 'You are not allowed to request time suggestions for resource %1. You can request them for yourself, for people whose time sheets you approve, or for anyone as a Thyme administrator.', Comment = '%1 = resource number';
+        NotAllowedToWriteHeartbeatErr: Label 'Only the AI agent can update agent heartbeats.';
         NotAllowedToChangeRequestsErr: Label 'You are not allowed to change suggestion requests. Only the AI agent can.';
         NotAllowedToWriteSuggestionErr: Label 'You are not allowed to change time suggestions for resource %1. You can only change suggestions for a resource whose time sheets you own.', Comment = '%1 = resource number';
 
@@ -204,6 +206,15 @@ codeunit 50104 "Thyme Record Security"
     begin
         if not IsAIAgent() then
             Error(NotAllowedToChangeRequestsErr);
+    end;
+
+    /// <summary>
+    /// Agent heartbeats are readable by every Thyme user and written only by the AI agent.
+    /// </summary>
+    procedure CheckCanWriteHeartbeat()
+    begin
+        if not IsAIAgent() then
+            Error(NotAllowedToWriteHeartbeatErr);
     end;
 
     local procedure IsOwnResource(ResourceNo: Code[20]): Boolean
