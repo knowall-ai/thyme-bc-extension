@@ -44,6 +44,7 @@ Once deployed, the APIs are available at:
 .../api/knowall/thyme/v1.0/companies({companyId})/timesheetReviews
 .../api/knowall/thyme/v1.0/companies({companyId})/timesheetReviewLines
 .../api/knowall/thyme/v1.0/companies({companyId})/timeSuggestions
+.../api/knowall/thyme/v1.0/companies({companyId})/suggestionRequests
 .../api/knowall/thyme/v1.0/companies({companyId})/thymeSetup
 ```
 
@@ -311,18 +312,56 @@ so re-runs should `PATCH` the existing one (suggestions with a blank `sourceRef`
 resource's time sheet owner (the user it's for), Thyme administrators and the AI agent. A user
 can't create a suggestion for, or move one to, a resource whose time sheets they don't own.
 
+### Suggestion Requests API
+
+Ask the AI agent to generate time suggestions for a resource's week now, instead of waiting
+for its scheduled runs (for example for a past week, or someone the schedule doesn't cover).
+Thyme creates a request and polls it; the agent claims it, reports progress and finishes it.
+
+| Field | Description |
+|-------|-------------|
+| `id` | SystemId (GUID) |
+| `entryNo` | Entry number (read-only) |
+| `resourceNo` | Resource the suggestions are for |
+| `fromDate` / `toDate` | Period to look at, at most 7 days; `fromDate` can't be in the future |
+| `status` | `Requested` (always, on create), `Running`, `Done` or `Failed` |
+| `progress` | What the agent is doing now, e.g. "Checking calendar for Tue 6 Oct" (≤ 250) |
+| `createdCount` / `updatedCount` | Suggestions the run created and updated (set by the agent when done) |
+| `errorMessage` | Why a `Failed` request failed, in words the requester can act on |
+| `requestedBy` / `requestedAt` | Who asked and when (set by BC, read-only) |
+| `startedAt` / `finishedAt` | Stamped when the agent claims it and when it finishes, if blank |
+| `lastModifiedDateTime` | Last modified timestamp (read-only) |
+
+**Usage:**
+```
+POST /suggestionRequests  { "resourceNo": "R0010", "fromDate": "2026-01-05", "toDate": "2026-01-11" }
+GET  /suggestionRequests?$filter=resourceNo eq 'R0010' and fromDate eq 2026-01-05 and toDate eq 2026-01-11&$orderby=requestedAt desc&$top=1
+GET  /suggestionRequests?$filter=status eq 'Requested'&$orderby=requestedAt     (agent: waiting requests)
+```
+Only one open (`Requested` or `Running`) request per resource and period is allowed; a second
+is rejected, so poll the open one instead. The agent claims a request with `PATCH` and the
+row's ETag, so two pollers can't both run it.
+
+**Who can request:** the resource's time sheet owner (for themselves), its time sheet approver,
+Thyme administrators and the AI agent. The `resources` endpoint has a read-only
+`canRequestSuggestions` flag that answers this for the caller, so Thyme can hide the button.
+Only the AI agent can change or delete a request. An approver who requests suggestions for
+someone sees the request's progress and counts, but not the suggestions themselves: those stay
+visible only to the person they are for (and administrators), because they can include that
+person's meeting subjects and other activity they haven't chosen to log yet.
+
 ### Row-level security
 
-The reviews, review lines and suggestions endpoints only return records the caller may see.
+The reviews, review lines, suggestions and suggestion requests endpoints only return records the caller may see.
 Records outside that scope are left out of lists and `$filter` results, and `GET`, `PATCH` or
 `DELETE` by `id` returns 404, as if the record didn't exist.
 
-| Caller | Reviews and review lines | Suggestions |
-|--------|--------------------------|-------------|
-| AI agent (`THYME AI AGENT`) | All; can write | All; can write |
-| Thyme administrator: *Time Sheet Admin.* in User Setup, or `THYME ADMIN` | All; can write (needs table permission) | All; can write (needs table permission) |
-| Time sheet owner or approver | Reviews of time sheets they own or approve, whatever their status; read only | Suggestions for resources whose time sheets they own; can change those |
-| Anyone else | None | None |
+| Caller | Reviews and review lines | Suggestions | Suggestion requests |
+|--------|--------------------------|-------------|---------------------|
+| AI agent (`THYME AI AGENT`) | All; can write | All; can write | All; can write |
+| Thyme administrator: *Time Sheet Admin.* in User Setup, or `THYME ADMIN` | All; can write (needs table permission) | All; can write (needs table permission) | All; can create |
+| Time sheet owner or approver | Reviews of time sheets they own or approve, whatever their status; read only | Suggestions for resources whose time sheets they own; can change those (approvers: none) | Requests for resources whose time sheets they own or approve; can create |
+| Anyone else | None | None | None |
 
 The permission sets count whether they are assigned directly or through a security group.
 `SUPER` on its own does not bypass these rules, so give a superuser who should see everything
@@ -418,8 +457,8 @@ Create two environments in Settings → Environments:
 
 | Permission set | Assign to | Grants |
 |----------------|-----------|--------|
-| `THYME AI AGENT` | The AI agent's Microsoft Entra application | Full access to reviews, review lines and suggestions (includes `THYME USER`) |
-| `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; read the default billable target; run the Thyme API pages |
+| `THYME AI AGENT` | The AI agent's Microsoft Entra application | Full access to reviews, review lines, suggestions and suggestion requests (includes `THYME USER`) |
+| `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; read and create suggestion requests; read the default billable target; run the Thyme API pages |
 | `THYME ADMIN` | Thyme administrators | Everything in `THYME USER`, plus changing the default billable target (Thyme Setup) and seeing every user's reviews and suggestions |
 
 Users with `THYME USER` only see reviews of time sheets they own or approve and their own

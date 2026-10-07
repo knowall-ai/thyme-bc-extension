@@ -107,6 +107,7 @@ https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timesheetReviews
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timesheetReviewLines
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeSuggestions
+https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/suggestionRequests
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/thymeSetup
 ----
 
@@ -442,6 +443,44 @@ for upserts. Inserting a suggestion that matches an existing one on those four f
 rejected so the agent can re-run without duplicates; it should `PATCH` the existing row.
 Suggestions with a blank Source Ref are not checked.
 
+=== Suggestion Requests API (Page 50114)
+
+Maps to the `Thyme Suggestion Request` table (table 50104). Thyme creates a request to have
+the AI agent generate time suggestions for a resource and period now; the agent works through
+them and reports progress.
+
+[cols="1,1,3"]
+|===
+| API Field | BC Field | Notes
+
+| id | SystemId | OData key
+| entryNo | Entry No. | AutoIncrement, read-only
+| resourceNo | Resource No. | TableRelation Resource
+| fromDate | From Date | Not later than tomorrow (server date)
+| toDate | To Date | At most 7 days after fromDate, inclusive
+| status | Status | Enum `Thyme Suggestion Request Status`: Requested (forced on insert), Running, Done, Failed
+| progress | Progress | Text[250]: what the agent is doing now
+| createdCount | Created Count | Set by the agent when Done
+| updatedCount | Updated Count | Set by the agent when Done
+| errorMessage | Error Message | Text[250]: why it Failed
+| requestedBy | Requested By | UserId() on insert, read-only
+| requestedAt | Requested At | On insert, read-only
+| startedAt | Started At | Stamped when status leaves Requested, if blank
+| finishedAt | Finished At | Stamped on Done or Failed, if blank
+| lastModifiedDateTime | SystemModifiedAt | For polling
+|===
+
+Keys on (Resource No., From Date, To Date, Status) for Thyme's lookup and the one-open-request
+check, and (Status, Requested At) for the agent's queue. Inserting a second Requested or
+Running request for the same resource and period is rejected.
+
+Security (codeunit `Thyme Record Security`): read and create for the resource's time sheet
+owner and approver (from the Resource card), Thyme administrators and the AI agent; change and
+delete for the AI agent only. Suggestions are not opened up to approvers: an approver who
+requests them sees the request's progress and counts, but the suggestions stay with the person
+they are for. The read-only `canRequestSuggestions` field on the Resources API answers "may I
+request for this resource?" per caller.
+
 === Thyme Setup API (Page 50112)
 
 Maps to the extension's `Thyme Setup` table (table 50103), a single record with a blank
@@ -495,10 +534,12 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Time Suggestions API | Page 50111
 | Thyme Setup API | Page 50112
 | Thyme Setup | Page 50113
+| Thyme Suggestion Requests API | Page 50114
 | Thyme Timesheet Review | Table 50100
 | Thyme Timesheet Review Line | Table 50101
 | Thyme Time Suggestion | Table 50102
 | Thyme Setup | Table 50103
+| Thyme Suggestion Request | Table 50104
 | Thyme Resource (extends Resource) | Table Extension 50100 (fields 50100-50101)
 | Thyme Resource Card (extends Resource Card) | Page Extension 50100
 | Thyme Review Verdict | Enum 50100
@@ -506,6 +547,7 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Suggestion Source | Enum 50102
 | Thyme Suggestion Confidence | Enum 50103
 | Thyme Suggestion Status | Enum 50104
+| Thyme Suggestion Request Status | Enum 50105
 | THYME AI AGENT | Permission Set 50100
 | THYME USER | Permission Set 50101
 | THYME ADMIN | Permission Set 50102
@@ -523,7 +565,7 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 * APIs inherit BC's standard security model
 * Users need appropriate permissions on Job, Job Task, Time Sheet, Resource, and Job Ledger Entry tables
 * The extension's own tables (reviews, review lines, suggestions) are not covered by the standard D365 permission sets. Assign `THYME AI AGENT` to the AI agent's Microsoft Entra application (full access) and `THYME USER` to Thyme users (read reviews; read and update suggestions; read Thyme Setup). Assign `THYME ADMIN` to people who change the default billable target. Per-person targets are Resource fields, so they follow the standard Resource permissions
-* Row-level security (codeunit `Thyme Record Security`): a timesheet review and its lines are visible only to the time sheet's owner and approver, Thyme administrators (*Time Sheet Admin.* in User Setup, or `THYME ADMIN`) and the AI agent (`THYME AI AGENT`); a time suggestion only to its resource's time sheet owner, administrators and the AI agent. The API pages filter in SQL through FlowFields in filter group 2, so lists, `$filter` and by-id requests all respect it. Only the AI agent or an administrator can write reviews, and users can only create or change suggestions for resources they own. `SUPER` alone does not bypass these rules
+* Row-level security (codeunit `Thyme Record Security`): a timesheet review and its lines are visible only to the time sheet's owner and approver, Thyme administrators (*Time Sheet Admin.* in User Setup, or `THYME ADMIN`) and the AI agent (`THYME AI AGENT`); a time suggestion only to its resource's time sheet owner, administrators and the AI agent; a suggestion request to its resource's time sheet owner and approver, administrators and the AI agent. The API pages filter in SQL through FlowFields in filter group 2, so lists, `$filter` and by-id requests all respect it. Only the AI agent or an administrator can write reviews, and users can only create or change suggestions for resources they own. `SUPER` alone does not bypass these rules
 * OAuth 2.0 authentication via Azure AD
 * Supports both delegated and application permissions
 

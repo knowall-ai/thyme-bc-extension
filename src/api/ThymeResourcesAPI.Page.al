@@ -2,6 +2,9 @@
 /// Custom API page exposing Resources with capacity data.
 /// Enables Thyme to fetch weekly hours targets and billable targets per employee.
 ///
+/// canRequestSuggestions is true when the caller may ask the agent for time suggestions for
+/// the resource (see the suggestionRequests endpoint).
+///
 /// billableTargetPercent (0..100) is only meaningful when billableTargetSet is true;
 /// otherwise Thyme uses defaultBillableTargetPercent from the thymeSetup endpoint.
 /// billableTargetPercent comes before billableTargetSet so that, when a PATCH sends both,
@@ -89,6 +92,13 @@ page 50104 "Thyme Resources API"
                 {
                     Caption = 'Time Sheet Approver User ID';
                 }
+                // Whether the caller may ask the agent for time suggestions for this resource
+                // (suggestionRequests). Worked out per caller; read-only.
+                field(canRequestSuggestions; CanRequestSuggestions)
+                {
+                    Caption = 'Can Request Suggestions';
+                    Editable = false;
+                }
                 field(billableTargetPercent; Rec."Thyme Billable Target %")
                 {
                     Caption = 'Billable Target %';
@@ -109,4 +119,22 @@ page 50104 "Thyme Resources API"
             }
         }
     }
+
+    var
+        CallerCanAccessAll: Boolean;
+        CanRequestSuggestions: Boolean;
+
+    trigger OnOpenPage()
+    var
+        RecordSecurity: Codeunit "Thyme Record Security";
+    begin
+        CallerCanAccessAll := RecordSecurity.CanAccessAll();
+    end;
+
+    trigger OnAfterGetRecord()
+    var
+        RecordSecurity: Codeunit "Thyme Record Security";
+    begin
+        CanRequestSuggestions := RecordSecurity.CanRequestSuggestions(Rec, CallerCanAccessAll);
+    end;
 }
