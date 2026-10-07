@@ -320,8 +320,8 @@ Records outside that scope are left out of lists and `$filter` results, and `GET
 | Caller | Reviews and review lines | Suggestions |
 |--------|--------------------------|-------------|
 | AI agent (`THYME AI AGENT`) | All; can write | All; can write |
-| Thyme administrator: *Time Sheet Admin.* in User Setup, or `THYME ADMIN` | All; can write (needs table permission) | All |
-| Time sheet owner or approver | Reviews of their own and approved time sheets; read only | Suggestions for resources whose time sheets they own |
+| Thyme administrator: *Time Sheet Admin.* in User Setup, or `THYME ADMIN` | All; can write (needs table permission) | All; can write (needs table permission) |
+| Time sheet owner or approver | Reviews of time sheets they own or approve, whatever their status; read only | Suggestions for resources whose time sheets they own; can change those |
 | Anyone else | None | None |
 
 The permission sets count whether they are assigned directly or through a security group.
