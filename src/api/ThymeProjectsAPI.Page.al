@@ -64,6 +64,14 @@ page 50100 "Thyme Projects API"
                 {
                     Caption = 'Ending Date';
                 }
+                // Currency of the project's prices (Job Planning Lines and Job Ledger Entries).
+                // Blank means the company's local currency (LCY). Read-only: changing it in BC
+                // re-prices the planning lines, so it isn't something to PATCH through the API.
+                field(currencyCode; Rec."Currency Code")
+                {
+                    Caption = 'Currency Code';
+                    Editable = false;
+                }
                 field(lastModifiedDateTime; Rec.SystemModifiedAt)
                 {
                     Caption = 'Last Modified DateTime';

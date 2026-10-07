@@ -77,6 +77,29 @@ page 50105 "Thyme Time Entries API"
                 {
                     Caption = 'Total Price';
                 }
+                // The fields above are in the company's local currency (LCY). These are in the
+                // project's currency (currencyCode; blank = LCY), matching the amounts on the
+                // project's planning lines, so prices can be compared like with like.
+                field(currencyCode; Rec."Currency Code")
+                {
+                    Caption = 'Currency Code';
+                }
+                field(unitCostProjectCurrency; Rec."Unit Cost")
+                {
+                    Caption = 'Unit Cost (Project Currency)';
+                }
+                field(totalCostProjectCurrency; Rec."Total Cost")
+                {
+                    Caption = 'Total Cost (Project Currency)';
+                }
+                field(unitPriceProjectCurrency; Rec."Unit Price")
+                {
+                    Caption = 'Unit Price (Project Currency)';
+                }
+                field(totalPriceProjectCurrency; Rec."Total Price")
+                {
+                    Caption = 'Total Price (Project Currency)';
+                }
                 field(workTypeCode; Rec."Work Type Code")
                 {
                     Caption = 'Work Type Code';

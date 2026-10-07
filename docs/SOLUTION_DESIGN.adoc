@@ -127,6 +127,7 @@ Maps to the BC `Job` table (table 167).
 | status | Status | Enum: Planning, Quote, Open, Completed
 | startingDate | Starting Date | Project start
 | endingDate | Ending Date | Project end
+| currencyCode | Currency Code | Currency of the project's prices; blank = LCY. Read-only
 | lastModifiedDateTime | SystemModifiedAt | For sync
 |===
 
@@ -323,11 +324,45 @@ Maps to the BC `Job Ledger Entry` table (table 169). Filtered to Resource-type e
 | totalCost | Total Cost (LCY) | Total cost
 | unitPrice | Unit Price (LCY) | Price per unit
 | totalPrice | Total Price (LCY) | Total price
+| currencyCode | Currency Code | Project currency of the entry; blank = LCY
+| unitCostProjectCurrency | Unit Cost | Cost per unit, project currency
+| totalCostProjectCurrency | Total Cost | Total cost, project currency
+| unitPriceProjectCurrency | Unit Price | Price per unit, project currency
+| totalPriceProjectCurrency | Total Price | Total price, project currency
 | workTypeCode | Work Type Code | Work classification
 | entryType | Entry Type | Usage or Sale
 | documentNo | Document No. | Source document
 | lastModifiedDateTime | SystemModifiedAt | For sync
 |===
+
+=== Project currency
+
+A Job can have a *Currency Code*, so its planning lines and ledger entries are priced in a
+foreign currency. BC stores each amount twice: in the project currency (`Unit Cost`,
+`Total Cost`, `Unit Price`, `Total Price`) and in the company's local currency (the same
+fields with `(LCY)`).
+
+The original API fields were mapped before projects in other currencies were considered, so
+they differ: `jobPlanningLines` exposed the project-currency fields and `timeEntries` the LCY
+ones. They keep that meaning for compatibility, and version 1.14.0.0 adds the other
+currency to each:
+
+[cols="1,1,1", options="header"]
+|===
+| Endpoint | Project currency | Local currency (LCY)
+
+| jobPlanningLines
+| unitCost, totalCost, unitPrice, totalPrice
+| unitCostLCY, totalCostLCY, unitPriceLCY, totalPriceLCY (read-only)
+
+| timeEntries
+| unitCostProjectCurrency, totalCostProjectCurrency, unitPriceProjectCurrency, totalPriceProjectCurrency
+| unitCost, totalCost, unitPrice, totalPrice
+|===
+
+`projects`, `jobPlanningLines` and `timeEntries` all return `currencyCode` (blank = LCY).
+Thyme shows customer prices (Billable Price, Invoiced Price) in the project currency and
+internal costs (Budget Cost, Actual Cost) in LCY, so each figure sums a single column.
 
 === Timesheet Reviews API (Page 50109)
 

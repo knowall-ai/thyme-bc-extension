@@ -2,6 +2,21 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
+## 1.14.0.0
+
+### Added
+
+- `currencyCode` on `projects` (the Job's Currency Code; blank = local currency), read-only.
+- Project-currency amounts on `timeEntries`: `unitCostProjectCurrency`, `totalCostProjectCurrency`,
+  `unitPriceProjectCurrency` and `totalPriceProjectCurrency`, plus `currencyCode`. The existing
+  `unitCost`, `totalCost`, `unitPrice` and `totalPrice` stay in local currency (LCY).
+- Local-currency amounts on `jobPlanningLines`: `unitCostLCY`, `totalCostLCY`, `unitPriceLCY` and
+  `totalPriceLCY` (read-only), plus `currencyCode`. The existing cost and price fields stay in the
+  project currency.
+
+This lets Thyme show a project priced in another currency (for example EUR in a GBP company) in
+that currency, instead of labelling its prices with the company currency.
+
 ## 1.13.0.0
 
 ### Added

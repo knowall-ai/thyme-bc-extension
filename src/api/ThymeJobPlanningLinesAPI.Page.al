@@ -93,6 +93,34 @@ page 50107 "Thyme Job Planning Lines API"
                 {
                     Caption = 'Total Price';
                 }
+                // The cost and price fields above are in the project's currency (currencyCode;
+                // blank = LCY). These are the same amounts in the company's local currency, for
+                // internal cost reporting. All read-only: BC calculates them from the line.
+                field(currencyCode; Rec."Currency Code")
+                {
+                    Caption = 'Currency Code';
+                    Editable = false;
+                }
+                field(unitCostLCY; Rec."Unit Cost (LCY)")
+                {
+                    Caption = 'Unit Cost (LCY)';
+                    Editable = false;
+                }
+                field(totalCostLCY; Rec."Total Cost (LCY)")
+                {
+                    Caption = 'Total Cost (LCY)';
+                    Editable = false;
+                }
+                field(unitPriceLCY; Rec."Unit Price (LCY)")
+                {
+                    Caption = 'Unit Price (LCY)';
+                    Editable = false;
+                }
+                field(totalPriceLCY; Rec."Total Price (LCY)")
+                {
+                    Caption = 'Total Price (LCY)';
+                    Editable = false;
+                }
                 field(workTypeCode; Rec."Work Type Code")
                 {
                     Caption = 'Work Type Code';

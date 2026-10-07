@@ -67,6 +67,7 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 | `status` | Planning, Quote, Open, Completed |
 | `startingDate` | Project start date |
 | `endingDate` | Project end date |
+| `currencyCode` | Currency of the project's prices (Job "Currency Code"); blank = the company's local currency (LCY). Read-only |
 | `lastModifiedDateTime` | Last modified timestamp |
 
 ### Job Tasks API
@@ -203,12 +204,31 @@ PATCH /resources({id})          { "billableTargetSet": false }       // back to 
 | `totalCost` | Total cost (LCY) |
 | `unitPrice` | Price per unit (LCY) |
 | `totalPrice` | Total price (LCY) |
+| `currencyCode` | Project currency of the entry; blank = LCY |
+| `unitCostProjectCurrency` | Cost per unit, in the project currency |
+| `totalCostProjectCurrency` | Total cost, in the project currency |
+| `unitPriceProjectCurrency` | Price per unit, in the project currency |
+| `totalPriceProjectCurrency` | Total price, in the project currency |
 | `workTypeCode` | Work type classification |
 | `entryType` | Usage or Sale |
 | `documentNo` | Source document number |
 | `lastModifiedDateTime` | Last modified timestamp |
 
 **Note:** Time Entries are filtered to Resource-type entries only (employee time tracking).
+
+### Currencies
+
+A project can be priced in a currency other than the company's (the Job's **Currency Code**).
+BC then keeps each amount in two currencies, and the endpoints expose both:
+
+| Endpoint | Project currency | Local currency (LCY) |
+|----------|------------------|----------------------|
+| `jobPlanningLines` | `unitCost`, `totalCost`, `unitPrice`, `totalPrice` | `unitCostLCY`, `totalCostLCY`, `unitPriceLCY`, `totalPriceLCY` |
+| `timeEntries` | `unitCostProjectCurrency`, `totalCostProjectCurrency`, `unitPriceProjectCurrency`, `totalPriceProjectCurrency` | `unitCost`, `totalCost`, `unitPrice`, `totalPrice` |
+
+The older field names keep their original meaning for compatibility, which is why the unsuffixed
+names differ between the two endpoints. Both endpoints, and `projects`, return `currencyCode`
+(blank = LCY). Never add amounts from different columns together.
 
 ### Timesheet Reviews API
 
