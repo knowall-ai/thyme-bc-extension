@@ -27,6 +27,9 @@ permissionset 50101 "THYME USER"
         tabledata "Thyme Suggestion Request" = RI,
         tabledata "Thyme Agent Heartbeat" = R,
         tabledata "Thyme Project Source Link" = RIMD,
+        // Indirect only: lets codeunit "Thyme Connected Accounts" save a person's own GitHub
+        // username after its row-level check; it gives no direct right to change resources.
+        tabledata Resource = m,
         page "Thyme Projects API" = X,
         page "Thyme Job Tasks API" = X,
         page "Thyme Time Sheet API" = X,

@@ -346,7 +346,7 @@ person's DevOps user is their Microsoft 365 sign-in, derived from the time sheet
   owner as stored, so changing the owner in the same edit doesn't count). Checked in the field's
   OnValidate, so it applies on the Resource Card, through PATCH and through the action.
 * Most people have no permission to modify resources, so the resources API has a bound action,
-  `setGitHubUsername`, that writes the field with inherent permissions (Resource RM) after that
+  `setGitHubUsername`, that writes the field through an indirect modify permission on Resource (granted by THYME USER, usable only by codeunit 50106, which declares it) after that
   check. It modifies without the Resource's OnModify trigger, so nothing else changes. A PATCH of
   `githubUsername` works too, for callers who may modify resources.
 * `canEditConnectedAccounts` on `resources` tells Thyme whether to offer the edit control.

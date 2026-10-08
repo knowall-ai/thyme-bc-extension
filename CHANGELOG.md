@@ -15,7 +15,7 @@ Notable changes to the Thyme BC Extension. Versions match `app.json`.
 - Who can change it: a Thyme administrator for anyone, and a person for their own resource (the
   one whose Time Sheet Owner User ID is them), checked in the field's OnValidate (codeunit 50104).
 - `setGitHubUsername` bound action on `resources`: sets it without permission to modify resources
-  (codeunit 50106 writes the field with inherent permissions after the check), so people can set
+  (codeunit 50106 writes the field after the check, using an indirect modify permission on Resource that THYME USER now grants), so people can set
   their own from Thyme.
 - GitHub Username in the Thyme group on the Resource Card.
 

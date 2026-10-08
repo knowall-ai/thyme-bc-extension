@@ -28,7 +28,7 @@ This is a Business Central (BC) AL extension that provides custom API endpoints 
 - `src/pageextension/ThymeResourceCard.PageExt.al` - Thyme group on the Resource Card (page extension 50100)
 - `src/enum/` - Review verdict/severity and suggestion source/confidence/status and suggestion request status enums (50100-50105)
 - `src/permissionset/` - `THYME AI AGENT` (50100), `THYME USER` (50101) and `THYME ADMIN` (50102); add new tables/pages to these
-- `src/codeunit/ThymeConnectedAccounts.Codeunit.al` - GitHub username normalisation, and the resources API's `setGitHubUsername` action, which writes it with inherent permissions after the row-level check (codeunit 50106)
+- `src/codeunit/ThymeConnectedAccounts.Codeunit.al` - GitHub username normalisation, and the resources API's `setGitHubUsername` action, which writes it after the row-level check using the indirect Resource modify permission THYME USER grants (codeunit 50106)
 - `src/codeunit/ThymeTimeSheetActions.Codeunit.al` - Time Sheet approval workflow actions (codeunit 50100)
 - `src/codeunit/ThymeInstall.Codeunit.al` / `ThymeUpgrade.Codeunit.al` - Create the Thyme Setup record on install / upgrade (codeunits 50101, 50102)
 - `src/codeunit/ThymeCompanyInitialize.Codeunit.al` - Creates the Thyme Setup record in new companies (codeunit 50103)

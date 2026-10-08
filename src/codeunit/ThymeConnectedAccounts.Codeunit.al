@@ -9,12 +9,16 @@
 ///
 /// SetGitHubUsername is what the resources API's setGitHubUsername action calls. People often
 /// have no permission to modify resources at all (the standard D365 permission sets give that to
-/// few), so it writes the field with inherent permissions, after the row-level check. It modifies
+/// few), so it writes the field through this codeunit's Permissions property, using the indirect
+/// modify permission on Resource that THYME USER grants, after the row-level check. (Indirect
+/// means only objects that declare it, like this one, can use it.) It modifies
 /// without running the Resource's OnModify trigger, so nothing else (here or in other tables)
 /// is touched.
 /// </summary>
 codeunit 50106 "Thyme Connected Accounts"
 {
+    Permissions = tabledata Resource = rm;
+
     var
         InvalidGitHubUsernameErr: Label '"%1" is not a valid GitHub username. Use the login from the person''s GitHub profile: letters, digits and single hyphens, not starting or ending with a hyphen, at most 39 characters.', Comment = '%1 = the value entered';
         GitHubUsernameCharsTok: Label 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-', Locked = true;
@@ -24,7 +28,6 @@ codeunit 50106 "Thyme Connected Accounts"
     /// Sets a resource's GitHub username (blank clears it). Errors if the caller may not change
     /// it or the value isn't a valid login; then nothing is changed.
     /// </summary>
-    [InherentPermissions(PermissionObjectType::TableData, Database::Resource, 'RM')]
     procedure SetGitHubUsername(ResourceNo: Code[20]; GitHubUsername: Text)
     var
         Resource: Record Resource;
