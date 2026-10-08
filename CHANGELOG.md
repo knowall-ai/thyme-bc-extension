@@ -2,6 +2,23 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
+## 1.21.0.0
+
+### Added
+
+- Per-person GitHub username on Resource: "Thyme GitHub Username" (field 50105, Text[39]), so the
+  AI agent knows whose GitHub pull requests and issues are whose, in every company, without its
+  own config. Validated as a GitHub login (letters, digits and single hyphens, no leading or
+  trailing hyphen); a profile URL or `@login` is stored as the login. (A person's Azure DevOps user
+  is their Microsoft 365 sign-in, so it isn't stored.)
+- `githubUsername` on `resources`, plus `canEditConnectedAccounts` (read-only, per caller).
+- Who can change it: a Thyme administrator for anyone, and a person for their own resource (the
+  one whose Time Sheet Owner User ID is them), checked in the field's OnValidate (codeunit 50104).
+- `setGitHubUsername` bound action on `resources`: sets it without permission to modify resources
+  (codeunit 50106 writes the field with inherent permissions after the check), so people can set
+  their own from Thyme.
+- GitHub Username in the Thyme group on the Resource Card.
+
 ## 1.20.0.2
 
 ### Added

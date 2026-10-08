@@ -24,14 +24,15 @@ This is a Business Central (BC) AL extension that provides custom API endpoints 
 - `src/api/ThymeProjectSourceLinksAPI.Page.al` - Project Source Links API: GitHub repos, DevOps projects and repos, meeting keywords and attendee domains per project, read by the AI agent to map time (page 50116, table 50106, type enum 50106); `src/page/ThymeProjectSourceLinks.Page.al` is the ListPart on the Project Card (page 50117, page extension 50101 `src/pageextension/ThymeJobCard.PageExt.al`); codeunit 50105 deletes a project's links with it
 - `src/api/ThymeSetupAPI.Page.al` - Thyme Setup API, single record (page 50112, table 50103 `Thyme Setup`)
 - `src/page/ThymeSetup.Page.al` - Thyme Setup card (page 50113)
-- `src/tableextension/ThymeResource.TableExt.al` - Resource billable target fields 50100-50101 and weekly capacity / flexible working days fields 50102-50104 (table extension 50100)
+- `src/tableextension/ThymeResource.TableExt.al` - Resource billable target fields 50100-50101 and weekly capacity / flexible working days fields 50102-50104, GitHub username field 50105 (table extension 50100)
 - `src/pageextension/ThymeResourceCard.PageExt.al` - Thyme group on the Resource Card (page extension 50100)
 - `src/enum/` - Review verdict/severity and suggestion source/confidence/status and suggestion request status enums (50100-50105)
 - `src/permissionset/` - `THYME AI AGENT` (50100), `THYME USER` (50101) and `THYME ADMIN` (50102); add new tables/pages to these
+- `src/codeunit/ThymeConnectedAccounts.Codeunit.al` - GitHub username normalisation, and the resources API's `setGitHubUsername` action, which writes it with inherent permissions after the row-level check (codeunit 50106)
 - `src/codeunit/ThymeTimeSheetActions.Codeunit.al` - Time Sheet approval workflow actions (codeunit 50100)
 - `src/codeunit/ThymeInstall.Codeunit.al` / `ThymeUpgrade.Codeunit.al` - Create the Thyme Setup record on install / upgrade (codeunits 50101, 50102)
 - `src/codeunit/ThymeCompanyInitialize.Codeunit.al` - Creates the Thyme Setup record in new companies (codeunit 50103)
-- `src/codeunit/ThymeRecordSecurity.Codeunit.al` - Row-level security for reviews, review lines, suggestions and suggestion requests, plus the shared time sheet admin check (codeunit 50104). The API pages call it in OnOpenPage (filters in FilterGroup 2) and in their insert/modify/delete triggers. Note: `FilterGroup(-1)` (cross-column OR) is NOT applied on API page reads, so OR conditions must be expressed with AND-only filters (see the `Hidden From User Filter` FlowFields).
+- `src/codeunit/ThymeRecordSecurity.Codeunit.al` - Row-level security for reviews, review lines, suggestions, suggestion requests, project source links and who may change a person's GitHub username, plus the shared time sheet admin check (codeunit 50104). The API pages call it in OnOpenPage (filters in FilterGroup 2) and in their insert/modify/delete triggers. Note: `FilterGroup(-1)` (cross-column OR) is NOT applied on API page reads, so OR conditions must be expressed with AND-only filters (see the `Hidden From User Filter` FlowFields).
 
 ## API Configuration
 
