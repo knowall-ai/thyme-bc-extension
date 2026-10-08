@@ -23,6 +23,9 @@ codeunit 50106 "Thyme Connected Accounts"
         InvalidGitHubUsernameErr: Label '"%1" is not a valid GitHub username. Use the login from the person''s GitHub profile: letters, digits and single hyphens, not starting or ending with a hyphen, at most 39 characters.', Comment = '%1 = the value entered';
         GitHubUsernameCharsTok: Label 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-', Locked = true;
         GitHubHostTok: Label 'github.com/', Locked = true;
+        WwwTok: Label 'www.', Locked = true;
+        HttpsTok: Label 'https://', Locked = true;
+        HttpTok: Label 'http://', Locked = true;
 
     /// <summary>
     /// Sets a resource's GitHub username (blank clears it). Errors if the caller may not change
@@ -49,21 +52,39 @@ codeunit 50106 "Thyme Connected Accounts"
     /// </summary>
     procedure NormaliseGitHubUsername(Value: Text): Text
     var
-        HostPos: Integer;
         Entered: Text;
     begin
         Entered := Value.Trim();
-        Value := Entered;
+        Value := StripGitHubProfileUrl(Entered);
         if Value = '' then
             exit('');
-        HostPos := StrPos(LowerCase(Value), GitHubHostTok);
-        if HostPos > 0 then
-            Value := CopyStr(Value, HostPos + StrLen(GitHubHostTok));
         Value := Value.TrimEnd('/').TrimStart('@');
         if (Value = '') or (StrLen(Value) > 39) or (DelChr(Value, '=', GitHubUsernameCharsTok) <> '') or
            Value.StartsWith('-') or Value.EndsWith('-') or Value.Contains('--')
         then
             Error(InvalidGitHubUsernameErr, Entered);
+        exit(Value);
+    end;
+
+    /// <summary>
+    /// The part after "github.com/" when the value is a GitHub profile URL (https://, http://,
+    /// www. or no scheme), otherwise the value unchanged. Only a URL that starts with the GitHub
+    /// host counts, so another host that merely contains "github.com/" isn't mistaken for one.
+    /// </summary>
+    local procedure StripGitHubProfileUrl(Value: Text): Text
+    var
+        Rest: Text;
+    begin
+        Rest := Value;
+        if LowerCase(Rest).StartsWith(HttpsTok) then
+            Rest := CopyStr(Rest, StrLen(HttpsTok) + 1)
+        else
+            if LowerCase(Rest).StartsWith(HttpTok) then
+                Rest := CopyStr(Rest, StrLen(HttpTok) + 1);
+        if LowerCase(Rest).StartsWith(WwwTok) then
+            Rest := CopyStr(Rest, StrLen(WwwTok) + 1);
+        if LowerCase(Rest).StartsWith(GitHubHostTok) then
+            exit(CopyStr(Rest, StrLen(GitHubHostTok) + 1));
         exit(Value);
     end;
 }
