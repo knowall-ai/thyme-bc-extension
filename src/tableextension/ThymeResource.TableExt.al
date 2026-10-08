@@ -14,6 +14,14 @@
 ///   value: the person is listed in Thyme but not counted (for example an AI agent).
 /// "Thyme Flexible Working Days" means the person works their weekly capacity on any days
 /// rather than fixed weekdays, so Thyme judges their week as a whole.
+///
+/// Connected accounts tell the AI agent whose GitHub and Azure DevOps activity is whose:
+/// - "Thyme GitHub Username": the person's GitHub login. Blank = not set (the agent falls back
+///   to its own config and lookups).
+/// - "Thyme DevOps User": the e-mail/UPN the person signs in to Azure DevOps with, when it differs
+///   from their Microsoft 365 sign-in. Blank = their time sheet owner's UPN.
+/// A Thyme administrator can change them for anyone, and a person for their own resource (the one
+/// whose Time Sheet Owner User ID is them); see codeunit "Thyme Connected Accounts".
 /// </summary>
 tableextension 50100 "Thyme Resource" extends Resource
 {
@@ -76,6 +84,34 @@ tableextension 50100 "Thyme Resource" extends Resource
         {
             Caption = 'Thyme Flexible Working Days';
             DataClassification = CustomerContent;
+        }
+        field(50105; "Thyme GitHub Username"; Text[39])
+        {
+            Caption = 'GitHub Username';
+            DataClassification = EndUserIdentifiableInformation;
+
+            trigger OnValidate()
+            var
+                ConnectedAccounts: Codeunit "Thyme Connected Accounts";
+                RecordSecurity: Codeunit "Thyme Record Security";
+            begin
+                RecordSecurity.CheckCanEditConnectedAccounts(Rec."No.");
+                Rec."Thyme GitHub Username" := CopyStr(ConnectedAccounts.NormaliseGitHubUsername(Rec."Thyme GitHub Username"), 1, MaxStrLen(Rec."Thyme GitHub Username"));
+            end;
+        }
+        field(50106; "Thyme DevOps User"; Text[250])
+        {
+            Caption = 'DevOps User';
+            DataClassification = EndUserIdentifiableInformation;
+
+            trigger OnValidate()
+            var
+                ConnectedAccounts: Codeunit "Thyme Connected Accounts";
+                RecordSecurity: Codeunit "Thyme Record Security";
+            begin
+                RecordSecurity.CheckCanEditConnectedAccounts(Rec."No.");
+                Rec."Thyme DevOps User" := CopyStr(ConnectedAccounts.NormaliseDevOpsUser(Rec."Thyme DevOps User"), 1, MaxStrLen(Rec."Thyme DevOps User"));
+            end;
         }
     }
 
