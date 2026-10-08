@@ -3,7 +3,7 @@
 /// accept or dismiss AI time suggestions, ask the agent for suggestions now (suggestion
 /// requests; who for is checked per resource), see whether the agent is online, read the company's default billable target,
 /// and read projects' linked sources (changing them is checked per project: Thyme administrators and the project's manager),
-/// and set their own connected accounts (GitHub username, DevOps user) through the resources API's setConnectedAccounts action.
+/// and set their own GitHub username through the resources API's setGitHubUsername action.
 /// Base-app data such as time sheets and resources still comes from the standard D365
 /// permission sets. To change the default billable target, use THYME ADMIN.
 /// </summary>

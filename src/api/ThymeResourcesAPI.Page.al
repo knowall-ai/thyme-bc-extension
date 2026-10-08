@@ -15,13 +15,12 @@
 /// ordering rule applies: the flag comes after the hours. flexibleWorkingDays means the person
 /// works their weekly capacity on any days, so Thyme judges the week rather than each day.
 ///
-/// githubUsername and devopsUser are the person's connected accounts (blank devopsUser = their
-/// time sheet owner's UPN). canEditConnectedAccounts is true when the caller may change them: a
-/// Thyme administrator for anyone, a person for their own resource. Change them with the
-/// setConnectedAccounts action, which works without permission to modify resources:
-///   POST /resources({id})/Microsoft.NAV.setConnectedAccounts
-///   { "githubUsername": "alex-contoso", "devopsUser": "" }
-/// A PATCH of the fields works too, for callers who may modify resources; the same rule applies.
+/// githubUsername is the person's GitHub login (their Azure DevOps user is their Microsoft 365
+/// sign-in, so it isn't stored). canEditConnectedAccounts is true when the caller may change it: a
+/// Thyme administrator for anyone, a person for their own resource. Change it with the
+/// setGitHubUsername action, which works without permission to modify resources:
+///   POST /resources({id})/Microsoft.NAV.setGitHubUsername   { "githubUsername": "alex-contoso" }
+/// ("" clears it). A PATCH works too, for callers who may modify resources; the same rule applies.
 ///
 /// Endpoint: /api/knowall/thyme/v1.0/companies({companyId})/resources
 /// </summary>
@@ -136,11 +135,7 @@ page 50104 "Thyme Resources API"
                 {
                     Caption = 'GitHub Username';
                 }
-                field(devopsUser; Rec."Thyme DevOps User")
-                {
-                    Caption = 'DevOps User';
-                }
-                // Whether the caller may change githubUsername and devopsUser. Per caller; read-only.
+                // Whether the caller may change githubUsername. Per caller; read-only.
                 field(canEditConnectedAccounts; CanEditConnectedAccounts)
                 {
                     Caption = 'Can Edit Connected Accounts';
@@ -182,15 +177,15 @@ page 50104 "Thyme Resources API"
     end;
 
     /// <summary>
-    /// Sets the resource's GitHub username and DevOps user (blank clears one). For the person
-    /// themselves or a Thyme administrator; doesn't need permission to modify resources.
+    /// Sets the resource's GitHub username (blank clears it). For the person themselves or a
+    /// Thyme administrator; doesn't need permission to modify resources.
     /// </summary>
     [ServiceEnabled]
-    procedure setConnectedAccounts(var ActionContext: WebServiceActionContext; githubUsername: Text; devopsUser: Text)
+    procedure setGitHubUsername(var ActionContext: WebServiceActionContext; githubUsername: Text)
     var
         ConnectedAccounts: Codeunit "Thyme Connected Accounts";
     begin
-        ConnectedAccounts.SetConnectedAccounts(Rec."No.", githubUsername, devopsUser);
+        ConnectedAccounts.SetGitHubUsername(Rec."No.", githubUsername);
         ActionContext.SetObjectType(ObjectType::Page);
         ActionContext.SetObjectId(Page::"Thyme Resources API");
         ActionContext.AddEntityKey(Rec.FieldNo(SystemId), Rec.SystemId);

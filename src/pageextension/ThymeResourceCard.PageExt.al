@@ -1,6 +1,6 @@
 /// <summary>
-/// Shows the Thyme billable target, weekly capacity, flexible working days and connected accounts
-/// (GitHub username, DevOps user) on the Resource Card.
+/// Shows the Thyme billable target, weekly capacity, flexible working days and GitHub username
+/// on the Resource Card.
 /// </summary>
 pageextension 50100 "Thyme Resource Card" extends "Resource Card"
 {
@@ -41,11 +41,6 @@ pageextension 50100 "Thyme Resource Card" extends "Resource Card"
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies this person''s GitHub username, so the AI agent can suggest time for their pull requests and issues. A Thyme administrator can change anyone''s; people can change their own.';
-                }
-                field("Thyme DevOps User"; Rec."Thyme DevOps User")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the e-mail address this person signs in to Azure DevOps with, if it differs from their Microsoft 365 sign-in. Leave blank to use their time sheet owner''s sign-in.';
                 }
             }
         }

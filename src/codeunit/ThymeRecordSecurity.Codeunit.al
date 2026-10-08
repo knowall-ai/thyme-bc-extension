@@ -16,7 +16,7 @@
 ///   manager (its Project Manager, or the time sheet owner of its Person Responsible) adds,
 ///   changes and removes them. The AI agent adds links it learned (always marked Learned) and
 ///   changes or removes only learned links; a person who edits a learned link adopts it.
-/// - A person's connected accounts (GitHub username and Azure DevOps user on their resource):
+/// - A person's connected accounts (the GitHub username on their resource):
 ///   everyone who can read resources sees them. A Thyme administrator changes anyone's; a person
 ///   changes their own (the resource whose Time Sheet Owner User ID is them).
 ///
@@ -45,7 +45,7 @@ codeunit 50104 "Thyme Record Security"
         NotAllowedToChangeRequestsErr: Label 'You are not allowed to change suggestion requests. Only the AI agent can.';
         NotAllowedToWriteSourceLinksErr: Label 'You are not allowed to change the linked sources of project %1. A Thyme administrator or the project''s manager can.', Comment = '%1 = job number';
         AgentOnlyLearnedLinksErr: Label 'The AI agent can only change or remove linked sources it learned. Project %1 line %2 was added by a person.', Comment = '%1 = job number, %2 = line number';
-        NotAllowedToEditConnectedAccountsErr: Label 'You are not allowed to change the connected accounts of resource %1. You can change your own, or anyone''s as a Thyme administrator.', Comment = '%1 = resource number';
+        NotAllowedToEditConnectedAccountsErr: Label 'You are not allowed to change the GitHub username of resource %1. You can change your own, or anyone''s as a Thyme administrator.', Comment = '%1 = resource number';
         NotAllowedToWriteSuggestionErr: Label 'You are not allowed to change time suggestions for resource %1. You can only change suggestions for a resource whose time sheets you own.', Comment = '%1 = resource number';
 
     /// <summary>
@@ -318,8 +318,8 @@ codeunit 50104 "Thyme Record Security"
     end;
 
     /// <summary>
-    /// True if the caller may change the resource's connected accounts (GitHub username, DevOps
-    /// user): a Thyme administrator, or the person themselves (the resource's time sheet owner).
+    /// True if the caller may change the resource's connected accounts (its GitHub username):
+    /// a Thyme administrator, or the person themselves (the resource's time sheet owner).
     /// Uses the owner as stored, so changing the owner in the same edit can't grant access.
     /// </summary>
     procedure CanEditConnectedAccounts(ResourceNo: Code[20]): Boolean
