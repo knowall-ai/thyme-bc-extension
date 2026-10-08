@@ -16,6 +16,9 @@
 ///   manager (its Project Manager, or the time sheet owner of its Person Responsible) adds,
 ///   changes and removes them. The AI agent adds links it learned (always marked Learned) and
 ///   changes or removes only learned links; a person who edits a learned link adopts it.
+/// - A person's connected accounts (the GitHub username on their resource):
+///   everyone who can read resources sees them. A Thyme administrator changes anyone's; a person
+///   changes their own (the resource whose Time Sheet Owner User ID is them).
 ///
 /// A Thyme administrator is a time sheet administrator (User Setup, the same rule that
 /// governs creating time sheets through the API) or a user with the THYME ADMIN
@@ -42,6 +45,7 @@ codeunit 50104 "Thyme Record Security"
         NotAllowedToChangeRequestsErr: Label 'You are not allowed to change suggestion requests. Only the AI agent can.';
         NotAllowedToWriteSourceLinksErr: Label 'You are not allowed to change the linked sources of project %1. A Thyme administrator or the project''s manager can.', Comment = '%1 = job number';
         AgentOnlyLearnedLinksErr: Label 'The AI agent can only change or remove linked sources it learned. Project %1 line %2 was added by a person.', Comment = '%1 = job number, %2 = line number';
+        NotAllowedToEditConnectedAccountsErr: Label 'You are not allowed to change the GitHub username of resource %1. You can change your own, or anyone''s as a Thyme administrator.', Comment = '%1 = resource number';
         NotAllowedToWriteSuggestionErr: Label 'You are not allowed to change time suggestions for resource %1. You can only change suggestions for a resource whose time sheets you own.', Comment = '%1 = resource number';
 
     /// <summary>
@@ -311,6 +315,35 @@ codeunit 50104 "Thyme Record Security"
         end;
         if not CanEditProjectSourceLinks(Link."Job No.") then
             Error(NotAllowedToWriteSourceLinksErr, Link."Job No.");
+    end;
+
+    /// <summary>
+    /// True if the caller may change the resource's connected accounts (its GitHub username):
+    /// a Thyme administrator, or the person themselves (the resource's time sheet owner).
+    /// Uses the owner as stored, so changing the owner in the same edit can't grant access.
+    /// </summary>
+    procedure CanEditConnectedAccounts(ResourceNo: Code[20]): Boolean
+    begin
+        if IsThymeAdmin() then
+            exit(true);
+        exit(IsOwnResource(ResourceNo));
+    end;
+
+    /// <summary>
+    /// As CanEditConnectedAccounts(ResourceNo), for a resource already read from the database and
+    /// with IsThymeAdmin() worked out once (the resources API asks this for every row).
+    /// </summary>
+    procedure CanEditConnectedAccounts(Resource: Record Resource; CallerIsThymeAdmin: Boolean): Boolean
+    begin
+        if CallerIsThymeAdmin then
+            exit(true);
+        exit((Resource."Time Sheet Owner User ID" <> '') and (UpperCase(Resource."Time Sheet Owner User ID") = CurrentUserCode()));
+    end;
+
+    procedure CheckCanEditConnectedAccounts(ResourceNo: Code[20])
+    begin
+        if not CanEditConnectedAccounts(ResourceNo) then
+            Error(NotAllowedToEditConnectedAccountsErr, ResourceNo);
     end;
 
     /// <summary>The link as stored must be a learned one (checked on the stored row, not the new values).</summary>

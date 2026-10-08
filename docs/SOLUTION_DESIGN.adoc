@@ -286,6 +286,8 @@ Maps to the BC `Resource` table (table 156).
 | weeklyCapacityHours | Thyme Weekly Capacity (Hours) | Extension field 50102; 0-168, only meaningful when weeklyCapacitySet is true
 | weeklyCapacitySet | Thyme Weekly Capacity Set | Extension field 50103; false = hours per day x 5
 | flexibleWorkingDays | Thyme Flexible Working Days | Extension field 50104; works the weekly capacity on any days
+| githubUsername | Thyme GitHub Username | Extension field 50105; the person's GitHub login (blank = not set)
+| canEditConnectedAccounts | (calculated) | Read-only, per caller: whether the caller may change githubUsername
 | lastDateModified | Last Date Modified | Last modification date
 | lastModifiedDateTime | SystemModifiedAt | For sync
 |===
@@ -328,6 +330,28 @@ than fixed weekdays (for example 15 hours on any two days). Thyme and the AI tim
 then judge their week as a whole: no "missing day" findings, and a single day is only flagged
 when it exceeds a full day's hours. People who aren't flexible but work fewer than five days
 keep hours per day as their daily capacity, with the week capped at their weekly capacity.
+
+==== GitHub username (connected accounts)
+
+`Thyme GitHub Username` (field 50105, Text[39]) is the person's GitHub login. The AI agent uses
+it to find whose pull requests and issues are whose; it takes precedence over the agent's own
+config and its lookups (SAML identities, commit e-mail search). There is no Azure DevOps field: a
+person's DevOps user is their Microsoft 365 sign-in, derived from the time sheet owner.
+
+* Validation and normalisation (codeunit 50106 `Thyme Connected Accounts`): trimmed; a GitHub
+  profile URL or a leading `@` is reduced to the login; the result must be letters, digits and
+  single hyphens, not starting or ending with a hyphen, 1-39 characters. Blank clears it.
+* Who may change it (codeunit 50104 `Thyme Record Security`): a Thyme administrator for anyone,
+  and a person for their own resource, the one whose *Time Sheet Owner User ID* is them (the
+  owner as stored, so changing the owner in the same edit doesn't count). Checked in the field's
+  OnValidate, so it applies on the Resource Card, through PATCH and through the action.
+* Most people have no permission to modify resources, so the resources API has a bound action,
+  `setGitHubUsername`, that writes the field through an indirect modify permission on Resource (granted by THYME USER, usable only by codeunit 50106, which declares it) after that
+  check. It modifies without the Resource's OnModify trigger, so nothing else changes. A PATCH of
+  `githubUsername` works too, for callers who may modify resources.
+* `canEditConnectedAccounts` on `resources` tells Thyme whether to offer the edit control.
+
+The field is on the Resource Card's *Thyme* group.
 
 All three fields appear in the *Thyme* group on the Resource Card and are editable through the
 `resources` API with the standard Resource permissions.

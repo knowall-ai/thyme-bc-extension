@@ -14,6 +14,12 @@
 ///   value: the person is listed in Thyme but not counted (for example an AI agent).
 /// "Thyme Flexible Working Days" means the person works their weekly capacity on any days
 /// rather than fixed weekdays, so Thyme judges their week as a whole.
+///
+/// "Thyme GitHub Username" is the person's GitHub login, so the AI agent knows whose GitHub
+/// activity is whose (their Azure DevOps user is their Microsoft 365 sign-in, from the time sheet
+/// owner). Blank = not set: the agent falls back to its own config and lookups. A Thyme
+/// administrator can change it for anyone, and a person for their own resource (the one whose
+/// Time Sheet Owner User ID is them); see codeunit "Thyme Connected Accounts".
 /// </summary>
 tableextension 50100 "Thyme Resource" extends Resource
 {
@@ -76,6 +82,20 @@ tableextension 50100 "Thyme Resource" extends Resource
         {
             Caption = 'Thyme Flexible Working Days';
             DataClassification = CustomerContent;
+        }
+        field(50105; "Thyme GitHub Username"; Text[39])
+        {
+            Caption = 'GitHub Username';
+            DataClassification = EndUserIdentifiableInformation;
+
+            trigger OnValidate()
+            var
+                ConnectedAccounts: Codeunit "Thyme Connected Accounts";
+                RecordSecurity: Codeunit "Thyme Record Security";
+            begin
+                RecordSecurity.CheckCanEditConnectedAccounts(Rec."No.");
+                Rec."Thyme GitHub Username" := CopyStr(ConnectedAccounts.NormaliseGitHubUsername(Rec."Thyme GitHub Username"), 1, MaxStrLen(Rec."Thyme GitHub Username"));
+            end;
         }
     }
 

@@ -1,5 +1,6 @@
 /// <summary>
-/// Shows the Thyme billable target, weekly capacity and flexible working days on the Resource Card.
+/// Shows the Thyme billable target, weekly capacity, flexible working days and GitHub username
+/// on the Resource Card.
 /// </summary>
 pageextension 50100 "Thyme Resource Card" extends "Resource Card"
 {
@@ -35,6 +36,11 @@ pageextension 50100 "Thyme Resource Card" extends "Resource Card"
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies whether this person works their weekly capacity on any days rather than fixed weekdays. Thyme then checks their week as a whole instead of expecting hours every day.';
+                }
+                field("Thyme GitHub Username"; Rec."Thyme GitHub Username")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies this person''s GitHub username, so the AI agent can suggest time for their pull requests and issues. A Thyme administrator can change anyone''s; people can change their own.';
                 }
             }
         }

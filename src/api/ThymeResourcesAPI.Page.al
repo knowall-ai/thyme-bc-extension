@@ -15,6 +15,13 @@
 /// ordering rule applies: the flag comes after the hours. flexibleWorkingDays means the person
 /// works their weekly capacity on any days, so Thyme judges the week rather than each day.
 ///
+/// githubUsername is the person's GitHub login (their Azure DevOps user is their Microsoft 365
+/// sign-in, so it isn't stored). canEditConnectedAccounts is true when the caller may change it: a
+/// Thyme administrator for anyone, a person for their own resource. Change it with the
+/// setGitHubUsername action, which works without permission to modify resources:
+///   POST /resources({id})/Microsoft.NAV.setGitHubUsername   { "githubUsername": "alex-contoso" }
+/// ("" clears it). A PATCH works too, for callers who may modify resources; the same rule applies.
+///
 /// Endpoint: /api/knowall/thyme/v1.0/companies({companyId})/resources
 /// </summary>
 page 50104 "Thyme Resources API"
@@ -124,6 +131,16 @@ page 50104 "Thyme Resources API"
                 {
                     Caption = 'Flexible Working Days';
                 }
+                field(githubUsername; Rec."Thyme GitHub Username")
+                {
+                    Caption = 'GitHub Username';
+                }
+                // Whether the caller may change githubUsername. Per caller; read-only.
+                field(canEditConnectedAccounts; CanEditConnectedAccounts)
+                {
+                    Caption = 'Can Edit Connected Accounts';
+                    Editable = false;
+                }
                 field(lastDateModified; Rec."Last Date Modified")
                 {
                     Caption = 'Last Date Modified';
@@ -139,13 +156,16 @@ page 50104 "Thyme Resources API"
 
     var
         CallerCanAccessAll: Boolean;
+        CallerIsThymeAdmin: Boolean;
         CanRequestSuggestions: Boolean;
+        CanEditConnectedAccounts: Boolean;
 
     trigger OnOpenPage()
     var
         RecordSecurity: Codeunit "Thyme Record Security";
     begin
         CallerCanAccessAll := RecordSecurity.CanAccessAll();
+        CallerIsThymeAdmin := RecordSecurity.IsThymeAdmin();
     end;
 
     trigger OnAfterGetRecord()
@@ -153,5 +173,22 @@ page 50104 "Thyme Resources API"
         RecordSecurity: Codeunit "Thyme Record Security";
     begin
         CanRequestSuggestions := RecordSecurity.CanRequestSuggestions(Rec, CallerCanAccessAll);
+        CanEditConnectedAccounts := RecordSecurity.CanEditConnectedAccounts(Rec, CallerIsThymeAdmin);
+    end;
+
+    /// <summary>
+    /// Sets the resource's GitHub username (blank clears it). For the person themselves or a
+    /// Thyme administrator; doesn't need permission to modify resources.
+    /// </summary>
+    [ServiceEnabled]
+    procedure setGitHubUsername(var ActionContext: WebServiceActionContext; githubUsername: Text)
+    var
+        ConnectedAccounts: Codeunit "Thyme Connected Accounts";
+    begin
+        ConnectedAccounts.SetGitHubUsername(Rec."No.", githubUsername);
+        ActionContext.SetObjectType(ObjectType::Page);
+        ActionContext.SetObjectId(Page::"Thyme Resources API");
+        ActionContext.AddEntityKey(Rec.FieldNo(SystemId), Rec.SystemId);
+        ActionContext.SetResultCode(WebServiceActionResultCode::Updated);
     end;
 }

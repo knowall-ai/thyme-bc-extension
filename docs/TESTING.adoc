@@ -109,6 +109,24 @@ curl -X PATCH -H "Authorization: Bearer {token}" -H "If-Match: *" -H "Content-Ty
 #   -d '{"weeklyCapacityHours": 200}'
 ----
 
+=== 6. Test GitHub usernames on Resources
+
+[source,bash]
+----
+# Read (expect githubUsername and canEditConnectedAccounts)
+curl -H "Authorization: Bearer {token}" \
+  ".../resources?\$filter=number eq 'KATHERINE'&\$select=number,githubUsername,canEditConnectedAccounts"
+
+# Set it with the action (a profile URL is stored as the login; expect 204 and githubUsername = katherine-contoso)
+curl -X POST -H "Authorization: Bearer {token}" -H "Content-Type: application/json" \
+  -d '{"githubUsername": "https://github.com/katherine-contoso"}' \
+  ".../resources({id})/Microsoft.NAV.setGitHubUsername"
+
+# Invalid (expect 400): -d '{"githubUsername": "-bad--name"}'
+# Clear it (expect githubUsername = ""): -d '{"githubUsername": ""}'
+# As a non-admin, someone else's resource (expect 400 "not allowed"; canEditConnectedAccounts = false on that row)
+----
+
 == Validation Checklist
 
 * [ ] Projects API returns customer name and number
@@ -121,3 +139,7 @@ curl -X PATCH -H "Authorization: Bearer {token}" -H "If-Match: *" -H "Content-Ty
 * [ ] Resources API returns weeklyCapacityHours, weeklyCapacitySet and flexibleWorkingDays
 * [ ] Setting weeklyCapacityHours (including 0) sets weeklyCapacitySet; clearing the flag resets the hours
 * [ ] weeklyCapacityHours outside 0-168 is rejected
+* [ ] Resources API returns githubUsername and canEditConnectedAccounts
+* [ ] setGitHubUsername stores a valid login (from a login, @login or profile URL) and rejects invalid ones
+* [ ] A non-admin can set their own GitHub username but not someone else's
+* [ ] GitHub Username shows in the Thyme group on the Resource Card

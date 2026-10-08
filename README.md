@@ -182,6 +182,8 @@ POST /timeSheetDetails
 | `weeklyCapacityHours` | Hours the person works per week (only meaningful when `weeklyCapacitySet` is `true`) |
 | `weeklyCapacitySet` | Whether the person has their own weekly capacity; when `false`, use hours per day x 5 |
 | `flexibleWorkingDays` | Whether the person works their weekly capacity on any days rather than fixed weekdays |
+| `githubUsername` | The person's GitHub login, so the AI agent knows whose GitHub activity is whose (blank = not set) |
+| `canEditConnectedAccounts` | Read-only, per caller: whether the caller may change `githubUsername` |
 | `lastDateModified` | Last date modified |
 | `lastModifiedDateTime` | Last modified timestamp |
 
@@ -202,6 +204,18 @@ example an AI agent). Values outside 0-168 are rejected.
 PATCH /resources({id})          { "weeklyCapacityHours": 15, "flexibleWorkingDays": true }  // 2 days a week, any days
 PATCH /resources({id})          { "weeklyCapacityHours": 0 }         // listed, not counted
 PATCH /resources({id})          { "weeklyCapacitySet": false }       // back to hours per day x 5
+```
+
+**GitHub username:** a Thyme administrator (THYME ADMIN or *Time Sheet Admin.*) can set anyone's;
+a person can set their own (the resource whose *Time Sheet Owner User ID* is them). Use the
+`setGitHubUsername` action, which works without permission to modify resources (most people don't
+have it). A profile URL or `@login` is accepted and stored as the login; anything that isn't a valid
+GitHub login (letters, digits and single hyphens, no leading or trailing hyphen, at most 39
+characters) is rejected. There is no Azure DevOps field: a person's DevOps user is their
+Microsoft 365 sign-in, which comes from the time sheet owner.
+```
+POST /resources({id})/Microsoft.NAV.setGitHubUsername   { "githubUsername": "alex-contoso" }
+POST /resources({id})/Microsoft.NAV.setGitHubUsername   { "githubUsername": "" }   // clear it
 ```
 
 ### Time Entries API

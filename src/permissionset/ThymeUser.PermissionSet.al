@@ -2,7 +2,8 @@
 /// For Thyme web app users: run the Thyme API pages, read AI timesheet reviews,
 /// accept or dismiss AI time suggestions, ask the agent for suggestions now (suggestion
 /// requests; who for is checked per resource), see whether the agent is online, read the company's default billable target,
-/// and read projects' linked sources (changing them is checked per project: Thyme administrators and the project's manager).
+/// and read projects' linked sources (changing them is checked per project: Thyme administrators and the project's manager),
+/// and set their own GitHub username through the resources API's setGitHubUsername action.
 /// Base-app data such as time sheets and resources still comes from the standard D365
 /// permission sets. To change the default billable target, use THYME ADMIN.
 /// </summary>
@@ -26,6 +27,9 @@ permissionset 50101 "THYME USER"
         tabledata "Thyme Suggestion Request" = RI,
         tabledata "Thyme Agent Heartbeat" = R,
         tabledata "Thyme Project Source Link" = RIMD,
+        // Indirect only: lets codeunit "Thyme Connected Accounts" save a person's own GitHub
+        // username after its row-level check; it gives no direct right to change resources.
+        tabledata Resource = m,
         page "Thyme Projects API" = X,
         page "Thyme Job Tasks API" = X,
         page "Thyme Time Sheet API" = X,
@@ -45,5 +49,6 @@ permissionset 50101 "THYME USER"
         page "Thyme Project Source Links" = X,
         codeunit "Thyme Time Sheet Actions" = X,
         codeunit "Thyme Record Security" = X,
+        codeunit "Thyme Connected Accounts" = X,
         codeunit "Thyme Source Link Events" = X;
 }
