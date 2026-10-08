@@ -11,6 +11,11 @@
 ///   can create one; only the AI agent can change or delete one. An approver who requests
 ///   suggestions still can't see them: they stay with the person they are for.
 /// - An agent heartbeat (when the agent was last seen): every Thyme user; only the AI agent writes.
+/// - A project source link (which repos, DevOps projects, meeting keywords and attendee domains
+///   belong to a project): every Thyme user reads them. A Thyme administrator or the project's
+///   manager (its Project Manager, or the time sheet owner of its Person Responsible) adds,
+///   changes and removes them. The AI agent adds links it learned (always marked Learned) and
+///   changes or removes only learned links; a person who edits a learned link adopts it.
 ///
 /// A Thyme administrator is a time sheet administrator (User Setup, the same rule that
 /// governs creating time sheets through the API) or a user with the THYME ADMIN
@@ -25,7 +30,8 @@
 codeunit 50104 "Thyme Record Security"
 {
     Permissions = tabledata "User Setup" = r,
-                  tabledata Resource = r;
+                  tabledata Resource = r,
+                  tabledata Job = r;
 
     var
         ThymeAdminRoleTok: Label 'THYME ADMIN', Locked = true;
@@ -34,6 +40,8 @@ codeunit 50104 "Thyme Record Security"
         NotAllowedToRequestSuggestionsErr: Label 'You are not allowed to request time suggestions for resource %1. You can request them for yourself, for people whose time sheets you approve, or for anyone as a Thyme administrator.', Comment = '%1 = resource number';
         NotAllowedToWriteHeartbeatErr: Label 'Only the AI agent can update agent heartbeats.';
         NotAllowedToChangeRequestsErr: Label 'You are not allowed to change suggestion requests. Only the AI agent can.';
+        NotAllowedToWriteSourceLinksErr: Label 'You are not allowed to change the linked sources of project %1. A Thyme administrator or the project''s manager can.', Comment = '%1 = job number';
+        AgentOnlyLearnedLinksErr: Label 'The AI agent can only change or remove linked sources it learned. Project %1 line %2 was added by a person.', Comment = '%1 = job number, %2 = line number';
         NotAllowedToWriteSuggestionErr: Label 'You are not allowed to change time suggestions for resource %1. You can only change suggestions for a resource whose time sheets you own.', Comment = '%1 = resource number';
 
     /// <summary>
@@ -215,6 +223,105 @@ codeunit 50104 "Thyme Record Security"
     begin
         if not IsAIAgent() then
             Error(NotAllowedToWriteHeartbeatErr);
+    end;
+
+    /// <summary>
+    /// True if the caller may add, change and remove the linked sources of a project: a Thyme
+    /// administrator or the project's manager.
+    /// </summary>
+    procedure CanEditProjectSourceLinks(JobNo: Code[20]): Boolean
+    var
+        Job: Record Job;
+    begin
+        if IsThymeAdmin() then
+            exit(true);
+        if JobNo = '' then
+            exit(false);
+        if not Job.Get(JobNo) then
+            exit(false);
+        exit(IsProjectManager(Job));
+    end;
+
+    /// <summary>
+    /// As CanEditProjectSourceLinks(JobNo), for a project already read and with IsThymeAdmin()
+    /// worked out once (the projects API asks this for every row).
+    /// </summary>
+    procedure CanEditProjectSourceLinks(Job: Record Job; CallerIsThymeAdmin: Boolean): Boolean
+    begin
+        if CallerIsThymeAdmin then
+            exit(true);
+        exit(IsProjectManager(Job));
+    end;
+
+    /// <summary>
+    /// The project's manager: its Project Manager user, or the time sheet owner of the resource
+    /// that is its Person Responsible.
+    /// </summary>
+    procedure IsProjectManager(Job: Record Job): Boolean
+    var
+        Resource: Record Resource;
+        Me: Code[50];
+    begin
+        Me := CurrentUserCode();
+        if (Job."Project Manager" <> '') and (UpperCase(Job."Project Manager") = Me) then
+            exit(true);
+        if Job."Person Responsible" = '' then
+            exit(false);
+        if not Resource.Get(Job."Person Responsible") then
+            exit(false);
+        exit((Resource."Time Sheet Owner User ID" <> '') and (UpperCase(Resource."Time Sheet Owner User ID") = Me));
+    end;
+
+    /// <summary>
+    /// A new link: the AI agent's are always marked Learned; a person's (administrator or the
+    /// project's manager) never are; anyone else is refused.
+    /// </summary>
+    procedure CheckCanInsertSourceLink(var Link: Record "Thyme Project Source Link")
+    begin
+        if IsAIAgent() then begin
+            Link.Learned := true;
+            exit;
+        end;
+        if not CanEditProjectSourceLinks(Link."Job No.") then
+            Error(NotAllowedToWriteSourceLinksErr, Link."Job No.");
+        Link.Learned := false;
+    end;
+
+    /// <summary>
+    /// A changed link: the AI agent only changes learned links (they stay learned); a person who
+    /// may edit the project's links adopts the link (no longer learned).
+    /// </summary>
+    procedure CheckCanModifySourceLink(var Link: Record "Thyme Project Source Link")
+    begin
+        if IsAIAgent() then begin
+            CheckLearnedLink(Link);
+            Link.Learned := true;
+            exit;
+        end;
+        if not CanEditProjectSourceLinks(Link."Job No.") then
+            Error(NotAllowedToWriteSourceLinksErr, Link."Job No.");
+        Link.Learned := false;
+    end;
+
+    procedure CheckCanDeleteSourceLink(Link: Record "Thyme Project Source Link")
+    begin
+        if IsAIAgent() then begin
+            CheckLearnedLink(Link);
+            exit;
+        end;
+        if not CanEditProjectSourceLinks(Link."Job No.") then
+            Error(NotAllowedToWriteSourceLinksErr, Link."Job No.");
+    end;
+
+    /// <summary>The link as stored must be a learned one (checked on the stored row, not the new values).</summary>
+    local procedure CheckLearnedLink(Link: Record "Thyme Project Source Link")
+    var
+        Stored: Record "Thyme Project Source Link";
+    begin
+        if not Stored.Get(Link."Job No.", Link."Line No.") then
+            Error(AgentOnlyLearnedLinksErr, Link."Job No.", Link."Line No.");
+        if not Stored.Learned then
+            Error(AgentOnlyLearnedLinksErr, Link."Job No.", Link."Line No.");
     end;
 
     local procedure IsOwnResource(ResourceNo: Code[20]): Boolean

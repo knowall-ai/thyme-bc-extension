@@ -45,6 +45,7 @@ Once deployed, the APIs are available at:
 .../api/knowall/thyme/v1.0/companies({companyId})/timesheetReviewLines
 .../api/knowall/thyme/v1.0/companies({companyId})/timeSuggestions
 .../api/knowall/thyme/v1.0/companies({companyId})/suggestionRequests
+.../api/knowall/thyme/v1.0/companies({companyId})/projectSourceLinks
 .../api/knowall/thyme/v1.0/companies({companyId})/agentHeartbeats
 .../api/knowall/thyme/v1.0/companies({companyId})/thymeSetup
 ```
@@ -70,6 +71,7 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 | `startingDate` | Project start date |
 | `endingDate` | Project end date |
 | `currencyCode` | Currency of the project's prices (Job "Currency Code"); blank = the company's local currency (LCY). Read-only |
+| `canEditSourceLinks` | True if the caller may add, change and remove the project's linked sources (a Thyme administrator or the project's manager). Read-only, per caller |
 | `lastModifiedDateTime` | Last modified timestamp |
 
 ### Job Tasks API
@@ -380,6 +382,54 @@ When each AI agent was last seen, so Thyme can show whether it's online and disa
 Every Thyme user can read it; only the AI agent (`THYME AI AGENT`) can create, change or delete.
 The agent sends its own `lastSeenAt` with each `PATCH` so the record always changes.
 
+### Project Source Links API
+
+Which work belongs to a project: GitHub repos, Azure DevOps projects and repos, meeting subject keywords
+and external attendee domains, optionally with the task to log that time against. The AI agent
+reads them to map activity to projects when it suggests time entries (they replace the
+`projects[]` rules in its config file). Thyme shows and edits them on the project page; in BC
+they are the *Thyme Linked Sources* part on the Project Card.
+
+| Field | Description |
+|-------|-------------|
+| `id` | SystemId (GUID) |
+| `jobNo` | Project (Job No.) |
+| `lineNo` | Line number, assigned on insert. Read-only |
+| `type` | `GitHubRepo`, `DevOpsProject`, `DevOpsRepo`, `MeetingKeyword` or `AttendeeDomain` |
+| `value` | What to match (≤ 250), normalised on save, see below |
+| `jobTaskNo` | Optional task; must be a Posting task of the project |
+| `useMonthlyBlock` | Log against the posting task named after the month ("Block 7 - October"). With `jobTaskNo`, that task is the fallback until the month's block exists; without one, unticked lets the agent detect monthly blocks |
+| `learned` | True when the AI agent added the link from approved time. Read-only |
+| `createdBy`, `createdAt` | Who added the link and when. Read-only |
+
+Values are normalised, so the agent matches them the same way however they were entered:
+
+| Type | Accepts | Stored as |
+|------|---------|-----------|
+| `GitHubRepo` | `owner/repo`, `owner/*` (every repo of the owner), `owner/prefix-*`, or a URL such as `https://github.com/contoso/app/pull/12` | `contoso/app` (lower case) |
+| `DevOpsProject` | `organisation/project`, a URL such as `https://dev.azure.com/contoso/Contoso%20App/_workitems` (or `https://contoso.visualstudio.com/Contoso App`), or just the project name | `contoso/Contoso App` (a bare name stays as typed) |
+| `DevOpsRepo` | `organisation/project/repo` or `https://dev.azure.com/contoso/Contoso App/_git/app-api` | `contoso/Contoso App/app-api` |
+| `MeetingKeyword` | A word or phrase in the meeting subject (at least 3 characters); a leading `Meeting: ` is dropped | As entered |
+| `AttendeeDomain` | `contoso.com` or an attendee's address `someone@contoso.com` | `contoso.com` |
+
+A DevOps repo link beats its project's link: pull requests in that repo (and work items linked
+to them) go to the repo's project; other work in the DevOps project goes to the project link.
+
+The same type and value can be linked to a project only once (case-insensitive); the same value
+on two projects is allowed and makes the agent ask which one.
+
+```
+GET  /projectSourceLinks?$filter=jobNo eq 'PR00010'
+POST /projectSourceLinks  { "jobNo": "PR00010", "type": "GitHubRepo", "value": "https://github.com/contoso/app", "jobTaskNo": "100" }
+```
+
+Every Thyme user can read every link. Thyme administrators and the project's manager (its
+*Project Manager*, or the time sheet owner of its *Person Responsible* resource) can create,
+change and delete them, in Thyme or in BC; anyone else gets an error. The AI agent
+(`THYME AI AGENT`) can create links, which are always marked `learned`, and change or delete
+only learned links. A person who edits a learned link adopts it (`learned` becomes false).
+Deleting a project deletes its links.
+
 ### Row-level security
 
 The reviews, review lines, suggestions and suggestion requests endpoints only return records the caller may see.
@@ -526,19 +576,22 @@ thyme-bc-extension/
 │   │   ├── ThymeTimesheetReviewsAPI.Page.al    # Timesheet Reviews (page 50109)
 │   │   ├── ThymeTimesheetReviewLinesAPI.Page.al # Timesheet Review Lines (page 50110)
 │   │   ├── ThymeTimeSuggestionsAPI.Page.al     # Time Suggestions (page 50111)
-│   │   └── ThymeSetupAPI.Page.al               # Thyme Setup (page 50112)
+│   │   ├── ThymeSetupAPI.Page.al               # Thyme Setup (page 50112)
+│   │   └── ThymeProjectSourceLinksAPI.Page.al  # Project Source Links (page 50116)
 │   ├── page/
-│   │   └── ThymeSetup.Page.al                  # Thyme Setup card (page 50113)
-│   ├── table/                                  # Review, review line, suggestion, Thyme Setup (tables 50100-50103)
+│   │   ├── ThymeSetup.Page.al                  # Thyme Setup card (page 50113)
+│   │   └── ThymeProjectSourceLinks.Page.al     # Linked sources part on the Project Card (page 50117)
+│   ├── table/                                  # Review, review line, suggestion, Thyme Setup, requests, heartbeats, source links (tables 50100-50106)
 │   ├── tableextension/                         # Resource billable target and capacity fields (50100)
-│   ├── pageextension/                          # Thyme group on the Resource Card (50100)
-│   ├── enum/                                   # Verdict, severity, suggestion enums (enums 50100-50104)
+│   ├── pageextension/                          # Thyme group on the Resource Card (50100), linked sources on the Project Card (50101)
+│   ├── enum/                                   # Verdict, severity, suggestion, request status, source type enums (enums 50100-50106)
 │   ├── permissionset/                          # THYME AI AGENT, THYME USER, THYME ADMIN (50100-50102)
 │   └── codeunit/
 │       ├── ThymeTimeSheetActions.Codeunit.al   # Approval workflow actions (codeunit 50100)
 │       ├── ThymeInstall.Codeunit.al            # Creates Thyme Setup on install (codeunit 50101)
 │       ├── ThymeUpgrade.Codeunit.al            # Creates Thyme Setup on upgrade (codeunit 50102)
-│       ├── ThymeRecordSecurity.Codeunit.al     # Row-level security for reviews and suggestions (codeunit 50104)
+│       ├── ThymeRecordSecurity.Codeunit.al     # Row-level security for reviews and suggestions, source link edit rights (codeunit 50104)
+│       ├── ThymeProjectSourceLinkEvents.Codeunit.al # Deletes a project's source links with it (codeunit 50105)
 │       └── ThymeCompanyInitialize.Codeunit.al  # Creates Thyme Setup in new companies (codeunit 50103)
 └── .vscode/
     ├── launch.json                             # Debug configuration

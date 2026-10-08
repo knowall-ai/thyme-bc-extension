@@ -2,6 +2,9 @@
 /// Custom API page exposing Projects (Jobs) with additional fields
 /// not available in the standard BC API v2.0.
 ///
+/// canEditSourceLinks is true when the caller may add, change and remove the project's linked
+/// sources (see the projectSourceLinks endpoint): a Thyme administrator or the project's manager.
+///
 /// Endpoint: /api/knowall/thyme/v1.0/companies({companyId})/projects
 /// </summary>
 page 50100 "Thyme Projects API"
@@ -72,6 +75,11 @@ page 50100 "Thyme Projects API"
                     Caption = 'Currency Code';
                     Editable = false;
                 }
+                field(canEditSourceLinks; CanEditSourceLinks)
+                {
+                    Caption = 'Can Edit Source Links';
+                    Editable = false;
+                }
                 field(lastModifiedDateTime; Rec.SystemModifiedAt)
                 {
                     Caption = 'Last Modified DateTime';
@@ -80,4 +88,22 @@ page 50100 "Thyme Projects API"
             }
         }
     }
+
+    var
+        CallerIsThymeAdmin: Boolean;
+        CanEditSourceLinks: Boolean;
+
+    trigger OnOpenPage()
+    var
+        RecordSecurity: Codeunit "Thyme Record Security";
+    begin
+        CallerIsThymeAdmin := RecordSecurity.IsThymeAdmin();
+    end;
+
+    trigger OnAfterGetRecord()
+    var
+        RecordSecurity: Codeunit "Thyme Record Security";
+    begin
+        CanEditSourceLinks := RecordSecurity.CanEditProjectSourceLinks(Rec, CallerIsThymeAdmin);
+    end;
 }
