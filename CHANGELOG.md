@@ -30,6 +30,8 @@ Notable changes to the Thyme BC Extension. Versions match `app.json`.
   request.
 - Thyme uses `canEditPlan` (1.22.0.0) on `projects` and `resources` to show *Apply change* and
   *Ask Poppie to re-review* only to people who may use them.
+- `countryRegionCode` on `resources` (read-only): the person's Country/Region Code (blank = the
+  company's), so the plan review checks public holidays for the right country.
 
 ## 1.22.0.0
 

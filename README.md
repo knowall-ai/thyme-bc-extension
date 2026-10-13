@@ -180,6 +180,7 @@ POST /timeSheetDetails
 | `resourceGroupNo` | Resource group code |
 | `blocked` | Whether resource is blocked |
 | `privacyBlocked` | Privacy blocked flag |
+| `countryRegionCode` | The person's Country/Region Code (blank = the company's), used by the plan review for public holidays. Read-only |
 | `useTimeSheet` | Time sheet enabled |
 | `timeSheetOwnerUserId` | Time sheet owner user ID |
 | `timeSheetApproverUserId` | Time sheet approver user ID |

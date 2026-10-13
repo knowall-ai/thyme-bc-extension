@@ -95,6 +95,13 @@ page 50104 "Thyme Resources API"
                 {
                     Caption = 'Privacy Blocked';
                 }
+                // The person's country (blank = the company's), so the plan review can check
+                // public holidays by country. Read-only: change it on the Resource Card.
+                field(countryRegionCode; Rec."Country/Region Code")
+                {
+                    Caption = 'Country/Region Code';
+                    Editable = false;
+                }
                 field(useTimeSheet; Rec."Use Time Sheet")
                 {
                     Caption = 'Use Time Sheet';
