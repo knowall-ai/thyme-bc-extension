@@ -2,6 +2,35 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
+## 1.23.0.0
+
+### Added
+
+- AI plan reviews: the agent reviews the plan (Resource planning lines, i.e. Thyme's Plan grid)
+  one subject-week at a time, a person's week (`Resource`) or a project's week (`Project`), and
+  Thyme shows the verdict on the Plan grid.
+  - `planReviews` (page 50118, table 50107 `Thyme Plan Review`, subject enum 50107): verdict
+    (Approve, Check, Query), summary, reviewer and `planHash`, the SHA-256 of the subject-week's
+    planning lines when reviewed (`PENDING` while the agent writes the findings), so Thyme can
+    tell a review is out of date. `weekStart` must be a Monday.
+  - `planReviewLines` (page 50119, table 50108): the findings, each with a severity, the check
+    that raised it, and optionally the day, project and resource it is about.
+  - `planReviewChanges` (page 50120, table 50109): changes a finding proposes to planning-line
+    cells, in hours (`currentHours` → `proposedHours`, a multiple of 0.25; 0 removes the cell),
+    applied together with Thyme's *Apply change*. A change must be in the review's week and for
+    its resource or project.
+  - Deleting a review deletes its findings and changes; deleting a finding deletes its changes.
+- `planReviewRequests` (page 50121, table 50110, status enum 50108): ask the agent to review a
+  subject-week now. Works like `suggestionRequests`: one open request per subject-week, the agent
+  claims it (`Running`), reports `progress` and finishes it as `Done` or `Failed`.
+- Who can do what: every Thyme user reads plan reviews, findings, changes and requests. Only the AI
+  agent or a Thyme administrator writes reviews, findings and changes (`CheckCanWritePlanReviews`).
+  Only people who may change the plan (permission to write Job Planning Lines; no Thyme
+  administrator or AI agent shortcut) can request a review; only the AI agent changes or deletes a
+  request.
+- Thyme uses `canEditPlan` (1.22.0.0) on `projects` and `resources` to show *Apply change* and
+  *Ask Poppie to re-review* only to people who may use them.
+
 ## 1.22.0.0
 
 ### Added

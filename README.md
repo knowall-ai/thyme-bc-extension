@@ -46,6 +46,10 @@ Once deployed, the APIs are available at:
 .../api/knowall/thyme/v1.0/companies({companyId})/timeSuggestions
 .../api/knowall/thyme/v1.0/companies({companyId})/suggestionRequests
 .../api/knowall/thyme/v1.0/companies({companyId})/projectSourceLinks
+.../api/knowall/thyme/v1.0/companies({companyId})/planReviews
+.../api/knowall/thyme/v1.0/companies({companyId})/planReviewLines
+.../api/knowall/thyme/v1.0/companies({companyId})/planReviewChanges
+.../api/knowall/thyme/v1.0/companies({companyId})/planReviewRequests
 .../api/knowall/thyme/v1.0/companies({companyId})/agentHeartbeats
 .../api/knowall/thyme/v1.0/companies({companyId})/dayNotes
 .../api/knowall/thyme/v1.0/companies({companyId})/thymeSetup
@@ -476,6 +480,83 @@ Planning Lines) can create, change and delete them; anyone else, including a Thy
 or the AI agent without that permission, gets "You don't have permission to change day notes." The read-only `canEditPlan`
 flag on `projects` and `resources` answers this for the caller.
 
+### Plan Reviews API
+
+AI reviews of the plan (Resource planning lines, as on Thyme's Plan grid), one per
+**subject-week**: a person's week (`subjectType` `Resource`, `subjectNo` = resource) or a
+project's week (`Project`, `subjectNo` = project). Written by the AI agent; Thyme shows them on
+the Plan grid.
+
+| Field | Description |
+|-------|-------------|
+| `id` | SystemId (GUID) |
+| `entryNo` | Entry number (read-only) |
+| `subjectType` | `Resource` or `Project` |
+| `subjectNo` | Resource No. or Job No. |
+| `weekStart` | The Monday the week starts on |
+| `planHash` | Lowercase hex SHA-256 of the subject-week's planning lines when reviewed; `PENDING` while the agent is still writing the findings |
+| `verdict` | `Approve` ("Looks good"), `Check` ("Worth a check", the default) or `Query` ("Needs changes") |
+| `summary` | Summary (≤ 2048) |
+| `reviewer` | Who reviewed, e.g. "Poppie" |
+| `reviewedAt` | When (defaults to now) |
+| `lastModifiedDateTime` | Last modified timestamp (read-only) |
+
+**Plan hash:** for each planning line of the subject-week (`type` Resource, quantity > 0) build
+`jobNo|jobTaskNo|resourceNo|planningDate(YYYY-MM-DD)|hours`, hours rounded to 2 decimals and
+written with exactly 2 (`7.25`, `0.50`); sort ascending, join with `\n` and hash the UTF-8. An empty
+week hashes the empty string. A review whose `planHash` differs from the current one is out of date.
+
+**Findings** (`planReviewLines`): `reviewEntryNo`, `lineNo` (assigned in steps of 10000 if 0),
+`severity` (`Info`, `Warning`, `Issue`), `check` (`ROUNDING`, `OVER_CAPACITY`, `BILLABLE_TARGET`,
+`CALENDAR`, `BUDGET_BURN`, `PLAN_SHAPE`, `OUTSIDE_PROJECT_DATES` or `OTHER`), and optionally
+`planningDate` (a day in the review's week; blank = the whole week), `jobNo`, `resourceNo`, plus
+`note` (≤ 500).
+
+**Proposed changes** (`planReviewChanges`): `reviewEntryNo`, `reviewLineNo` (the finding),
+`changeNo` (assigned 1, 2, 3... if 0), `jobNo`, `jobTaskNo`, `resourceNo`, `planningDate`,
+`currentHours` (what the cell held when the agent looked) and `proposedHours` (a multiple of 0.25;
+0 = remove the cell's planning lines). A change must be on a day of the review's week and, for a
+resource-week, for that resource (for a project-week, that project). Thyme's *Apply change*
+re-checks `currentHours`, then writes the planning lines with the user's own permissions.
+
+```
+GET /planReviews?$filter=subjectType eq 'Resource' and weekStart ge 2026-10-19 and weekStart le 2026-11-09
+GET /planReviews?$filter=subjectType eq 'Resource' and subjectNo eq 'R0010' and weekStart eq 2026-10-19&$orderby=reviewedAt desc&$top=1
+GET /planReviewLines?$filter=reviewEntryNo eq 42
+GET /planReviewChanges?$filter=reviewEntryNo eq 42
+```
+
+Deleting a review deletes its findings and changes; deleting a finding deletes its changes.
+Every Thyme user can read plan reviews, findings and changes (there is no row-level security
+on them); only the AI agent or a Thyme administrator can write them.
+
+### Plan Review Requests API
+
+Ask the AI agent to review a subject-week now (*Ask Poppie to re-review* in Thyme), instead of
+waiting for its Thursday sweep. Works like `suggestionRequests`.
+
+| Field | Description |
+|-------|-------------|
+| `id` | SystemId (GUID) |
+| `entryNo` | Entry number (read-only) |
+| `subjectType` / `subjectNo` / `weekStart` | The subject-week, as on `planReviews` (`weekStart` a Monday) |
+| `status` | `Requested` (always, on create), `Running`, `Done` or `Failed` |
+| `progress` | What the agent is doing now (≤ 250) |
+| `errorMessage` | Why a `Failed` request failed (≤ 250) |
+| `requestedBy` / `requestedAt` | Who asked and when (set by BC, read-only) |
+| `startedAt` / `finishedAt` | Stamped when the agent claims it and when it finishes, if blank |
+| `lastModifiedDateTime` | Last modified timestamp (read-only) |
+
+```
+POST /planReviewRequests  { "subjectType": "Resource", "subjectNo": "R0010", "weekStart": "2026-10-19" }
+GET  /planReviewRequests?$filter=status eq 'Requested'&$orderby=requestedAt     (agent: waiting requests)
+```
+Only one open (`Requested` or `Running`) request per subject-week; a second is rejected,
+including by re-opening one with `PATCH`. Every Thyme user can read requests. People who may
+change the plan (permission to write Job Planning Lines; being a Thyme administrator or the AI
+agent doesn't count on its own) can create them (`canEditPlan` on `projects` and `resources` answers this for the caller); only the
+AI agent can change or delete one.
+
 ### Row-level security
 
 The reviews, review lines, suggestions and suggestion requests endpoints only return records the caller may see.
@@ -583,8 +664,8 @@ Create two environments in Settings → Environments:
 
 | Permission set | Assign to | Grants |
 |----------------|-----------|--------|
-| `THYME AI AGENT` | The AI agent's Microsoft Entra application | Full access to reviews, review lines, suggestions, suggestion requests and its heartbeat; reads day notes, and changes them (through `dayNotes`) only if it also has permission to write Job Planning Lines (includes `THYME USER`) |
-| `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; read and create suggestion requests; read agent heartbeats; read day notes, and change them through `dayNotes` with permission to write Job Planning Lines; read the default billable target; run the Thyme API pages |
+| `THYME AI AGENT` | The AI agent's Microsoft Entra application | Full access to reviews, review lines, suggestions, suggestion requests, its heartbeat, plan reviews (with findings and changes) and plan review requests; reads day notes, and changes them (through `dayNotes`) only if it also has permission to write Job Planning Lines (includes `THYME USER`) |
+| `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; read and create suggestion requests; read agent heartbeats; read plan reviews, their findings and changes; read and create plan review requests (checked in code); read day notes, and change them through `dayNotes` with permission to write Job Planning Lines; read the default billable target; run the Thyme API pages |
 | `THYME ADMIN` | Thyme administrators | Everything in `THYME USER`, plus changing the default billable target (Thyme Setup) and seeing every user's reviews and suggestions |
 
 Users with `THYME USER` only see reviews of time sheets they own or approve and their own
@@ -624,14 +705,18 @@ thyme-bc-extension/
 │   │   ├── ThymeTimeSuggestionsAPI.Page.al     # Time Suggestions (page 50111)
 │   │   ├── ThymeSetupAPI.Page.al               # Thyme Setup (page 50112)
 │   │   ├── ThymeProjectSourceLinksAPI.Page.al  # Project Source Links (page 50116)
+│   │   ├── ThymePlanReviewsAPI.Page.al         # Plan Reviews (page 50118)
+│   │   ├── ThymePlanReviewLinesAPI.Page.al     # Plan Review Lines (page 50119)
+│   │   ├── ThymePlanReviewChangesAPI.Page.al   # Plan Review Changes (page 50120)
+│   │   ├── ThymePlanReviewRequestsAPI.Page.al  # Plan Review Requests (page 50121)
 │   │   └── ThymeDayNotesAPI.Page.al            # Day Notes (page 50122)
 │   ├── page/
 │   │   ├── ThymeSetup.Page.al                  # Thyme Setup card (page 50113)
 │   │   └── ThymeProjectSourceLinks.Page.al     # Linked sources part on the Project Card (page 50117)
-│   ├── table/                                  # Review, review line, suggestion, Thyme Setup, requests, heartbeats, source links (tables 50100-50106), day notes (table 50111)
+│   ├── table/                                  # Review, review line, suggestion, Thyme Setup, requests, heartbeats, source links (tables 50100-50106), plan reviews, lines, changes, requests (tables 50107-50110), day notes (table 50111)
 │   ├── tableextension/                         # Resource billable target and capacity fields (50100)
 │   ├── pageextension/                          # Thyme group on the Resource Card (50100), linked sources on the Project Card (50101)
-│   ├── enum/                                   # Verdict, severity, suggestion, request status, source type enums (enums 50100-50106)
+│   ├── enum/                                   # Verdict, severity, suggestion, request status, source type, plan review subject and request status enums (enums 50100-50108)
 │   ├── permissionset/                          # THYME AI AGENT, THYME USER, THYME ADMIN (50100-50102)
 │   └── codeunit/
 │       ├── ThymeTimeSheetActions.Codeunit.al   # Approval workflow actions (codeunit 50100)

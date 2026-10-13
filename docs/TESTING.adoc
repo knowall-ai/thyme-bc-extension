@@ -154,6 +154,32 @@ curl -H "Authorization: Bearer {token}" \
 # "You don't have permission to change day notes."; canEditPlan = false), for POST, PATCH and DELETE
 ----
 
+=== 8. Test plan reviews
+
+[source,bash]
+----
+# Can I change the plan? (expect canEditPlan on every row)
+curl -H "Authorization: Bearer {token}" ".../resources?\$select=number,canEditPlan&\$top=3"
+
+# As the AI agent: a review of a CRONUS resource's week (weekStart must be a Monday), then a finding and a change
+curl -X POST -H "Authorization: Bearer {token}" -H "Content-Type: application/json" \
+  -d '{"subjectType": "Resource", "subjectNo": "KATHERINE", "weekStart": "2026-10-19", "planHash": "PENDING", "verdict": "Check", "summary": "One cell is not in quarter hours.", "reviewer": "Poppie"}' \
+  ".../planReviews"
+#   POST .../planReviewLines   {"reviewEntryNo": <entryNo>, "severity": "Warning", "check": "ROUNDING", "planningDate": "2026-10-22", "note": "7.17h"}
+#   POST .../planReviewChanges {"reviewEntryNo": <entryNo>, "reviewLineNo": 10000, "jobNo": "<job>", "jobTaskNo": "<task>",
+#                               "resourceNo": "KATHERINE", "planningDate": "2026-10-22", "currentHours": 7.17, "proposedHours": 7.25}
+#   PATCH .../planReviews({id}) {"planHash": "<sha256>"}
+# Expect 400: weekStart not a Monday; proposedHours 7.3; a change dated outside the week or for another resource
+# As a Thyme user: POST to planReviews (expect 400 "not allowed"); GET works
+
+# Request a review (as a planner; expect status Requested), then a second one (expect 400 "already been requested")
+curl -X POST -H "Authorization: Bearer {token}" -H "Content-Type: application/json" \
+  -d '{"subjectType": "Resource", "subjectNo": "KATHERINE", "weekStart": "2026-10-19"}' \
+  ".../planReviewRequests"
+# As a non-agent, PATCH the request (expect 400 "Only the AI agent can"); as a user without permission
+# to write Job Planning Lines, POST a request (expect 400; canEditPlan = false)
+----
+
 == Validation Checklist
 
 * [ ] Projects API returns customer name and number
@@ -173,3 +199,7 @@ curl -H "Authorization: Bearer {token}" \
 * [ ] Projects and Resources APIs return canEditPlan (true for a user who may write Job Planning Lines; false otherwise, including a Thyme admin without that permission)
 * [ ] Day notes can be created, changed and deleted by people who may change the plan, and only read by others
 * [ ] Day notes filter by a noteDate range; a blank note is rejected
+* [ ] Only the AI agent or a Thyme admin can write plan reviews, findings and changes; every Thyme user can read them
+* [ ] Plan review changes outside the review's week or subject, or not in quarter hours, are rejected
+* [ ] Deleting a plan review deletes its findings and changes
+* [ ] One open plan review request per subject-week; only the AI agent can change a request
