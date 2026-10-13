@@ -47,6 +47,7 @@ Once deployed, the APIs are available at:
 .../api/knowall/thyme/v1.0/companies({companyId})/suggestionRequests
 .../api/knowall/thyme/v1.0/companies({companyId})/projectSourceLinks
 .../api/knowall/thyme/v1.0/companies({companyId})/agentHeartbeats
+.../api/knowall/thyme/v1.0/companies({companyId})/dayNotes
 .../api/knowall/thyme/v1.0/companies({companyId})/thymeSetup
 ```
 
@@ -72,6 +73,7 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 | `endingDate` | Project end date |
 | `currencyCode` | Currency of the project's prices (Job "Currency Code"); blank = the company's local currency (LCY). Read-only |
 | `canEditSourceLinks` | True if the caller may add, change and remove the project's linked sources (a Thyme administrator or the project's manager). Read-only, per caller |
+| `canEditPlan` | True if the caller may change the plan: has permission to write Job Planning Lines (being a Thyme administrator doesn't count on its own). Read-only, per caller, the same on every row |
 | `lastModifiedDateTime` | Last modified timestamp |
 
 ### Job Tasks API
@@ -184,6 +186,7 @@ POST /timeSheetDetails
 | `flexibleWorkingDays` | Whether the person works their weekly capacity on any days rather than fixed weekdays |
 | `githubUsername` | The person's GitHub login, so the AI agent knows whose GitHub activity is whose (blank = not set) |
 | `canEditConnectedAccounts` | Read-only, per caller: whether the caller may change `githubUsername` |
+| `canEditPlan` | Read-only, per caller: whether the caller may change the plan (see `projects`) |
 | `lastDateModified` | Last date modified |
 | `lastModifiedDateTime` | Last modified timestamp |
 
@@ -444,6 +447,35 @@ change and delete them, in Thyme or in BC; anyone else gets an error. The AI age
 only learned links. A person who edits a learned link adopts it (`learned` becomes false).
 Deleting a project deletes its links.
 
+### Day Notes API
+
+Notes on particular days, e.g. "Company Off-Site", for the whole company or one person. Thyme
+shows them on the Plan grid; the AI agent's plan review reads them.
+
+| Field | Description |
+|-------|-------------|
+| `id` | SystemId (GUID) |
+| `entryNo` | Entry number (read-only) |
+| `noteDate` | The day (required) |
+| `resourceNo` | Blank = the whole company; otherwise just that person |
+| `note` | The note (required, ≤ 100), e.g. "Company Off-Site" |
+| `noProjectWork` | The day isn't available for project work (capacity 0 that day), e.g. an off-site or a holiday |
+| `createdBy` / `createdAt` | Who added the note and when (set by BC, read-only) |
+| `modifiedBy` / `modifiedAt` | Who last changed it and when (set by BC, read-only) |
+| `lastModifiedDateTime` | Last modified timestamp (read-only) |
+
+**Usage:**
+```
+GET  /dayNotes?$filter=noteDate ge 2026-10-19 and noteDate le 2026-11-15
+POST /dayNotes  { "noteDate": "2026-10-22", "note": "Company Off-Site", "noProjectWork": true }
+POST /dayNotes  { "noteDate": "2026-10-23", "resourceNo": "R0010", "note": "Client workshop" }
+```
+
+Every Thyme user can read day notes. People who may change the plan (permission to write Job
+Planning Lines) can create, change and delete them; anyone else, including a Thyme administrator
+or the AI agent without that permission, gets "You don't have permission to change day notes." The read-only `canEditPlan`
+flag on `projects` and `resources` answers this for the caller.
+
 ### Row-level security
 
 The reviews, review lines, suggestions and suggestion requests endpoints only return records the caller may see.
@@ -551,8 +583,8 @@ Create two environments in Settings → Environments:
 
 | Permission set | Assign to | Grants |
 |----------------|-----------|--------|
-| `THYME AI AGENT` | The AI agent's Microsoft Entra application | Full access to reviews, review lines, suggestions, suggestion requests and its heartbeat (includes `THYME USER`) |
-| `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; read and create suggestion requests; read agent heartbeats; read the default billable target; run the Thyme API pages |
+| `THYME AI AGENT` | The AI agent's Microsoft Entra application | Full access to reviews, review lines, suggestions, suggestion requests, its heartbeat and day notes (includes `THYME USER`) |
+| `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; read and create suggestion requests; read agent heartbeats; read day notes (changing them is checked in code); read the default billable target; run the Thyme API pages |
 | `THYME ADMIN` | Thyme administrators | Everything in `THYME USER`, plus changing the default billable target (Thyme Setup) and seeing every user's reviews and suggestions |
 
 Users with `THYME USER` only see reviews of time sheets they own or approve and their own
@@ -591,11 +623,12 @@ thyme-bc-extension/
 │   │   ├── ThymeTimesheetReviewLinesAPI.Page.al # Timesheet Review Lines (page 50110)
 │   │   ├── ThymeTimeSuggestionsAPI.Page.al     # Time Suggestions (page 50111)
 │   │   ├── ThymeSetupAPI.Page.al               # Thyme Setup (page 50112)
-│   │   └── ThymeProjectSourceLinksAPI.Page.al  # Project Source Links (page 50116)
+│   │   ├── ThymeProjectSourceLinksAPI.Page.al  # Project Source Links (page 50116)
+│   │   └── ThymeDayNotesAPI.Page.al            # Day Notes (page 50122)
 │   ├── page/
 │   │   ├── ThymeSetup.Page.al                  # Thyme Setup card (page 50113)
 │   │   └── ThymeProjectSourceLinks.Page.al     # Linked sources part on the Project Card (page 50117)
-│   ├── table/                                  # Review, review line, suggestion, Thyme Setup, requests, heartbeats, source links (tables 50100-50106)
+│   ├── table/                                  # Review, review line, suggestion, Thyme Setup, requests, heartbeats, source links (tables 50100-50106), day notes (table 50111)
 │   ├── tableextension/                         # Resource billable target and capacity fields (50100)
 │   ├── pageextension/                          # Thyme group on the Resource Card (50100), linked sources on the Project Card (50101)
 │   ├── enum/                                   # Verdict, severity, suggestion, request status, source type enums (enums 50100-50106)

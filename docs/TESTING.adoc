@@ -127,6 +127,29 @@ curl -X POST -H "Authorization: Bearer {token}" -H "Content-Type: application/js
 # As a non-admin, someone else's resource (expect 400 "not allowed"; canEditConnectedAccounts = false on that row)
 ----
 
+=== 7. Test day notes
+
+[source,bash]
+----
+# Can I change the plan? (expect canEditPlan on every row)
+curl -H "Authorization: Bearer {token}" \
+  ".../projects?\$select=number,canEditPlan&\$top=3"
+
+# Add a company-wide off-site day (expect 201, createdBy = you, resourceNo = "")
+curl -X POST -H "Authorization: Bearer {token}" -H "Content-Type: application/json" \
+  -d '{"noteDate": "2026-10-22", "note": "Company Off-Site", "noProjectWork": true}' \
+  ".../dayNotes"
+
+# A note for one CRONUS person: -d '{"noteDate": "2026-10-23", "resourceNo": "KATHERINE", "note": "Client workshop"}'
+# Read a date range (expect both)
+curl -H "Authorization: Bearer {token}" \
+  ".../dayNotes?\$filter=noteDate ge 2026-10-19 and noteDate le 2026-10-25"
+
+# Blank note (expect 400): -d '{"noteDate": "2026-10-22", "note": "  "}'
+# As a user without permission to write Job Planning Lines, including a Thyme admin (expect 400
+# "You don't have permission to change day notes."; canEditPlan = false), for POST, PATCH and DELETE
+----
+
 == Validation Checklist
 
 * [ ] Projects API returns customer name and number
@@ -143,3 +166,6 @@ curl -X POST -H "Authorization: Bearer {token}" -H "Content-Type: application/js
 * [ ] setGitHubUsername stores a valid login (from a login, @login or profile URL) and rejects invalid ones
 * [ ] A non-admin can set their own GitHub username but not someone else's
 * [ ] GitHub Username shows in the Thyme group on the Resource Card
+* [ ] Projects and Resources APIs return canEditPlan (true for a user who may write Job Planning Lines; false otherwise, including a Thyme admin without that permission)
+* [ ] Day notes can be created, changed and deleted by people who may change the plan, and only read by others
+* [ ] Day notes filter by a noteDate range; a blank note is rejected

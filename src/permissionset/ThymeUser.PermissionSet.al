@@ -4,6 +4,8 @@
 /// requests; who for is checked per resource), see whether the agent is online, read the company's default billable target,
 /// and read projects' linked sources (changing them is checked per project: Thyme administrators and the project's manager),
 /// and set their own GitHub username through the resources API's setGitHubUsername action.
+/// Every Thyme user reads day notes; changing them is checked in code (people who may change the plan:
+/// permission to write Job Planning Lines).
 /// Base-app data such as time sheets and resources still comes from the standard D365
 /// permission sets. To change the default billable target, use THYME ADMIN.
 /// </summary>
@@ -20,6 +22,7 @@ permissionset 50101 "THYME USER"
         table "Thyme Suggestion Request" = X,
         table "Thyme Agent Heartbeat" = X,
         table "Thyme Project Source Link" = X,
+        table "Thyme Day Note" = X,
         tabledata "Thyme Timesheet Review" = R,
         tabledata "Thyme Timesheet Review Line" = R,
         tabledata "Thyme Time Suggestion" = RM,
@@ -27,6 +30,7 @@ permissionset 50101 "THYME USER"
         tabledata "Thyme Suggestion Request" = RI,
         tabledata "Thyme Agent Heartbeat" = R,
         tabledata "Thyme Project Source Link" = RIMD,
+        tabledata "Thyme Day Note" = RIMD,
         // Indirect only: lets codeunit "Thyme Connected Accounts" save a person's own GitHub
         // username after its row-level check; it gives no direct right to change resources.
         tabledata Resource = m,
@@ -47,6 +51,7 @@ permissionset 50101 "THYME USER"
         page "Thyme Agent Heartbeats API" = X,
         page "Thyme Project Source Links API" = X,
         page "Thyme Project Source Links" = X,
+        page "Thyme Day Notes API" = X,
         codeunit "Thyme Time Sheet Actions" = X,
         codeunit "Thyme Record Security" = X,
         codeunit "Thyme Connected Accounts" = X,
