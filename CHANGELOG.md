@@ -2,6 +2,21 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
+## 1.22.0.0
+
+### Added
+
+- `dayNotes` endpoint (page 50122, table 50111 `Thyme Day Note`): notes on particular days, e.g.
+  "Company Off-Site", for the whole company (blank `resourceNo`) or one person, shown on Thyme's
+  Plan grid. `noProjectWork` marks the day as unavailable for project work (capacity 0), so Thyme
+  counts hours planned on it as over capacity and the AI agent's plan review treats it like a
+  public holiday. BC stamps `createdBy`/`createdAt` and `modifiedBy`/`modifiedAt`.
+- Every Thyme user can read day notes. People who may change the plan (permission to write Job
+  Planning Lines) can create, change and delete them; anyone else, including a Thyme administrator
+  or the AI agent without that permission, gets "You don't have permission to change day notes."
+- `canEditPlan` on `projects` and `resources` (read-only, per caller): whether the caller may
+  change the plan, so Thyme shows the day-note edit controls only to people who may use them.
+
 ## 1.21.0.1
 
 ### Added

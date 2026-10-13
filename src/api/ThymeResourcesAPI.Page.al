@@ -22,6 +22,9 @@
 ///   POST /resources({id})/Microsoft.NAV.setGitHubUsername   { "githubUsername": "alex-contoso" }
 /// ("" clears it). A PATCH works too, for callers who may modify resources; the same rule applies.
 ///
+/// canEditPlan is true when the caller may change the plan (resource planning lines and what goes
+/// with them): a user with permission to write Job Planning Lines. Per caller, the same on every row.
+///
 /// Endpoint: /api/knowall/thyme/v1.0/companies({companyId})/resources
 /// </summary>
 page 50104 "Thyme Resources API"
@@ -141,6 +144,12 @@ page 50104 "Thyme Resources API"
                     Caption = 'Can Edit Connected Accounts';
                     Editable = false;
                 }
+                // Whether the caller may change the plan. Per caller; read-only.
+                field(canEditPlan; CanEditPlan)
+                {
+                    Caption = 'Can Edit Plan';
+                    Editable = false;
+                }
                 field(lastDateModified; Rec."Last Date Modified")
                 {
                     Caption = 'Last Date Modified';
@@ -159,6 +168,7 @@ page 50104 "Thyme Resources API"
         CallerIsThymeAdmin: Boolean;
         CanRequestSuggestions: Boolean;
         CanEditConnectedAccounts: Boolean;
+        CanEditPlan: Boolean;
 
     trigger OnOpenPage()
     var
@@ -166,6 +176,7 @@ page 50104 "Thyme Resources API"
     begin
         CallerCanAccessAll := RecordSecurity.CanAccessAll();
         CallerIsThymeAdmin := RecordSecurity.IsThymeAdmin();
+        CanEditPlan := RecordSecurity.CanEditPlan();
     end;
 
     trigger OnAfterGetRecord()

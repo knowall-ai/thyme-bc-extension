@@ -3,6 +3,8 @@
 /// to the timesheet review and time suggestion tables it writes through the API, and to
 /// the suggestion requests it works through and its heartbeat. It reads every project's linked
 /// sources and adds the ones it learns (changing or removing only learned links is checked in code).
+/// Day notes come from THYME USER: it reads them, and changes them through the dayNotes API only with
+/// permission to write Job Planning Lines, like anyone.
 /// Base-app data such as time sheets and resources still comes from the standard
 /// D365 permission sets.
 /// </summary>

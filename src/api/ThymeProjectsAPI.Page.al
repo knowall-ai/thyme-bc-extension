@@ -5,6 +5,10 @@
 /// canEditSourceLinks is true when the caller may add, change and remove the project's linked
 /// sources (see the projectSourceLinks endpoint): a Thyme administrator or the project's manager.
 ///
+/// canEditPlan is true when the caller may change the plan (the project's resource planning lines
+/// and what goes with them): a user with permission to write Job Planning Lines. Per caller, the
+/// same on every row.
+///
 /// Endpoint: /api/knowall/thyme/v1.0/companies({companyId})/projects
 /// </summary>
 page 50100 "Thyme Projects API"
@@ -80,6 +84,12 @@ page 50100 "Thyme Projects API"
                     Caption = 'Can Edit Source Links';
                     Editable = false;
                 }
+                // Whether the caller may change the plan. Per caller; read-only.
+                field(canEditPlan; CanEditPlan)
+                {
+                    Caption = 'Can Edit Plan';
+                    Editable = false;
+                }
                 field(lastModifiedDateTime; Rec.SystemModifiedAt)
                 {
                     Caption = 'Last Modified DateTime';
@@ -92,12 +102,14 @@ page 50100 "Thyme Projects API"
     var
         CallerIsThymeAdmin: Boolean;
         CanEditSourceLinks: Boolean;
+        CanEditPlan: Boolean;
 
     trigger OnOpenPage()
     var
         RecordSecurity: Codeunit "Thyme Record Security";
     begin
         CallerIsThymeAdmin := RecordSecurity.IsThymeAdmin();
+        CanEditPlan := RecordSecurity.CanEditPlan();
     end;
 
     trigger OnAfterGetRecord()

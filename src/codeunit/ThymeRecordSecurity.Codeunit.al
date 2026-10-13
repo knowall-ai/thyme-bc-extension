@@ -19,6 +19,9 @@
 /// - A person's connected accounts (the GitHub username on their resource):
 ///   everyone who can read resources sees them. A Thyme administrator changes anyone's; a person
 ///   changes their own (the resource whose Time Sheet Owner User ID is them).
+/// - The plan (resource planning lines and what goes with them): only a user with permission to
+///   write Job Planning Lines may change it, with no administrator or AI agent shortcut (CanEditPlan;
+///   the projects and resources APIs expose it per caller as canEditPlan).
 ///
 /// A Thyme administrator is a time sheet administrator (User Setup, the same rule that
 /// governs creating time sheets through the API) or a user with the THYME ADMIN
@@ -344,6 +347,29 @@ codeunit 50104 "Thyme Record Security"
     begin
         if not CanEditConnectedAccounts(ResourceNo) then
             Error(NotAllowedToEditConnectedAccountsErr, ResourceNo);
+    end;
+
+    /// <summary>
+    /// True if the caller may change the plan (resource planning lines, i.e. Thyme's Plan grid,
+    /// and what goes with it): exactly the users with permission to write Job Planning Lines.
+    /// Being a Thyme administrator or the AI agent doesn't count on its own, so Thyme never offers
+    /// a change BC would then refuse. The same for every project and resource, so the projects
+    /// and resources APIs work it out once per call (canEditPlan).
+    /// </summary>
+    procedure CanEditPlan(): Boolean
+    var
+        JobPlanningLine: Record "Job Planning Line";
+    begin
+        exit(JobPlanningLine.WritePermission());
+    end;
+
+    /// <summary>
+    /// Raises NotAllowedErr (the caller's own message, e.g. for day notes) unless CanEditPlan().
+    /// </summary>
+    procedure CheckCanEditPlan(NotAllowedErr: Text)
+    begin
+        if not CanEditPlan() then
+            Error(NotAllowedErr);
     end;
 
     /// <summary>The link as stored must be a learned one (checked on the stored row, not the new values).</summary>
