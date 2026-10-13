@@ -577,8 +577,10 @@ the API page's triggers: a user with permission to write Job Planning Lines
 (`JobPlanningLine.WritePermission()`); being a Thyme administrator or the AI agent doesn't count on
 its own, so Thyme never offers an edit BC would refuse. The read-only
 `canEditPlan` field on the Projects and Resources APIs gives the same answer per caller, so Thyme
-can show or hide its edit controls. `THYME USER` grants RIMD on the table so that a planner with
-only `THYME USER` can write once the code check passes.
+can show or hide its edit controls. `THYME USER` grants direct read and indirect insert, modify
+and delete (`Rimd`), and the API page has `Permissions = tabledata "Thyme Day Note" = rimd`, so a
+planner with only `THYME USER` can write through the page once the code check passes, but not
+directly (for example through a configuration package).
 
 === Thyme Setup API (Page 50112)
 

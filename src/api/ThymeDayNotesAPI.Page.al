@@ -30,6 +30,9 @@ page 50122 "Thyme Day Notes API"
     DelayedInsert = true;
     ODataKeyFields = SystemId;
     Extensible = false;
+    // THYME USER only has indirect insert, modify and delete on day notes, so writes go through
+    // this page and its CanEditPlan check.
+    Permissions = tabledata "Thyme Day Note" = rimd;
 
     layout
     {

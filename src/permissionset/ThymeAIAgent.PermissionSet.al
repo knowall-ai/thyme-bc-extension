@@ -3,7 +3,8 @@
 /// to the timesheet review and time suggestion tables it writes through the API, and to
 /// the suggestion requests it works through and its heartbeat. It reads every project's linked
 /// sources and adds the ones it learns (changing or removing only learned links is checked in code).
-/// It reads day notes (changing them needs permission to write Job Planning Lines, like anyone).
+/// Day notes come from THYME USER: it reads them, and changes them through the dayNotes API only with
+/// permission to write Job Planning Lines, like anyone.
 /// Base-app data such as time sheets and resources still comes from the standard
 /// D365 permission sets.
 /// </summary>
@@ -19,6 +20,5 @@ permissionset 50100 "THYME AI AGENT"
         tabledata "Thyme Time Suggestion" = RIMD,
         tabledata "Thyme Suggestion Request" = RIMD,
         tabledata "Thyme Agent Heartbeat" = RIMD,
-        tabledata "Thyme Project Source Link" = RIMD,
-        tabledata "Thyme Day Note" = RIMD;
+        tabledata "Thyme Project Source Link" = RIMD;
 }

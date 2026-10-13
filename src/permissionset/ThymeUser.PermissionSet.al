@@ -30,7 +30,9 @@ permissionset 50101 "THYME USER"
         tabledata "Thyme Suggestion Request" = RI,
         tabledata "Thyme Agent Heartbeat" = R,
         tabledata "Thyme Project Source Link" = RIMD,
-        tabledata "Thyme Day Note" = RIMD,
+        // Direct read only; insert, modify and delete are indirect, so day notes can only be written
+        // through the dayNotes API page, whose triggers check CanEditPlan (not, say, a config package).
+        tabledata "Thyme Day Note" = Rimd,
         // Indirect only: lets codeunit "Thyme Connected Accounts" save a person's own GitHub
         // username after its row-level check; it gives no direct right to change resources.
         tabledata Resource = m,

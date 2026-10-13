@@ -140,7 +140,11 @@ curl -X POST -H "Authorization: Bearer {token}" -H "Content-Type: application/js
   -d '{"noteDate": "2026-10-22", "note": "Company Off-Site", "noProjectWork": true}' \
   ".../dayNotes"
 
-# A note for one CRONUS person: -d '{"noteDate": "2026-10-23", "resourceNo": "KATHERINE", "note": "Client workshop"}'
+# A note for one CRONUS person (expect 201, resourceNo = "KATHERINE")
+curl -X POST -H "Authorization: Bearer {token}" -H "Content-Type: application/json" \
+  -d '{"noteDate": "2026-10-23", "resourceNo": "KATHERINE", "note": "Client workshop"}' \
+  ".../dayNotes"
+
 # Read a date range (expect both)
 curl -H "Authorization: Bearer {token}" \
   ".../dayNotes?\$filter=noteDate ge 2026-10-19 and noteDate le 2026-10-25"
