@@ -34,6 +34,9 @@ page 50121 "Thyme Plan Review Requests API"
     DelayedInsert = true;
     ODataKeyFields = SystemId;
     Extensible = false;
+    // THYME USER only has indirect insert on requests, so they are created through this page
+    // and its CanEditPlan check. The AI agent's own direct RIMD covers its changes.
+    Permissions = tabledata "Thyme Plan Review Request" = i;
 
     layout
     {

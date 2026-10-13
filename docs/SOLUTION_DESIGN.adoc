@@ -657,7 +657,9 @@ written only by the AI agent or a Thyme administrator (`CheckCanWritePlanReviews
 created by people who may change the plan (`CanEditPlan`: permission to write Job Planning
 Lines, `JobPlanningLine.WritePermission()`, with no administrator or AI agent shortcut) and changed or
 deleted only by the AI agent. The read-only `canEditPlan` field on the Projects and Resources APIs
-gives the same answer per caller, for *Apply change* and *Ask Poppie to re-review*.
+gives the same answer per caller, for *Apply change* and *Ask Poppie to re-review*. `THYME USER` has
+direct read and only indirect insert on requests (`Ri`), and the requests page grants `i`, so a request
+can only be created through the page and its check, not directly (for example a configuration package).
 
 === Thyme Setup API (Page 50112)
 

@@ -38,7 +38,9 @@ permissionset 50101 "THYME USER"
         tabledata "Thyme Plan Review" = R,
         tabledata "Thyme Plan Review Line" = R,
         tabledata "Thyme Plan Review Change" = R,
-        tabledata "Thyme Plan Review Request" = RI,
+        // Direct read; insert only indirect, so requests are created only through the
+        // planReviewRequests API page, whose insert trigger checks CanEditPlan.
+        tabledata "Thyme Plan Review Request" = Ri,
         tabledata "Thyme Project Source Link" = RIMD,
         // Direct read only; insert, modify and delete are indirect, so day notes can only be written
         // through the dayNotes API page, whose triggers check CanEditPlan (not, say, a config package).
