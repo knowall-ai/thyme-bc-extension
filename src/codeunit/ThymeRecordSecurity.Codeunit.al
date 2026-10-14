@@ -10,6 +10,10 @@
 ///   time sheet owner and approver, a Thyme administrator and the AI agent. The same people
 ///   can create one; only the AI agent can change or delete one. An approver who requests
 ///   suggestions still can't see them: they stay with the person they are for.
+/// - An AI plan review (of a person's or a project's week of planning lines), its findings and
+///   proposed changes: every Thyme user reads them; only the AI agent or a Thyme administrator
+///   writes them (CheckCanWritePlanReviews). A plan review request: every Thyme user reads them;
+///   people who may change the plan (CanEditPlan) create them; only the AI agent changes or deletes one.
 /// - An agent heartbeat (when the agent was last seen): every Thyme user; only the AI agent writes.
 /// - A project source link (which repos, DevOps projects, meeting keywords and attendee domains
 ///   belong to a project): every Thyme user reads them. A Thyme administrator or the project's
@@ -221,6 +225,30 @@ codeunit 50104 "Thyme Record Security"
     begin
         if not IsAIAgent() then
             Error(NotAllowedToChangeRequestsErr);
+    end;
+
+    /// <summary>
+    /// Only the AI agent moves a plan review request through Running to Done or Failed, or
+    /// removes one.
+    /// </summary>
+    procedure CheckCanChangePlanReviewRequests()
+    var
+        NotAllowedToChangePlanReviewRequestsErr: Label 'You are not allowed to change plan review requests. Only the AI agent can.';
+    begin
+        if not IsAIAgent() then
+            Error(NotAllowedToChangePlanReviewRequestsErr);
+    end;
+
+    /// <summary>
+    /// Only the AI agent or a Thyme administrator may create, change or delete plan reviews,
+    /// their findings and proposed changes (the same rule as CheckCanWriteReviews).
+    /// </summary>
+    procedure CheckCanWritePlanReviews()
+    var
+        NotAllowedToWritePlanReviewsErr: Label 'You are not allowed to change plan reviews. Only the AI agent or a Thyme administrator can.';
+    begin
+        if not CanAccessAll() then
+            Error(NotAllowedToWritePlanReviewsErr);
     end;
 
     /// <summary>

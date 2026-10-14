@@ -7,6 +7,8 @@
 /// permission to write Job Planning Lines, like anyone.
 /// Base-app data such as time sheets and resources still comes from the standard
 /// D365 permission sets.
+/// It also writes AI plan reviews, their findings and proposed changes, and works through plan
+/// review requests.
 /// </summary>
 permissionset 50100 "THYME AI AGENT"
 {
@@ -19,6 +21,10 @@ permissionset 50100 "THYME AI AGENT"
         tabledata "Thyme Timesheet Review Line" = RIMD,
         tabledata "Thyme Time Suggestion" = RIMD,
         tabledata "Thyme Suggestion Request" = RIMD,
+        tabledata "Thyme Plan Review" = RIMD,
+        tabledata "Thyme Plan Review Line" = RIMD,
+        tabledata "Thyme Plan Review Change" = RIMD,
+        tabledata "Thyme Plan Review Request" = RIMD,
         tabledata "Thyme Agent Heartbeat" = RIMD,
         tabledata "Thyme Project Source Link" = RIMD;
 }

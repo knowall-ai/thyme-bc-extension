@@ -8,6 +8,8 @@
 /// permission to write Job Planning Lines).
 /// Base-app data such as time sheets and resources still comes from the standard D365
 /// permission sets. To change the default billable target, use THYME ADMIN.
+/// Every Thyme user reads AI plan reviews (with their findings and proposed changes) and plan review
+/// requests, and can create a request (checked in code: people who may change the plan).
 /// </summary>
 permissionset 50101 "THYME USER"
 {
@@ -21,6 +23,10 @@ permissionset 50101 "THYME USER"
         table "Thyme Setup" = X,
         table "Thyme Suggestion Request" = X,
         table "Thyme Agent Heartbeat" = X,
+        table "Thyme Plan Review" = X,
+        table "Thyme Plan Review Line" = X,
+        table "Thyme Plan Review Change" = X,
+        table "Thyme Plan Review Request" = X,
         table "Thyme Project Source Link" = X,
         table "Thyme Day Note" = X,
         tabledata "Thyme Timesheet Review" = R,
@@ -29,6 +35,12 @@ permissionset 50101 "THYME USER"
         tabledata "Thyme Setup" = R,
         tabledata "Thyme Suggestion Request" = RI,
         tabledata "Thyme Agent Heartbeat" = R,
+        tabledata "Thyme Plan Review" = R,
+        tabledata "Thyme Plan Review Line" = R,
+        tabledata "Thyme Plan Review Change" = R,
+        // Direct read; insert only indirect, so requests are created only through the
+        // planReviewRequests API page, whose insert trigger checks CanEditPlan.
+        tabledata "Thyme Plan Review Request" = Ri,
         tabledata "Thyme Project Source Link" = RIMD,
         // Direct read only; insert, modify and delete are indirect, so day notes can only be written
         // through the dayNotes API page, whose triggers check CanEditPlan (not, say, a config package).
@@ -51,6 +63,10 @@ permissionset 50101 "THYME USER"
         page "Thyme Setup API" = X,
         page "Thyme Suggestion Requests API" = X,
         page "Thyme Agent Heartbeats API" = X,
+        page "Thyme Plan Reviews API" = X,
+        page "Thyme Plan Review Lines API" = X,
+        page "Thyme Plan Review Changes API" = X,
+        page "Thyme Plan Review Requests API" = X,
         page "Thyme Project Source Links API" = X,
         page "Thyme Project Source Links" = X,
         page "Thyme Day Notes API" = X,
