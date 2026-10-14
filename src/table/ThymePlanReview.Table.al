@@ -113,11 +113,9 @@ table 50107 "Thyme Plan Review"
         StoredReview.ReadIsolation := IsolationLevel::UpdLock;
         if StoredReview.Get("Entry No.") then;
         ReviewLine.SetRange("Review Entry No.", "Entry No.");
-        if not ReviewLine.IsEmpty() then
-            ReviewLine.DeleteAll(true);
+        ReviewLine.DeleteAll(true);
         ReviewChange.SetRange("Review Entry No.", "Entry No.");
-        if not ReviewChange.IsEmpty() then
-            ReviewChange.DeleteAll();
+        ReviewChange.DeleteAll();
     end;
 
     local procedure CheckReview()
@@ -150,6 +148,9 @@ table 50107 "Thyme Plan Review"
             exit;
         ReviewLine.SetRange("Review Entry No.", "Entry No.");
         ReviewChange.SetRange("Review Entry No.", "Entry No.");
+        // Read committed, so another session's uncommitted delete doesn't hide a finding or change.
+        ReviewLine.ReadIsolation := IsolationLevel::ReadCommitted;
+        ReviewChange.ReadIsolation := IsolationLevel::ReadCommitted;
         if not ReviewLine.IsEmpty() or not ReviewChange.IsEmpty() then
             Error(SubjectWeekLockedErr, "Entry No.");
     end;

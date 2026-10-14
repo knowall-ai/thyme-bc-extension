@@ -153,6 +153,8 @@ table 50110 "Thyme Plan Review Request"
         Existing.SetRange("Week Start", "Week Start");
         Existing.SetFilter(Status, '%1|%2', Status::Requested, Status::Running);
         Existing.SetFilter("Entry No.", '<>%1', "Entry No.");
+        // Read committed, so another session's uncommitted change doesn't hide an open request.
+        Existing.ReadIsolation := IsolationLevel::ReadCommitted;
         if Existing.FindFirst() then
             Error(OpenRequestExistsErr, "Subject Type", "Subject No.", "Week Start", Existing."Entry No.");
     end;

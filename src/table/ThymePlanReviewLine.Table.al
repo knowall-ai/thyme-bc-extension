@@ -95,8 +95,7 @@ table 50108 "Thyme Plan Review Line"
         if StoredLine.Get("Review Entry No.", "Line No.") then;
         ReviewChange.SetRange("Review Entry No.", "Review Entry No.");
         ReviewChange.SetRange("Review Line No.", "Line No.");
-        if not ReviewChange.IsEmpty() then
-            ReviewChange.DeleteAll();
+        ReviewChange.DeleteAll();
     end;
 
     /// <summary>
