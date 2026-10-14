@@ -618,6 +618,8 @@ Subject Type, Subject No. and Week Start can't be changed (they were validated a
 changes lock their parent review (and a change its finding) with an update lock while they are
 validated, and a review or finding locks itself before checking or deleting its children, so a
 concurrent PATCH or delete can't slip between the check and the commit.
+Changing a key (a PATCH of `reviewEntryNo`, `lineNo` or `changeNo`) is refused on reviews, findings
+and changes alike (OnRename), since it would skip those checks: delete and recreate instead.
 
 The canonical plan: for each line build `jobNo|jobTaskNo|resourceNo|planningDate|hours`
 (date as YYYY-MM-DD, hours = the quantity in hours rounded to and written with 2 decimals),

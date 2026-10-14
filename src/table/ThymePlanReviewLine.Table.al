@@ -82,6 +82,15 @@ table 50108 "Thyme Plan Review Line"
     end;
 
     /// <summary>
+    /// Changing the key (a PATCH of a key field) would move the row without the OnModify checks,
+    /// so it is refused: delete it and create a new one instead.
+    /// </summary>
+    trigger OnRename()
+    begin
+        Error(RenameNotAllowedErr);
+    end;
+
+    /// <summary>
     /// Deleting a finding removes its proposed changes too.
     /// </summary>
     trigger OnDelete()
@@ -119,6 +128,7 @@ table 50108 "Thyme Plan Review Line"
     end;
 
     var
+        RenameNotAllowedErr: Label 'A finding''s review entry number and line number can''t be changed. Delete the finding and create a new one instead.';
         ReviewNotFoundErr: Label 'Plan review %1 does not exist.', Comment = '%1 = review entry number';
         DateOutsideWeekErr: Label '%1 isn''t in the week starting %2 that plan review %3 covers.', Comment = '%1 = planning date, %2 = week start date, %3 = review entry number';
 }

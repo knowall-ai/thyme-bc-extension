@@ -99,6 +99,15 @@ table 50107 "Thyme Plan Review"
     end;
 
     /// <summary>
+    /// Changing the key (a PATCH of a key field) would move the row without the OnModify checks,
+    /// so it is refused: delete it and create a new one instead.
+    /// </summary>
+    trigger OnRename()
+    begin
+        Error(RenameNotAllowedErr);
+    end;
+
+    /// <summary>
     /// Deleting a review removes its findings and their proposed changes too, so nothing is
     /// left orphaned.
     /// </summary>
@@ -156,6 +165,7 @@ table 50107 "Thyme Plan Review"
     end;
 
     var
+        RenameNotAllowedErr: Label 'A plan review''s entry number can''t be changed. Delete the review and write a new one instead.';
         SubjectWeekLockedErr: Label 'Plan review %1 already has findings or changes, so its subject and week can''t change. Write a new review instead.', Comment = '%1 = review entry number';
         WeekStartNotMondayErr: Label 'The week must start on a Monday; %1 isn''t one.', Comment = '%1 = week start date';
 }

@@ -100,6 +100,15 @@ table 50109 "Thyme Plan Review Change"
         CheckChange();
     end;
 
+    /// <summary>
+    /// Changing the key (a PATCH of a key field) would move the row without the OnModify checks,
+    /// so it is refused: delete it and create a new one instead.
+    /// </summary>
+    trigger OnRename()
+    begin
+        Error(RenameNotAllowedErr);
+    end;
+
     local procedure CheckChange()
     var
         Review: Record "Thyme Plan Review";
@@ -140,6 +149,7 @@ table 50109 "Thyme Plan Review Change"
     end;
 
     var
+        RenameNotAllowedErr: Label 'A proposed change''s review entry, finding and change numbers can''t be changed. Delete the change and create a new one instead.';
         ReviewNotFoundErr: Label 'Plan review %1 does not exist.', Comment = '%1 = review entry number';
         ReviewLineNotFoundErr: Label 'Plan review %1 has no finding %2.', Comment = '%1 = review entry number, %2 = review line number';
         NegativeHoursErr: Label 'Current and proposed hours can''t be negative.';
