@@ -24,7 +24,7 @@ This is a Business Central (BC) AL extension that provides custom API endpoints 
 - `src/api/ThymeProjectSourceLinksAPI.Page.al` - Project Source Links API: GitHub repos, DevOps projects and repos, meeting keywords and attendee domains per project, read by the AI agent to map time (page 50116, table 50106, type enum 50106); `src/page/ThymeProjectSourceLinks.Page.al` is the ListPart on the Project Card (page 50117, page extension 50101 `src/pageextension/ThymeJobCard.PageExt.al`); codeunit 50105 deletes a project's links with it
 - `src/api/ThymeDayNotesAPI.Page.al` - Day Notes API: notes on particular days for the company or one person, e.g. "Company Off-Site", optionally with no project work that day (page 50122, table 50111)
 - `src/api/ThymePlanReviewsAPI.Page.al` - Plan Reviews API: AI reviews of a person's or a project's week of planning lines (page 50118, table 50107, subject enum 50107)
-- `src/api/ThymePlanReviewLinesAPI.Page.al` - Plan Review Lines API: a plan review's findings (page 50119, table 50108)
+- `src/api/ThymePlanReviewLinesAPI.Page.al` - Plan Review Lines API: a plan review's findings (page 50119, table 50108), with the `applyChanges` action; `src/codeunit/ThymePlanReviewApply.Codeunit.al` applies a finding's changes to the planning lines in one transaction (codeunit 50107)
 - `src/api/ThymePlanReviewChangesAPI.Page.al` - Plan Review Changes API: planning-line changes a finding proposes, applied from Thyme (page 50120, table 50109)
 - `src/api/ThymePlanReviewRequestsAPI.Page.al` - Plan Review Requests API: ask the agent to review a subject-week now (page 50121, table 50110, status enum 50108)
 - `src/api/ThymeSetupAPI.Page.al` - Thyme Setup API, single record (page 50112, table 50103 `Thyme Setup`)

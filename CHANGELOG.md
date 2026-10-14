@@ -2,6 +2,28 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
+## 1.24.0.0
+
+### Added
+
+- `applyChanges` bound action on `planReviewLines`
+  (`POST /planReviewLines({id})/Microsoft.NAV.applyChanges`, no body): applies all of a finding's
+  proposed changes to the Resource planning lines in one transaction (codeunit 50107
+  `Thyme Plan Review Apply`), so Thyme's *Apply change* is all or nothing. Only a user who may change
+  the plan (`canEditPlan`) can apply. The review, the finding, its changes and the affected projects
+  are locked and the changes read once; a finding that changes the same cell twice is refused.
+  Every cell is checked first: it must be empty or hold exactly one Budget line in the resource's
+  base unit, and still hold the change's `currentHours`; then each cell is re-checked and gets its
+  `proposedHours` (0 deletes the line, an empty cell gets a new Budget line), written to exactly the
+  line the check found and confirmed afterwards (a line added meanwhile counts as the plan
+  changing). Any error rolls the lot back.
+- `jobPlanningLines` takes an update lock on the line's project when it inserts, modifies or
+  deletes a line, the same lock `applyChanges` takes, so the two change a project's plan one at a
+  time.
+- `appliedAt` / `appliedBy` on `planReviewLines` (read-only, fields 9-10 on table 50108): stamped
+  when the finding's changes are applied, so Thyme can show it as applied. THYME USER gains indirect
+  modify on findings for the stamp.
+
 ## 1.23.0.0
 
 ### Added

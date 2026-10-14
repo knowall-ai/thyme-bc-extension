@@ -50,6 +50,17 @@ table 50108 "Thyme Plan Review Line"
         {
             Caption = 'Note';
         }
+        // Stamped by "Thyme Plan Review Apply" when the finding's changes are applied from Thyme.
+        field(9; "Applied At"; DateTime)
+        {
+            Caption = 'Applied At';
+            Editable = false;
+        }
+        field(10; "Applied By"; Code[50])
+        {
+            Caption = 'Applied By';
+            Editable = false;
+        }
     }
 
     keys

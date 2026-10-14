@@ -144,6 +144,30 @@ page 50107 "Thyme Job Planning Lines API"
         }
     }
 
+    /// <summary>
+    /// Takes an update lock on the line's project (held until commit), the same lock a plan review's
+    /// applyChanges takes, so the two writers change a project's plan one at a time.
+    /// </summary>
+    local procedure LockProject()
+    var
+        Job: Record Job;
+    begin
+        Job.ReadIsolation := IsolationLevel::UpdLock;
+        if Job.Get(Rec."Job No.") then;
+    end;
+
+    trigger OnModifyRecord(): Boolean
+    begin
+        LockProject();
+        exit(true);
+    end;
+
+    trigger OnDeleteRecord(): Boolean
+    begin
+        LockProject();
+        exit(true);
+    end;
+
     local procedure SetCurrencyFromJob()
     var
         Job: Record Job;
@@ -162,6 +186,7 @@ page 50107 "Thyme Job Planning Lines API"
         JobPlanningLine: Record "Job Planning Line";
         NextLineNo: Integer;
     begin
+        LockProject();
         // Upsert logic: Check if a line already exists for the same job/task/date/resource/type
         // Lock the table to prevent race conditions with concurrent inserts
         ExistingLine.LockTable();
