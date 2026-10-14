@@ -36,7 +36,9 @@ permissionset 50101 "THYME USER"
         tabledata "Thyme Suggestion Request" = RI,
         tabledata "Thyme Agent Heartbeat" = R,
         tabledata "Thyme Plan Review" = R,
-        tabledata "Thyme Plan Review Line" = R,
+        // Direct read; indirect modify only, so codeunit "Thyme Plan Review Apply" can stamp a finding
+        // Applied after applying its changes (which needs permission to change the plan).
+        tabledata "Thyme Plan Review Line" = Rm,
         tabledata "Thyme Plan Review Change" = R,
         // Direct read; insert only indirect, so requests are created only through the
         // planReviewRequests API page, whose insert trigger checks CanEditPlan.
@@ -73,5 +75,6 @@ permissionset 50101 "THYME USER"
         codeunit "Thyme Time Sheet Actions" = X,
         codeunit "Thyme Record Security" = X,
         codeunit "Thyme Connected Accounts" = X,
-        codeunit "Thyme Source Link Events" = X;
+        codeunit "Thyme Source Link Events" = X,
+        codeunit "Thyme Plan Review Apply" = X;
 }

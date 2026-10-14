@@ -4,6 +4,10 @@
 /// OVER_CAPACITY, BILLABLE_TARGET, CALENDAR, BUDGET_BURN, PLAN_SHAPE, OUTSIDE_PROJECT_DATES
 /// or OTHER.
 ///
+/// appliedAt / appliedBy are stamped when a user applies the finding's changes with the
+/// applyChanges action (POST .../planReviewLines({id})/Microsoft.NAV.applyChanges, no body):
+/// all of them in one transaction, for a user who may change the plan (canEditPlan).
+///
 /// Findings for one review:
 ///   GET .../planReviewLines?$filter=reviewEntryNo eq 42
 ///
@@ -73,6 +77,16 @@ page 50119 "Thyme Plan Review Lines API"
                 {
                     Caption = 'Note';
                 }
+                field(appliedAt; Rec."Applied At")
+                {
+                    Caption = 'Applied At';
+                    Editable = false;
+                }
+                field(appliedBy; Rec."Applied By")
+                {
+                    Caption = 'Applied By';
+                    Editable = false;
+                }
                 field(lastModifiedDateTime; Rec.SystemModifiedAt)
                 {
                     Caption = 'Last Modified DateTime';
@@ -104,5 +118,22 @@ page 50119 "Thyme Plan Review Lines API"
     begin
         RecordSecurity.CheckCanWritePlanReviews();
         exit(true);
+    end;
+
+    /// <summary>
+    /// Applies all of this finding's proposed changes to the planning lines in one transaction
+    /// (codeunit "Thyme Plan Review Apply"), for a user who may change the plan.
+    ///   POST .../planReviewLines({id})/Microsoft.NAV.applyChanges   (no body)
+    /// </summary>
+    [ServiceEnabled]
+    procedure applyChanges(var ActionContext: WebServiceActionContext)
+    var
+        PlanReviewApply: Codeunit "Thyme Plan Review Apply";
+    begin
+        PlanReviewApply.ApplyChanges(Rec);
+        ActionContext.SetObjectType(ObjectType::Page);
+        ActionContext.SetObjectId(Page::"Thyme Plan Review Lines API");
+        ActionContext.AddEntityKey(Rec.FieldNo(SystemId), Rec.SystemId);
+        ActionContext.SetResultCode(WebServiceActionResultCode::Updated);
     end;
 }

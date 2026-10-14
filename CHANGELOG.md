@@ -2,6 +2,22 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
+## 1.24.0.0
+
+### Added
+
+- `applyChanges` bound action on `planReviewLines`
+  (`POST /planReviewLines({id})/Microsoft.NAV.applyChanges`, no body): applies all of a finding's
+  proposed changes to the Resource planning lines in one transaction (codeunit 50107
+  `Thyme Plan Review Apply`), so Thyme's *Apply change* is all or nothing. Only a user who may change
+  the plan (`canEditPlan`) can apply. Every cell is checked first: it must be empty or hold exactly
+  one Budget line, and still hold the change's `currentHours`; then each cell gets its
+  `proposedHours` (0 deletes the line, an empty cell gets a new Budget line). Any error rolls the
+  lot back.
+- `appliedAt` / `appliedBy` on `planReviewLines` (read-only, fields 9-10 on table 50108): stamped
+  when the finding's changes are applied, so Thyme can show it as applied. THYME USER gains indirect
+  modify on findings for the stamp.
+
 ## 1.23.0.0
 
 ### Added

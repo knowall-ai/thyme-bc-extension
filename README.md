@@ -517,14 +517,33 @@ week hashes the empty string. A review whose `planHash` differs from the current
 `changeNo` (assigned 1, 2, 3... if 0), `jobNo`, `jobTaskNo`, `resourceNo`, `planningDate`,
 `currentHours` (what the cell held when the agent looked) and `proposedHours` (a multiple of 0.25;
 0 = remove the cell's planning lines). A change must be on a day of the review's week and, for a
-resource-week, for that resource (for a project-week, that project). Thyme's *Apply change*
-re-checks `currentHours`, then writes the planning lines with the user's own permissions.
+resource-week, for that resource (for a project-week, that project).
+
+**Applying a finding** (Thyme's *Apply change*): `POST /planReviewLines({id})/Microsoft.NAV.applyChanges`
+with no body applies all of the finding's changes in one transaction, or none. Only a user who may
+change the plan (`canEditPlan`: permission to write Job Planning Lines) can. Every cell (project,
+task, resource and day; Resource lines with a quantity) is checked first: it must be empty or hold
+exactly one Budget line, and its hours must still be `currentHours` (within 0.005). Then each cell
+gets `proposedHours`: 0 deletes the line, an existing line gets the new quantity, and an empty cell
+gets a new Budget line. Quantities are converted with Thyme's rule: if the resource has an `HOUR`
+unit of measure whose factor isn't 1, the base unit is a day of that many hours (or 1/factor when
+below 1); otherwise it's an hour. The finding's read-only `appliedAt` / `appliedBy` are stamped.
+Any error rolls everything back:
+
+| Problem | Error |
+|---------|-------|
+| The caller may not change the plan (`canEditPlan` is false) | `You don't have permission to change the plan.` |
+| The finding has no changes | `Finding <lineNo> of plan review <entryNo> has no changes to apply.` |
+| A cell has more than one planning line | `Edit this cell by hand: <resource> has <n> planning lines on <date> for project <job>, task <task>.` |
+| A cell's one line isn't a Budget line | `Edit this cell by hand: the planning line for <resource> on <date> for project <job>, task <task> is a <line type> line, not a Budget line.` |
+| A cell's hours differ from `currentHours` by 0.005 or more | `The plan changed since Poppie looked. Ask her to re-review.` |
 
 ```
 GET /planReviews?$filter=subjectType eq 'Resource' and weekStart ge 2026-10-19 and weekStart le 2026-11-09
 GET /planReviews?$filter=subjectType eq 'Resource' and subjectNo eq 'R0010' and weekStart eq 2026-10-19&$orderby=reviewedAt desc&$top=1
 GET /planReviewLines?$filter=reviewEntryNo eq 42
 GET /planReviewChanges?$filter=reviewEntryNo eq 42
+POST /planReviewLines({id})/Microsoft.NAV.applyChanges
 ```
 
 Deleting a review deletes its findings and changes; deleting a finding deletes its changes. Once a

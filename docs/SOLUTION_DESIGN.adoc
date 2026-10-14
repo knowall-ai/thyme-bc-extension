@@ -633,7 +633,8 @@ steps of 10000, assigned when 0. Fields: `reviewEntryNo`, `lineNo`, `severity` (
 `Thyme Review Severity`, 50101), `check` (Code[30]: ROUNDING, OVER_CAPACITY, BILLABLE_TARGET,
 CALENDAR, BUDGET_BURN, PLAN_SHAPE, OUTSIDE_PROJECT_DATES, OTHER; not validated, so new checks
 need no extension change), `planningDate` (optional, within the review's week; blank = whole
-week), `jobNo`, `resourceNo` (optional), `note` (Text[500]). Deleting a finding deletes its changes.
+week), `jobNo`, `resourceNo` (optional), `note` (Text[500]), and read-only `appliedAt` / `appliedBy`
+(Applied At, Applied By: stamped when its changes are applied). Deleting a finding deletes its changes.
 
 === Plan Review Changes API (Page 50120)
 
@@ -642,9 +643,31 @@ No.); Change No. assigned 1, 2, 3... when 0. A proposed change to one planning-l
 `jobTaskNo`, `resourceNo`, `planningDate`, `currentHours` and `proposedHours` (hours, 2 decimals,
 not negative; proposed a multiple of 0.25, 0 = remove the cell's lines). The finding must exist,
 the day must be in the review's week, and the change must be for the review's resource
-(resource-week) or project (project-week). Thyme applies a finding's changes together through the
-Job Planning Lines API with the user's own permissions, after checking each cell still holds
-`currentHours`.
+(resource-week) or project (project-week).
+
+==== Applying a finding (applyChanges)
+
+`POST .../planReviewLines({id})/Microsoft.NAV.applyChanges` (bound action, no body) runs codeunit
+50107 `Thyme Plan Review Apply`, which applies all of the finding's changes in one transaction:
+
+. `CanEditPlan()` (permission to write Job Planning Lines), else "You don't have permission to change the plan."
+. The finding's changes must exist, else "Finding <lineNo> of plan review <entryNo> has no changes to apply."
+. Lock Job Planning Line. For each change, the cell's lines (Job No., Job Task No., Type Resource,
+  No. = Resource No., Planning Date, Quantity <> 0) must be none or one Budget line, else "Edit this
+  cell by hand: ..." (several lines, or a line that isn't Budget); and the cell's hours must be
+  within 0.005 of Current Hours, else "The plan changed since Poppie looked. Ask her to re-review."
+. Only when every cell passes, apply each: Proposed Hours 0 deletes the line; an existing line gets
+  `Validate(Quantity, proposed hours / hours per unit)` and `Modify(true)`; an empty cell gets a new
+  Budget line (next Line No. in the task, the project's currency, `Validate("No.")`, `Validate(Quantity)`,
+  `Insert(true)`).
+. Stamp the finding's Applied At / Applied By.
+
+Any error rolls the whole transaction back. Hours per unit: the resource's `HOUR` unit of measure
+factor when it exists and isn't 1 (the base unit is a day of that many hours, or 1/factor when the
+factor is below 1); otherwise 1. The codeunit's Permissions property gives indirect access to the
+planning lines and the review tables; `THYME USER` grants indirect modify on findings for the stamp,
+and the `CanEditPlan` check gates the planning-line writes, so only people who may change the plan
+succeed.
 
 === Plan Review Requests API (Page 50121)
 
@@ -759,6 +782,7 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Upgrade | Codeunit 50102
 | Thyme Company Initialize | Codeunit 50103
 | Thyme Record Security | Codeunit 50104
+| Thyme Plan Review Apply | Codeunit 50107
 | (Reserved for future pages) | Page 50116-50199
 | (Reserved for future codeunits) | Codeunit 50105-50199
 |===
