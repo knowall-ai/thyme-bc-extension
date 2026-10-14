@@ -521,10 +521,12 @@ resource-week, for that resource (for a project-week, that project).
 
 **Applying a finding** (Thyme's *Apply change*): `POST /planReviewLines({id})/Microsoft.NAV.applyChanges`
 with no body applies all of the finding's changes in one transaction, or none. Only a user who may
-change the plan (`canEditPlan`: permission to write Job Planning Lines) can. Every cell (project,
-task, resource and day; Resource lines with a quantity) is checked first: it must be empty or hold
-exactly one Budget line, and its hours must still be `currentHours` (within 0.005). Then each cell
-gets `proposedHours`: 0 deletes the line, an existing line gets the new quantity, and an empty cell
+change the plan (`canEditPlan`: permission to write Job Planning Lines) can. The review, the finding,
+its changes and each affected project are locked, and the changes are read once. A finding that
+changes the same cell twice is refused. Every cell (project, task, resource and day; Resource lines
+with a quantity) is checked first: it must be empty or hold exactly one Budget line in the
+resource's base unit of measure, and its hours must still be `currentHours` (within 0.005). Each
+cell is checked again just before it's written. Then each cell gets `proposedHours`: 0 deletes the line, an existing line gets the new quantity, and an empty cell
 gets a new Budget line. Quantities are converted with Thyme's rule: if the resource has an `HOUR`
 unit of measure whose factor isn't 1, the base unit is a day of that many hours (or 1/factor when
 below 1); otherwise it's an hour. The finding's read-only `appliedAt` / `appliedBy` are stamped.
@@ -534,9 +536,11 @@ Any error rolls everything back:
 |---------|-------|
 | The caller may not change the plan (`canEditPlan` is false) | `You don't have permission to change the plan.` |
 | The finding has no changes | `Finding <lineNo> of plan review <entryNo> has no changes to apply.` |
+| Two of the finding's changes are for the same cell | `Edit this cell by hand: the finding changes the same cell twice.` |
 | A cell has more than one planning line | `Edit this cell by hand: <resource> has <n> planning lines on <date> for project <job>, task <task>.` |
 | A cell's one line isn't a Budget line | `Edit this cell by hand: the planning line for <resource> on <date> for project <job>, task <task> is a <line type> line, not a Budget line.` |
-| A cell's hours differ from `currentHours` by 0.005 or more | `The plan changed since Poppie looked. Ask her to re-review.` |
+| A cell's line is in a unit other than the resource's base unit | `Edit this cell by hand: the planning line for <resource> on <date> for project <job>, task <task> uses unit <code>.` |
+| A cell's hours differ from `currentHours` by 0.005 or more, or the cell changed between the check and the write | `The plan changed since Poppie looked. Ask her to re-review.` |
 
 ```
 GET /planReviews?$filter=subjectType eq 'Resource' and weekStart ge 2026-10-19 and weekStart le 2026-11-09

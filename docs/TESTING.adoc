@@ -198,6 +198,8 @@ curl -H "Authorization: Bearer {token}" \
 # A finding with two changes where the second cell has two lines (expect 400 "Edit this cell by hand: ...",
 # and the first cell unchanged: all or nothing)
 # proposedHours 0 (expect the line deleted); a change on an empty cell (expect a new Budget line)
+# Two changes for the same cell (expect 400 "Edit this cell by hand: the finding changes the same cell twice.")
+# A cell whose line is in another unit than the resource's base unit (expect 400 "Edit this cell by hand: ... uses unit ...")
 # As a user without permission to write Job Planning Lines (expect 400 "You don't have permission
 # to change the plan.")
 ----
