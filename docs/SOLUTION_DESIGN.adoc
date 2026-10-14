@@ -663,11 +663,18 @@ the day must be in the review's week, and the change must be for the review's re
   line in another unit); and the cell's hours must be within 0.005 of Current Hours, else "The plan
   changed since Poppie looked. Ask her to re-review."
 . Only when every cell passes, apply each, re-checking the cell immediately before writing it
-  (any difference: "The plan changed since Poppie looked..."): Proposed Hours 0 deletes the line; an existing line gets
+  (any difference: "The plan changed since Poppie looked..."). The write goes to exactly the line
+  that check found, re-read by its key and confirmed unchanged (Budget, quantity, unit), never a
+  fresh lookup; afterwards the cell must hold just the expected lines (one, or none for 0 hours),
+  so a line someone else added meanwhile also raises "The plan changed..." and rolls back.
+  Proposed Hours 0 deletes the line; an existing line gets
   `Validate(Quantity, proposed hours / hours per unit)` and `Modify(true)`; an empty cell gets a new
   Budget line (next Line No. in the task, the project's currency, `Validate("No.")`, `Validate(Quantity)`,
   `Insert(true)`).
 . Stamp the finding's Applied At / Applied By.
+
+The Job Planning Lines API takes the same update lock on the line's Job row when it inserts,
+modifies or deletes a line, so it and `applyChanges` change a project's plan one at a time.
 
 Any error rolls the whole transaction back. Hours per unit: the resource's `HOUR` unit of measure
 factor when it exists and isn't 1 (the base unit is a day of that many hours, or 1/factor when the

@@ -48,7 +48,9 @@ codeunit 50107 "Thyme Plan Review Apply"
         StoredLine: Record "Thyme Plan Review Line";
         TempChange: Record "Thyme Plan Review Change" temporary;
         JobPlanningLine: Record "Job Planning Line";
+        CellLine: Record "Job Planning Line";
         RecordSecurity: Codeunit "Thyme Record Security";
+        CellFound: Boolean;
     begin
         RecordSecurity.CheckCanEditPlan(NotAllowedToChangePlanErr);
 
@@ -66,14 +68,15 @@ codeunit 50107 "Thyme Plan Review Apply"
         // Check every cell first; write only once they all pass.
         TempChange.FindSet();
         repeat
-            CheckCell(TempChange, false);
+            CheckCell(TempChange, false, CellLine, CellFound);
         until TempChange.Next() = 0;
 
         TempChange.FindSet();
         repeat
             // Check again right before writing: anything different now means the plan changed.
-            CheckCell(TempChange, true);
-            ApplyCell(TempChange);
+            // The write then goes to exactly the line this check found (or a new one).
+            CheckCell(TempChange, true, CellLine, CellFound);
+            ApplyCell(TempChange, CellLine, CellFound);
         until TempChange.Next() = 0;
 
         StoredLine."Applied At" := CurrentDateTime();
@@ -138,12 +141,13 @@ codeunit 50107 "Thyme Plan Review Apply"
     /// change's Current Hours. On the re-check before writing (Recheck), any difference is reported
     /// as the plan having changed.
     /// </summary>
-    local procedure CheckCell(TempChange: Record "Thyme Plan Review Change" temporary; Recheck: Boolean)
+    local procedure CheckCell(TempChange: Record "Thyme Plan Review Change" temporary; Recheck: Boolean; var CellLine: Record "Job Planning Line"; var CellFound: Boolean)
     var
-        CellLine: Record "Job Planning Line";
         CellHours: Decimal;
         LineCount: Integer;
     begin
+        Clear(CellLine);
+        CellFound := false;
         FilterCell(CellLine, TempChange);
         LineCount := CellLine.Count();
         if LineCount > 1 then
@@ -155,6 +159,7 @@ codeunit 50107 "Thyme Plan Review Apply"
             if not IsBaseUnit(CellLine) then
                 FailCell(Recheck, StrSubstNo(OtherUnitErr, TempChange."Resource No.", TempChange."Planning Date", TempChange."Job No.", TempChange."Job Task No.", CellLine."Unit of Measure Code"));
             CellHours := CellLine.Quantity * HoursPerUnit(TempChange."Resource No.");
+            CellFound := true;
         end;
         if Abs(CellHours - TempChange."Current Hours") >= 0.005 then
             Error(PlanChangedErr);
@@ -167,25 +172,43 @@ codeunit 50107 "Thyme Plan Review Apply"
         Error(Reason);
     end;
 
-    local procedure ApplyCell(TempChange: Record "Thyme Plan Review Change" temporary)
+    /// <summary>
+    /// Writes the cell: to exactly the line the final check found (re-read by its key and checked
+    /// unchanged), or a new line for an empty cell. Afterwards the cell must hold just the expected
+    /// lines (one, or none for 0 hours); a line someone else added meanwhile means the plan changed,
+    /// and the error rolls everything back.
+    /// </summary>
+    local procedure ApplyCell(TempChange: Record "Thyme Plan Review Change" temporary; CheckedLine: Record "Job Planning Line"; CellFound: Boolean)
     var
         CellLine: Record "Job Planning Line";
         NewQuantity: Decimal;
+        ExpectedLines: Integer;
     begin
         NewQuantity := TempChange."Proposed Hours" / HoursPerUnit(TempChange."Resource No.");
-        FilterCell(CellLine, TempChange);
-        if CellLine.FindFirst() then begin
+        if TempChange."Proposed Hours" <> 0 then
+            ExpectedLines := 1;
+        if CellFound then begin
+            if not CellLine.Get(CheckedLine."Job No.", CheckedLine."Job Task No.", CheckedLine."Line No.") then
+                Error(PlanChangedErr);
+            if (CellLine."Line Type" <> CellLine."Line Type"::Budget) or (CellLine.Quantity <> CheckedLine.Quantity) or
+               (CellLine."Unit of Measure Code" <> CheckedLine."Unit of Measure Code") or (CellLine.Type <> CheckedLine.Type) or
+               (CellLine."No." <> CheckedLine."No.") or (CellLine."Planning Date" <> CheckedLine."Planning Date")
+            then
+                Error(PlanChangedErr);
             if TempChange."Proposed Hours" = 0 then
                 CellLine.Delete(true)
             else begin
                 CellLine.Validate(Quantity, NewQuantity);
                 CellLine.Modify(true);
             end;
-            exit;
-        end;
-        if TempChange."Proposed Hours" = 0 then
-            exit;
-        InsertCellLine(TempChange, NewQuantity);
+        end else
+            if TempChange."Proposed Hours" <> 0 then
+                InsertCellLine(TempChange, NewQuantity);
+
+        Clear(CellLine);
+        FilterCell(CellLine, TempChange);
+        if CellLine.Count() <> ExpectedLines then
+            Error(PlanChangedErr);
     end;
 
     local procedure InsertCellLine(TempChange: Record "Thyme Plan Review Change" temporary; NewQuantity: Decimal)
