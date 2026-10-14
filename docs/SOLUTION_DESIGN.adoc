@@ -614,7 +614,10 @@ Keys on (Subject Type, Subject No., Week Start, Reviewed At) for "latest review 
 subject-week" and (Subject Type, Week Start) for Thyme's visible weeks. The agent writes
 commit-last: the header with Plan Hash `PENDING`, then findings and changes, then the real hash.
 Deleting a review deletes its findings and changes. Once a review has findings or changes, its
-Subject Type, Subject No. and Week Start can't be changed (they were validated against it).
+Subject Type, Subject No. and Week Start can't be changed (they were validated against it).. Findings and
+changes lock their parent review (and a change its finding) with an update lock while they are
+validated, and a review or finding locks itself before checking or deleting its children, so a
+concurrent PATCH or delete can't slip between the check and the commit.
 
 The canonical plan: for each line build `jobNo|jobTaskNo|resourceNo|planningDate|hours`
 (date as YYYY-MM-DD, hours = the quantity in hours rounded to and written with 2 decimals),

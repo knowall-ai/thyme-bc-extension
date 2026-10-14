@@ -86,8 +86,13 @@ table 50108 "Thyme Plan Review Line"
     /// </summary>
     trigger OnDelete()
     var
+        StoredLine: Record "Thyme Plan Review Line";
         ReviewChange: Record "Thyme Plan Review Change";
     begin
+        // Lock the finding first: a change being added waits on the same lock, then finds the
+        // finding gone, so none is left orphaned.
+        StoredLine.ReadIsolation := IsolationLevel::UpdLock;
+        if StoredLine.Get("Review Entry No.", "Line No.") then;
         ReviewChange.SetRange("Review Entry No.", "Review Entry No.");
         ReviewChange.SetRange("Review Line No.", "Line No.");
         if not ReviewChange.IsEmpty() then
@@ -103,6 +108,9 @@ table 50108 "Thyme Plan Review Line"
         Review: Record "Thyme Plan Review";
     begin
         TestField("Review Entry No.");
+        // Lock the review (held until commit) so it can't move to another subject-week or be
+        // deleted between this check and the commit.
+        Review.ReadIsolation := IsolationLevel::UpdLock;
         if not Review.Get("Review Entry No.") then
             Error(ReviewNotFoundErr, "Review Entry No.");
         if "Planning Date" = 0D then

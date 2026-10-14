@@ -111,8 +111,12 @@ table 50109 "Thyme Plan Review Change"
         TestField("Job Task No.");
         TestField("Resource No.");
         TestField("Planning Date");
+        // Lock the review and the finding (held until commit) so neither can change subject-week or
+        // be deleted between these checks and the commit.
+        Review.ReadIsolation := IsolationLevel::UpdLock;
         if not Review.Get("Review Entry No.") then
             Error(ReviewNotFoundErr, "Review Entry No.");
+        ReviewLine.ReadIsolation := IsolationLevel::UpdLock;
         if not ReviewLine.Get("Review Entry No.", "Review Line No.") then
             Error(ReviewLineNotFoundErr, "Review Entry No.", "Review Line No.");
 
