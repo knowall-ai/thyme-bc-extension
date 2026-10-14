@@ -613,7 +613,8 @@ lines with quantity > 0) for one subject-week, a resource-week or a project-week
 Keys on (Subject Type, Subject No., Week Start, Reviewed At) for "latest review of a
 subject-week" and (Subject Type, Week Start) for Thyme's visible weeks. The agent writes
 commit-last: the header with Plan Hash `PENDING`, then findings and changes, then the real hash.
-Deleting a review deletes its findings and changes.
+Deleting a review deletes its findings and changes. Once a review has findings or changes, its
+Subject Type, Subject No. and Week Start can't be changed (they were validated against it).
 
 The canonical plan: for each line build `jobNo|jobTaskNo|resourceNo|planningDate|hours`
 (date as YYYY-MM-DD, hours = the quantity in hours rounded to and written with 2 decimals),
@@ -653,7 +654,10 @@ locks the subject's Resource or Job row first so two simultaneous inserts can't 
 
 Security for plan reviews, findings, changes and requests (codeunit `Thyme Record Security`):
 every Thyme user reads them (no row-level security in v1). Reviews, findings and changes are
-written only by the AI agent or a Thyme administrator (`CheckCanWritePlanReviews`). Requests are
+written only by the AI agent or a Thyme administrator (`CheckCanWritePlanReviews`). The agent has
+direct RIMD; `THYME ADMIN` has indirect insert, modify and delete, and the three API pages (and the
+review and finding tables, for their cascading deletes) carry the matching `Permissions`, so an
+administrator writes them only through the API. Requests are
 created by people who may change the plan (`CanEditPlan`: permission to write Job Planning
 Lines, `JobPlanningLine.WritePermission()`, with no administrator or AI agent shortcut) and changed or
 deleted only by the AI agent. The read-only `canEditPlan` field on the Projects and Resources APIs

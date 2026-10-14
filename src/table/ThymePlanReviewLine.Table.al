@@ -8,6 +8,8 @@ table 50108 "Thyme Plan Review Line"
 {
     Caption = 'Thyme Plan Review Line';
     DataClassification = CustomerContent;
+    // For the cascade in OnDelete when a Thyme administrator (indirect access only) deletes a finding.
+    Permissions = tabledata "Thyme Plan Review Change" = rd;
 
     fields
     {

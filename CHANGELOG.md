@@ -20,11 +20,13 @@ Notable changes to the Thyme BC Extension. Versions match `app.json`.
     applied together with Thyme's *Apply change*. A change must be in the review's week and for
     its resource or project.
   - Deleting a review deletes its findings and changes; deleting a finding deletes its changes.
+    Once a review has findings or changes, its subject and week can't be changed.
 - `planReviewRequests` (page 50121, table 50110, status enum 50108): ask the agent to review a
   subject-week now. Works like `suggestionRequests`: one open request per subject-week, the agent
   claims it (`Running`), reports `progress` and finishes it as `Done` or `Failed`.
 - Who can do what: every Thyme user reads plan reviews, findings, changes and requests. Only the AI
-  agent or a Thyme administrator writes reviews, findings and changes (`CheckCanWritePlanReviews`).
+  agent or a Thyme administrator writes reviews, findings and changes (`CheckCanWritePlanReviews`;
+  `THYME ADMIN` grants indirect insert, modify and delete, so administrators write them only through the API pages).
   Only people who may change the plan (permission to write Job Planning Lines; no Thyme
   administrator or AI agent shortcut) can request a review; only the AI agent changes or deletes a
   request.

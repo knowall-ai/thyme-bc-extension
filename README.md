@@ -527,9 +527,11 @@ GET /planReviewLines?$filter=reviewEntryNo eq 42
 GET /planReviewChanges?$filter=reviewEntryNo eq 42
 ```
 
-Deleting a review deletes its findings and changes; deleting a finding deletes its changes.
+Deleting a review deletes its findings and changes; deleting a finding deletes its changes. Once a
+review has findings or changes, its `subjectType`, `subjectNo` and `weekStart` can't be changed.
 Every Thyme user can read plan reviews, findings and changes (there is no row-level security
-on them); only the AI agent or a Thyme administrator can write them.
+on them); only the AI agent or a Thyme administrator can write them (an administrator through
+these API pages only: `THYME ADMIN` grants indirect insert, modify and delete).
 
 ### Plan Review Requests API
 
@@ -667,7 +669,7 @@ Create two environments in Settings → Environments:
 |----------------|-----------|--------|
 | `THYME AI AGENT` | The AI agent's Microsoft Entra application | Full access to reviews, review lines, suggestions, suggestion requests, its heartbeat, plan reviews (with findings and changes) and plan review requests; reads day notes, and changes them (through `dayNotes`) only if it also has permission to write Job Planning Lines (includes `THYME USER`) |
 | `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; read and create suggestion requests; read agent heartbeats; read plan reviews, their findings and changes; read and create plan review requests (checked in code); read day notes, and change them through `dayNotes` with permission to write Job Planning Lines; read the default billable target; run the Thyme API pages |
-| `THYME ADMIN` | Thyme administrators | Everything in `THYME USER`, plus changing the default billable target (Thyme Setup) and seeing every user's reviews and suggestions |
+| `THYME ADMIN` | Thyme administrators | Everything in `THYME USER`, plus changing the default billable target (Thyme Setup) and seeing every user's reviews and suggestions; writing plan reviews, their findings and changes through the plan review APIs (indirect permission) |
 
 Users with `THYME USER` only see reviews of time sheets they own or approve and their own
 suggestions; see [Row-level security](#row-level-security).

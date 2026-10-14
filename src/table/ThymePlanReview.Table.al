@@ -12,6 +12,9 @@ table 50107 "Thyme Plan Review"
 {
     Caption = 'Thyme Plan Review';
     DataClassification = CustomerContent;
+    // For the cascade in OnDelete when a Thyme administrator (indirect access only) deletes a review.
+    Permissions = tabledata "Thyme Plan Review Line" = rd,
+                  tabledata "Thyme Plan Review Change" = rd;
 
     fields
     {
@@ -92,6 +95,7 @@ table 50107 "Thyme Plan Review"
     trigger OnModify()
     begin
         CheckReview();
+        CheckSubjectWeekUnchanged();
     end;
 
     /// <summary>
@@ -120,6 +124,29 @@ table 50107 "Thyme Plan Review"
             Error(WeekStartNotMondayErr, "Week Start");
     end;
 
+    /// <summary>
+    /// A review's findings and changes are about its subject-week (their days, resource and project
+    /// were checked against it), so once it has any, its subject and week can't change.
+    /// </summary>
+    local procedure CheckSubjectWeekUnchanged()
     var
+        StoredReview: Record "Thyme Plan Review";
+        ReviewLine: Record "Thyme Plan Review Line";
+        ReviewChange: Record "Thyme Plan Review Change";
+    begin
+        if not StoredReview.Get("Entry No.") then
+            exit;
+        if (StoredReview."Subject Type" = "Subject Type") and (StoredReview."Subject No." = "Subject No.") and
+           (StoredReview."Week Start" = "Week Start")
+        then
+            exit;
+        ReviewLine.SetRange("Review Entry No.", "Entry No.");
+        ReviewChange.SetRange("Review Entry No.", "Entry No.");
+        if not ReviewLine.IsEmpty() or not ReviewChange.IsEmpty() then
+            Error(SubjectWeekLockedErr, "Entry No.");
+    end;
+
+    var
+        SubjectWeekLockedErr: Label 'Plan review %1 already has findings or changes, so its subject and week can''t change. Write a new review instead.', Comment = '%1 = review entry number';
         WeekStartNotMondayErr: Label 'The week must start on a Monday; %1 isn''t one.', Comment = '%1 = week start date';
 }

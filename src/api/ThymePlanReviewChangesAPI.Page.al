@@ -27,6 +27,9 @@ page 50120 "Thyme Plan Review Changes API"
     DelayedInsert = true;
     ODataKeyFields = SystemId;
     Extensible = false;
+    // THYME ADMIN writes proposed changes only indirectly, through this page and its
+    // CheckCanWritePlanReviews triggers; the AI agent has direct access.
+    Permissions = tabledata "Thyme Plan Review Change" = rimd;
 
     layout
     {
