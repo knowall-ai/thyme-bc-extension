@@ -65,8 +65,12 @@ codeunit 50108 "Thyme Project Notes"
             NoteBuffer."Created By Name" := CopyStr(User."Full Name", 1, MaxStrLen(NoteBuffer."Created By Name"))
         else
             NoteBuffer."Created By Name" := CopyStr(RecordLink."User ID", 1, MaxStrLen(NoteBuffer."Created By Name"));
-        // Newest first: the later the note, the smaller the key
-        NoteBuffer."Sort Key" := -(RecordLink.Created - CreateDateTime(DMY2Date(1, 1, 2000), 0T));
+        // Newest first: the later the note, the smaller the key (milliseconds until the
+        // end of 9999); one without a date goes last
+        if RecordLink.Created = 0DT then
+            NoteBuffer."Sort Key" := 9223372036854775807L
+        else
+            NoteBuffer."Sort Key" := CreateDateTime(DMY2Date(31, 12, 9999), 0T) - RecordLink.Created;
         NoteBuffer.Insert();
     end;
 
