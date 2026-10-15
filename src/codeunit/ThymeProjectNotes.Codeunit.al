@@ -57,6 +57,8 @@ codeunit 50108 "Thyme Project Notes"
         NoteBuffer.Init();
         NoteBuffer."Link ID" := RecordLink."Link ID";
         NoteBuffer."Job No." := JobNo;
+        // The note is a Blob: not read with the record, so load it first
+        RecordLink.CalcFields(Note);
         NoteBuffer.Note := CopyStr(RecordLinkManagement.ReadNote(RecordLink), 1, MaxStrLen(NoteBuffer.Note));
         NoteBuffer."Created At" := RecordLink.Created;
         NoteBuffer."Created By" := CopyStr(RecordLink."User ID", 1, MaxStrLen(NoteBuffer."Created By"));
