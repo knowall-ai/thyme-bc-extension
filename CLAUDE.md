@@ -21,6 +21,7 @@ This is a Business Central (BC) AL extension that provides custom API endpoints 
 - `src/api/ThymeTimeSuggestionsAPI.Page.al` - Time Suggestions API (page 50111, table 50102)
 - `src/api/ThymeSuggestionRequestsAPI.Page.al` - Suggestion Requests API: ask the agent for suggestions now (page 50114, table 50104, status enum 50105)
 - `src/api/ThymeAgentHeartbeatsAPI.Page.al` - Agent Heartbeats API: when the AI agent was last seen (page 50115, table 50105)
+- `src/api/ThymeProjectNotesAPI.Page.al` - Project Notes API: Business Central's own Notes on a project (Record Links of type Note), newest first; filter by `jobNo`; POST adds one (page 50123, temporary table 50112, codeunit 50108 `Thyme Project Notes`)
 - `src/api/ThymeProjectSourceLinksAPI.Page.al` - Project Source Links API: GitHub repos, DevOps projects and repos, meeting keywords and attendee domains per project, read by the AI agent to map time (page 50116, table 50106, type enum 50106); `src/page/ThymeProjectSourceLinks.Page.al` is the ListPart on the Project Card (page 50117, page extension 50101 `src/pageextension/ThymeJobCard.PageExt.al`); codeunit 50105 deletes a project's links with it
 - `src/api/ThymeDayNotesAPI.Page.al` - Day Notes API: notes on particular days for the company or one person, e.g. "Company Off-Site", optionally with no project work that day (page 50122, table 50111)
 - `src/api/ThymePlanReviewsAPI.Page.al` - Plan Reviews API: AI reviews of a person's or a project's week of planning lines (page 50118, table 50107, subject enum 50107)
@@ -64,6 +65,7 @@ Endpoints available at:
 /api/knowall/thyme/v1.0/companies({id})/suggestionRequests
 /api/knowall/thyme/v1.0/companies({id})/agentHeartbeats
 /api/knowall/thyme/v1.0/companies({id})/projectSourceLinks
+/api/knowall/thyme/v1.0/companies({id})/projectNotes
 /api/knowall/thyme/v1.0/companies({id})/dayNotes
 /api/knowall/thyme/v1.0/companies({id})/planReviews
 /api/knowall/thyme/v1.0/companies({id})/planReviewLines

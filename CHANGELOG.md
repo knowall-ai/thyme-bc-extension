@@ -2,6 +2,19 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
+## 1.25.0.0
+
+### Added
+
+- `projectNotes` API (page 50123, temporary table 50112, codeunit 50108 `Thyme Project Notes`): a
+  project's Notes, the same ones as the Notes factbox on the Project card in Business Central
+  (Record Links of type Note), newest first, with who wrote each and when.
+  `GET /projectNotes?$filter=jobNo eq 'PR00010'` lists them (the `jobNo` filter is required);
+  `POST /projectNotes { "jobNo", "note" }` adds one as the signed-in user, so it shows in Business
+  Central too. Anyone who can read the project can read and add its notes; they aren't changed or
+  deleted through the API. `THYME USER` can run the page and codeunit (the codeunit has the indirect
+  Record Link permission).
+
 ## 1.24.0.0
 
 ### Added
