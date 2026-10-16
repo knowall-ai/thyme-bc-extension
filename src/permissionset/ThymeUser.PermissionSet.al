@@ -8,6 +8,8 @@
 /// permission to write Job Planning Lines).
 /// Base-app data such as time sheets and resources still comes from the standard D365
 /// permission sets. To change the default billable target, use THYME ADMIN.
+/// Every Thyme user reads a project's Notes (Business Central's own) and adds to them, through the
+/// projectNotes API, as anyone who can read the project can on the Project card.
 /// Every Thyme user reads AI plan reviews (with their findings and proposed changes) and plan review
 /// requests, and can create a request (checked in code: people who may change the plan).
 /// </summary>
@@ -29,6 +31,7 @@ permissionset 50101 "THYME USER"
         table "Thyme Plan Review Request" = X,
         table "Thyme Project Source Link" = X,
         table "Thyme Day Note" = X,
+        table "Thyme Project Note" = X,
         tabledata "Thyme Timesheet Review" = R,
         tabledata "Thyme Timesheet Review Line" = R,
         tabledata "Thyme Time Suggestion" = RM,
@@ -70,11 +73,15 @@ permissionset 50101 "THYME USER"
         page "Thyme Plan Review Changes API" = X,
         page "Thyme Plan Review Requests API" = X,
         page "Thyme Project Source Links API" = X,
+        page "Thyme Project Notes API" = X,
         page "Thyme Project Source Links" = X,
         page "Thyme Day Notes API" = X,
         codeunit "Thyme Time Sheet Actions" = X,
         codeunit "Thyme Record Security" = X,
         codeunit "Thyme Connected Accounts" = X,
         codeunit "Thyme Source Link Events" = X,
-        codeunit "Thyme Plan Review Apply" = X;
+        codeunit "Thyme Plan Review Apply" = X,
+        // Reads and adds the project Notes (Record Links) behind the projectNotes API, with its own
+        // indirect Record Link permission, so no direct right to Record Links is needed
+        codeunit "Thyme Project Notes" = X;
 }
