@@ -2,7 +2,7 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
-## 1.27.0.2
+## 1.27.0.3
 
 ### Added
 

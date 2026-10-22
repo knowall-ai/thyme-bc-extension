@@ -156,4 +156,18 @@ page 50100 "Thyme Projects API"
     begin
         SellToCustomerNo := '';
     end;
+
+    // BC can set the Sell-to customer itself (e.g. from a new Bill-to customer when there's none),
+    // so return what's on the record, not what was sent
+    trigger OnInsertRecord(BelowxRec: Boolean): Boolean
+    begin
+        SellToCustomerNo := Rec."Sell-to Customer No.";
+        exit(true);
+    end;
+
+    trigger OnModifyRecord(): Boolean
+    begin
+        SellToCustomerNo := Rec."Sell-to Customer No.";
+        exit(true);
+    end;
 }
