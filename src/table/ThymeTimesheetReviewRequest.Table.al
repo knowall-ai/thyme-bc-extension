@@ -140,7 +140,9 @@ table 50113 "Thyme Timesheet Review Request"
         // Two requests arriving together could both find no open request. Locking the
         // time sheet's row first serialises them: the second waits, then sees the first.
         TimeSheetHeader.LockTable();
-        if TimeSheetHeader.Get("Time Sheet No.") then;
+        // It also stops a request for a time sheet that doesn't exist (or was just deleted).
+        if not TimeSheetHeader.Get("Time Sheet No.") then
+            Error(TimeSheetNotFoundErr, "Time Sheet No.");
 
         Existing.SetCurrentKey("Time Sheet No.", Status);
         Existing.SetRange("Time Sheet No.", "Time Sheet No.");
@@ -153,5 +155,6 @@ table 50113 "Thyme Timesheet Review Request"
     end;
 
     var
+        TimeSheetNotFoundErr: Label 'Time sheet %1 does not exist.', Comment = '%1 = time sheet number';
         OpenRequestExistsErr: Label 'A review of time sheet %1 has already been requested (entry %2). Wait for that request to finish.', Comment = '%1 = time sheet number, %2 = entry number';
 }
