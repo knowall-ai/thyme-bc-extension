@@ -9,7 +9,13 @@
 /// the way. When the project already has a Bill-to customer, SetSellToCustomer skips that Bill-to
 /// validation, so only the Sell-to fields change. BC's own Sell-to validation still runs, with its
 /// checks: e.g. it's refused once the project has invoiced (Sale) ledger entries. A project without
-/// a Bill-to customer gets one from the Sell-to customer, as in BC.
+/// a Bill-to customer gets one from the Sell-to customer, as in BC, and clearing the Sell-to customer
+/// is left to BC too (it clears the Bill-to customer as well), as a project with a Bill-to but no
+/// Sell-to customer can't be invoiced.
+///
+/// While BC's Sell-to validation runs, the Bill-to Customer No. briefly holds the value BC would have
+/// set (only the number: the validation that would copy the rest is skipped), so a subscriber to
+/// OnAfterSellToCustomerNoUpdated sees it; it's set back before SetSellToCustomer returns.
 ///
 /// The subscriber only runs while SetSellToCustomer has it bound (EventSubscriberInstance = Manual),
 /// so Business Central's own pages and other code are unaffected.
@@ -18,7 +24,10 @@ codeunit 50109 "Thyme Project Customer"
 {
     EventSubscriberInstance = Manual;
 
-    /// <summary>Sets the project's Sell-to customer (not saved), keeping any Bill-to customer.</summary>
+    /// <summary>
+    /// Sets the project's Sell-to customer (not saved), keeping any Bill-to customer. Clearing it
+    /// is BC's own validation, which clears the Bill-to customer too.
+    /// </summary>
     procedure SetSellToCustomer(var Job: Record Job; SellToCustomerNo: Code[20])
     var
         KeepBillTo: Codeunit "Thyme Project Customer";
@@ -27,7 +36,7 @@ codeunit 50109 "Thyme Project Customer"
         if Job."Sell-to Customer No." = SellToCustomerNo then
             exit;
         BillToCustomerNo := Job."Bill-to Customer No.";
-        if BillToCustomerNo = '' then begin
+        if (BillToCustomerNo = '') or (SellToCustomerNo = '') then begin
             Job.Validate("Sell-to Customer No.", SellToCustomerNo);
             exit;
         end;

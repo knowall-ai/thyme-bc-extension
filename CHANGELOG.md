@@ -2,7 +2,7 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
-## 1.27.0.1
+## 1.27.0.2
 
 ### Added
 
@@ -17,7 +17,9 @@ Notable changes to the Thyme BC Extension. Versions match `app.json`.
   codeunit runs BC's Sell-to validation, with its checks (refused once the project has invoiced (Sale)
   ledger entries), and skips the Bill-to validation through a manually bound subscriber, so only the
   Sell-to fields change. Posted entries and time sheets aren't touched. A project with no Bill-to
-  customer gets the Sell-to customer as Bill-to, as in BC. Send `billToCustomerNo` only to change
+  customer gets the Sell-to customer as Bill-to, as in BC, and clearing the Sell-to customer is BC's
+  own validation, which clears the Bill-to customer too (a project with a Bill-to but no Sell-to
+  customer can't be invoiced). Send `billToCustomerNo` only to change
   the Bill-to customer: BC then applies that customer's terms and re-prices the planning lines.
 - `THYME USER` can run the codeunit; changing a project still needs Business Central's own
   permission to modify projects.
