@@ -129,8 +129,10 @@ Maps to the BC `Job` table (table 167).
 | id | SystemId | Primary key (GUID)
 | number | No. | Job number
 | description | Description | Project name
-| billToCustomerNo | Bill-to Customer No. | Customer code
-| billToCustomerName | Bill-to Name | Customer display name
+| sellToCustomerNo | Sell-to Customer No. | Who the work is for (the end client of partner work). Validated as in BC: also sets Bill-to, so PATCH it with billToCustomerNo to keep the Bill-to; refused once the project has invoiced (Sale) entries or sales lines
+| sellToCustomerName | Sell-to Customer Name | Read-only; filled in by BC from the customer
+| billToCustomerNo | Bill-to Customer No. | Who pays (the partner, for partner work)
+| billToCustomerName | Bill-to Name | Bill-to customer display name
 | personResponsible | Person Responsible | Project manager
 | status | Status | Enum: Planning, Quote, Open, Completed
 | startingDate | Starting Date | Project start

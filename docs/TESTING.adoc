@@ -41,6 +41,8 @@ curl -H "Authorization: Bearer {token}" \
       "id": "guid-here",
       "number": "J00010",
       "description": "Website Redesign",
+      "sellToCustomerNo": "C00020",
+      "sellToCustomerName": "Fabrikam Inc",
       "billToCustomerNo": "C00010",
       "billToCustomerName": "Contoso Ltd",
       "personResponsible": "John Smith",

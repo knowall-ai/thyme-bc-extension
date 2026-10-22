@@ -2,6 +2,15 @@
 /// Custom API page exposing Projects (Jobs) with additional fields
 /// not available in the standard BC API v2.0.
 ///
+/// sellToCustomerNo / sellToCustomerName are the customer the project's work is for, and
+/// billToCustomerNo / billToCustomerName the customer who pays for it. They differ when the work is
+/// sold through a partner: Sell-to is the end client and Bill-to the partner. These are Business
+/// Central's own Project fields and follow its rules: changing sellToCustomerNo also sets the Bill-to
+/// customer (to the new customer's Bill-to Customer, or the customer itself), and either is refused
+/// once the project has invoiced (Sale) ledger entries or sales lines. To change the Sell-to customer
+/// and keep the Bill-to customer, send both in one PATCH: sellToCustomerNo comes first on this page,
+/// so it is applied before billToCustomerNo.
+///
 /// canEditSourceLinks is true when the caller may add, change and remove the project's linked
 /// sources (see the projectSourceLinks endpoint): a Thyme administrator or the project's manager.
 ///
@@ -42,6 +51,18 @@ page 50100 "Thyme Projects API"
                 field(displayName; Rec.Description)
                 {
                     Caption = 'Display Name';
+                }
+                // Before the Bill-to fields: on a PATCH with both, BC applies Sell-to first (which
+                // also sets Bill-to), then the Bill-to that was sent.
+                field(sellToCustomerNo; Rec."Sell-to Customer No.")
+                {
+                    Caption = 'Sell-to Customer No.';
+                }
+                // Read-only: set sellToCustomerNo, and BC fills in the name from the customer.
+                field(sellToCustomerName; Rec."Sell-to Customer Name")
+                {
+                    Caption = 'Sell-to Customer Name';
+                    Editable = false;
                 }
                 field(billToCustomerNo; Rec."Bill-to Customer No.")
                 {
