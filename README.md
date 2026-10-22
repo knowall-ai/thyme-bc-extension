@@ -50,6 +50,7 @@ Once deployed, the APIs are available at:
 .../api/knowall/thyme/v1.0/companies({companyId})/planReviewLines
 .../api/knowall/thyme/v1.0/companies({companyId})/planReviewChanges
 .../api/knowall/thyme/v1.0/companies({companyId})/planReviewRequests
+.../api/knowall/thyme/v1.0/companies({companyId})/timesheetReviewRequests
 .../api/knowall/thyme/v1.0/companies({companyId})/agentHeartbeats
 .../api/knowall/thyme/v1.0/companies({companyId})/dayNotes
 .../api/knowall/thyme/v1.0/companies({companyId})/thymeSetup
@@ -583,18 +584,45 @@ change the plan (permission to write Job Planning Lines; being a Thyme administr
 agent doesn't count on its own) can create them (`canEditPlan` on `projects` and `resources` answers this for the caller); only the
 AI agent can change or delete one.
 
+### Timesheet Review Requests API
+
+Ask the AI agent to review a time sheet again now (*Ask Poppie to look again* in Thyme), instead
+of waiting for the time sheet to be resubmitted. Works like `planReviewRequests`.
+
+| Field | Description |
+|-------|-------------|
+| `id` | SystemId (GUID) |
+| `entryNo` | Entry number (read-only) |
+| `timeSheetNo` | The time sheet to review (Time Sheet Header No.) |
+| `status` | `Requested` (always, on create), `Running`, `Done` or `Failed` |
+| `progress` | What the agent is doing now (≤ 250) |
+| `errorMessage` | Why a `Failed` request failed (≤ 250) |
+| `requestedBy` / `requestedAt` | Who asked and when (set by BC, read-only) |
+| `startedAt` / `finishedAt` | Stamped when the agent claims it and when it finishes, if blank |
+| `lastModifiedDateTime` | Last modified timestamp (read-only) |
+
+```
+POST /timesheetReviewRequests  { "timeSheetNo": "TS00042" }
+GET  /timesheetReviewRequests?$filter=timeSheetNo eq 'TS00042'&$orderby=requestedAt desc&$top=1   (Thyme: latest request)
+GET  /timesheetReviewRequests?$filter=status eq 'Requested'&$orderby=requestedAt                  (agent: waiting requests)
+```
+Only one open (`Requested` or `Running`) request per time sheet; a second is rejected, including
+by re-opening one with `PATCH`. The time sheet's owner and approver, Thyme administrators and the
+AI agent (the people who see its reviews) can read and create requests for it; only the AI agent
+can change or delete one. The agent writes the new review to `timesheetReviews` as usual.
+
 ### Row-level security
 
-The reviews, review lines, suggestions and suggestion requests endpoints only return records the caller may see.
+The reviews, review lines, suggestions, suggestion requests and timesheet review requests endpoints only return records the caller may see.
 Records outside that scope are left out of lists and `$filter` results, and `GET`, `PATCH` or
 `DELETE` by `id` returns 404, as if the record didn't exist.
 
-| Caller | Reviews and review lines | Suggestions | Suggestion requests |
-|--------|--------------------------|-------------|---------------------|
-| AI agent (`THYME AI AGENT`) | All; can write | All; can write | All; can write |
-| Thyme administrator: *Time Sheet Admin.* in User Setup, or `THYME ADMIN` | All; can write (needs table permission) | All; can write (needs table permission) | All; can create |
-| Time sheet owner or approver | Reviews of time sheets they own or approve, whatever their status; read only | Suggestions for resources whose time sheets they own; can change those (approvers: none) | Requests for resources whose time sheets they own or approve; can create |
-| Anyone else | None | None | None |
+| Caller | Reviews and review lines | Suggestions | Suggestion requests | Timesheet review requests |
+|--------|--------------------------|-------------|---------------------|---------------------------|
+| AI agent (`THYME AI AGENT`) | All; can write | All; can write | All; can write | All; can write |
+| Thyme administrator: *Time Sheet Admin.* in User Setup, or `THYME ADMIN` | All; can write (needs table permission) | All; can write (needs table permission) | All; can create | All; can create |
+| Time sheet owner or approver | Reviews of time sheets they own or approve, whatever their status; read only | Suggestions for resources whose time sheets they own; can change those (approvers: none) | Requests for resources whose time sheets they own or approve; can create | Requests for time sheets they own or approve; can create |
+| Anyone else | None | None | None | None |
 
 The permission sets count whether they are assigned directly or through a security group.
 `SUPER` on its own does not bypass these rules, so give a superuser who should see everything
@@ -690,8 +718,8 @@ Create two environments in Settings → Environments:
 
 | Permission set | Assign to | Grants |
 |----------------|-----------|--------|
-| `THYME AI AGENT` | The AI agent's Microsoft Entra application | Full access to reviews, review lines, suggestions, suggestion requests, its heartbeat, plan reviews (with findings and changes) and plan review requests; reads day notes, and changes them (through `dayNotes`) only if it also has permission to write Job Planning Lines (includes `THYME USER`) |
-| `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; read and create suggestion requests; read agent heartbeats; read plan reviews, their findings and changes; read and create plan review requests (checked in code); read day notes, and change them through `dayNotes` with permission to write Job Planning Lines; read the default billable target; run the Thyme API pages |
+| `THYME AI AGENT` | The AI agent's Microsoft Entra application | Full access to reviews, review lines, suggestions, suggestion requests, its heartbeat, plan reviews (with findings and changes), plan review requests and timesheet review requests; reads day notes, and changes them (through `dayNotes`) only if it also has permission to write Job Planning Lines (includes `THYME USER`) |
+| `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; read and create suggestion requests; read agent heartbeats; read plan reviews, their findings and changes; read and create plan review requests (checked in code); read and create timesheet review requests for time sheets they own or approve (checked in code); read day notes, and change them through `dayNotes` with permission to write Job Planning Lines; read the default billable target; run the Thyme API pages |
 | `THYME ADMIN` | Thyme administrators | Everything in `THYME USER`, plus changing the default billable target (Thyme Setup) and seeing every user's reviews and suggestions; writing plan reviews, their findings and changes through the plan review APIs (indirect permission) |
 
 Users with `THYME USER` only see reviews of time sheets they own or approve and their own
@@ -735,14 +763,15 @@ thyme-bc-extension/
 │   │   ├── ThymePlanReviewLinesAPI.Page.al     # Plan Review Lines (page 50119)
 │   │   ├── ThymePlanReviewChangesAPI.Page.al   # Plan Review Changes (page 50120)
 │   │   ├── ThymePlanReviewRequestsAPI.Page.al  # Plan Review Requests (page 50121)
+│   │   ├── ThymeTimesheetReviewRequestsAPI.Page.al # Timesheet Review Requests (page 50124)
 │   │   └── ThymeDayNotesAPI.Page.al            # Day Notes (page 50122)
 │   ├── page/
 │   │   ├── ThymeSetup.Page.al                  # Thyme Setup card (page 50113)
 │   │   └── ThymeProjectSourceLinks.Page.al     # Linked sources part on the Project Card (page 50117)
-│   ├── table/                                  # Review, review line, suggestion, Thyme Setup, requests, heartbeats, source links (tables 50100-50106), plan reviews, lines, changes, requests (tables 50107-50110), day notes (table 50111)
+│   ├── table/                                  # Review, review line, suggestion, Thyme Setup, requests, heartbeats, source links (tables 50100-50106), plan reviews, lines, changes, requests (tables 50107-50110), day notes (table 50111), timesheet review requests (table 50113)
 │   ├── tableextension/                         # Resource billable target and capacity fields (50100)
 │   ├── pageextension/                          # Thyme group on the Resource Card (50100), linked sources on the Project Card (50101)
-│   ├── enum/                                   # Verdict, severity, suggestion, request status, source type, plan review subject and request status enums (enums 50100-50108)
+│   ├── enum/                                   # Verdict, severity, suggestion, request status, source type, plan review subject and request status, timesheet review request status enums (enums 50100-50109)
 │   ├── permissionset/                          # THYME AI AGENT, THYME USER, THYME ADMIN (50100-50102)
 │   └── codeunit/
 │       ├── ThymeTimeSheetActions.Codeunit.al   # Approval workflow actions (codeunit 50100)

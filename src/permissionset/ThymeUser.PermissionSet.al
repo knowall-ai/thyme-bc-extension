@@ -12,6 +12,8 @@
 /// projectNotes API, as anyone who can read the project can on the Project card.
 /// Every Thyme user reads AI plan reviews (with their findings and proposed changes) and plan review
 /// requests, and can create a request (checked in code: people who may change the plan).
+/// Thyme users read timesheet review requests for time sheets they own or approve and can create one
+/// for those time sheets (checked in code), to ask the agent to review a time sheet again.
 /// </summary>
 permissionset 50101 "THYME USER"
 {
@@ -29,6 +31,7 @@ permissionset 50101 "THYME USER"
         table "Thyme Plan Review Line" = X,
         table "Thyme Plan Review Change" = X,
         table "Thyme Plan Review Request" = X,
+        table "Thyme Timesheet Review Request" = X,
         table "Thyme Project Source Link" = X,
         table "Thyme Day Note" = X,
         table "Thyme Project Note" = X,
@@ -46,6 +49,9 @@ permissionset 50101 "THYME USER"
         // Direct read; insert only indirect, so requests are created only through the
         // planReviewRequests API page, whose insert trigger checks CanEditPlan.
         tabledata "Thyme Plan Review Request" = Ri,
+        // The same for timesheet review requests: insert only through the timesheetReviewRequests
+        // API page, whose insert trigger checks the caller owns or approves the time sheet.
+        tabledata "Thyme Timesheet Review Request" = Ri,
         tabledata "Thyme Project Source Link" = RIMD,
         // Direct read only; insert, modify and delete are indirect, so day notes can only be written
         // through the dayNotes API page, whose triggers check CanEditPlan (not, say, a config package).
@@ -72,6 +78,7 @@ permissionset 50101 "THYME USER"
         page "Thyme Plan Review Lines API" = X,
         page "Thyme Plan Review Changes API" = X,
         page "Thyme Plan Review Requests API" = X,
+        page "Thyme TS Review Requests API" = X,
         page "Thyme Project Source Links API" = X,
         page "Thyme Project Notes API" = X,
         page "Thyme Project Source Links" = X,
