@@ -88,6 +88,8 @@ permissionset 50101 "THYME USER"
         codeunit "Thyme Connected Accounts" = X,
         codeunit "Thyme Source Link Events" = X,
         codeunit "Thyme Plan Review Apply" = X,
+        // Sets a project's Sell-to customer for the projects API, keeping its Bill-to customer
+        codeunit "Thyme Project Customer" = X,
         // Reads and adds the project Notes (Record Links) behind the projectNotes API, with its own
         // indirect Record Link permission, so no direct right to Record Links is needed
         codeunit "Thyme Project Notes" = X;

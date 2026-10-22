@@ -129,7 +129,7 @@ Maps to the BC `Job` table (table 167).
 | id | SystemId | Primary key (GUID)
 | number | No. | Job number
 | description | Description | Project name
-| sellToCustomerNo | Sell-to Customer No. | Who the work is for (the end client of partner work). Validated as in BC: also sets Bill-to, so PATCH it with billToCustomerNo to keep the Bill-to; refused once the project has invoiced (Sale) entries or sales lines
+| sellToCustomerNo | Sell-to Customer No. | Who the work is for (the end client of partner work). Set through codeunit 50109 `Thyme Project Customer`: BC's Sell-to validation runs (refused once the project has invoiced (Sale) entries) but the Bill-to validation it triggers is skipped, so the Bill-to customer, its contact, terms, default dimensions and the planning line prices stay as they are. A project with no Bill-to gets the Sell-to customer, as in BC
 | sellToCustomerName | Sell-to Customer Name | Read-only; filled in by BC from the customer
 | billToCustomerNo | Bill-to Customer No. | Who pays (the partner, for partner work)
 | billToCustomerName | Bill-to Name | Bill-to customer display name
