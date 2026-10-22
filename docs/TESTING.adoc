@@ -178,6 +178,15 @@ curl -X POST -H "Authorization: Bearer {token}" -H "Content-Type: application/js
   ".../planReviewRequests"
 # As a non-agent, PATCH the request (expect 400 "Only the AI agent can"); as a user without permission
 # to write Job Planning Lines, POST a request (expect 400; canEditPlan = false)
+
+# Ask for a time sheet to be reviewed again (as its owner or approver; expect status Requested),
+# then a second one (expect 400 "already been requested")
+curl -X POST -H "Authorization: Bearer {token}" -H "Content-Type: application/json" \
+  -d '{"timeSheetNo": "<a CRONUS time sheet No.>"}' \
+  ".../timesheetReviewRequests"
+# As the AI agent: PATCH it to Running, then Done (expect startedAt / finishedAt stamped)
+# As a non-agent, PATCH the request (expect 400 "Only the AI agent can"); as someone who neither owns
+# nor approves the time sheet, POST a request (expect 400 "not allowed") and GET it (expect 404)
 ----
 
 === 9. Test applying a finding's changes
@@ -227,5 +236,6 @@ curl -H "Authorization: Bearer {token}" \
 * [ ] Plan review changes outside the review's week or subject, or not in quarter hours, are rejected
 * [ ] Deleting a plan review deletes its findings and changes
 * [ ] One open plan review request per subject-week; only the AI agent can change a request
+* [ ] One open timesheet review request per time sheet; only its owner, approver, a Thyme admin or the agent can create or see one; only the AI agent can change one
 * [ ] applyChanges applies all of a finding's changes or none; stale cells and cells with several or non-Budget lines are refused
 * [ ] applyChanges stamps appliedAt / appliedBy and is refused without permission to write Job Planning Lines

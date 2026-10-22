@@ -14,6 +14,9 @@
 ///   proposed changes: every Thyme user reads them; only the AI agent or a Thyme administrator
 ///   writes them (CheckCanWritePlanReviews). A plan review request: every Thyme user reads them;
 ///   people who may change the plan (CanEditPlan) create them; only the AI agent changes or deletes one.
+/// - A timesheet review request (asking the agent to review a time sheet again now): the time
+///   sheet's owner and approver, a Thyme administrator and the AI agent (the people who see its
+///   reviews). The same people can create one; only the AI agent can change or delete one.
 /// - An agent heartbeat (when the agent was last seen): every Thyme user; only the AI agent writes.
 /// - A project source link (which repos, DevOps projects, meeting keywords and attendee domains
 ///   belong to a project): every Thyme user reads them. A Thyme administrator or the project's
@@ -41,7 +44,8 @@ codeunit 50104 "Thyme Record Security"
 {
     Permissions = tabledata "User Setup" = r,
                   tabledata Resource = r,
-                  tabledata Job = r;
+                  tabledata Job = r,
+                  tabledata "Time Sheet Header" = r;
 
     var
         ThymeAdminRoleTok: Label 'THYME ADMIN', Locked = true;
@@ -237,6 +241,61 @@ codeunit 50104 "Thyme Record Security"
     begin
         if not IsAIAgent() then
             Error(NotAllowedToChangePlanReviewRequestsErr);
+    end;
+
+    /// <summary>
+    /// Limits timesheet review requests to time sheets the caller owns or approves, unless they
+    /// can access all (the same rows as ApplyReviewFilter).
+    /// </summary>
+    procedure ApplyTimesheetReviewRequestFilter(var Request: Record "Thyme Timesheet Review Request")
+    begin
+        if CanAccessAll() then
+            exit;
+
+        Request.FilterGroup(2);
+        Request.SetFilter("User ID Filter", '<>%1', CurrentUserCode());
+        Request.SetRange("Hidden From User Filter", false);
+        Request.SetRange("Time Sheet Exists", true);
+        Request.FilterGroup(0);
+    end;
+
+    /// <summary>
+    /// True if the caller may ask the agent to review this time sheet again: its owner or
+    /// approver, a Thyme administrator or the AI agent. The time sheet must exist.
+    /// </summary>
+    procedure CanRequestTimesheetReview(TimeSheetNo: Code[20]): Boolean
+    var
+        TimeSheetHeader: Record "Time Sheet Header";
+        Me: Code[50];
+    begin
+        if TimeSheetNo = '' then
+            exit(false);
+        if not TimeSheetHeader.Get(TimeSheetNo) then
+            exit(false);
+        if CanAccessAll() then
+            exit(true);
+        Me := CurrentUserCode();
+        exit((UpperCase(TimeSheetHeader."Owner User ID") = Me) or (UpperCase(TimeSheetHeader."Approver User ID") = Me));
+    end;
+
+    procedure CheckCanRequestTimesheetReview(TimeSheetNo: Code[20])
+    var
+        NotAllowedToRequestTimesheetReviewErr: Label 'You are not allowed to request a review of time sheet %1. You can request one for your own time sheets, for time sheets you approve, or for any as a Thyme administrator.', Comment = '%1 = time sheet number';
+    begin
+        if not CanRequestTimesheetReview(TimeSheetNo) then
+            Error(NotAllowedToRequestTimesheetReviewErr, TimeSheetNo);
+    end;
+
+    /// <summary>
+    /// Only the AI agent moves a timesheet review request through Running to Done or Failed,
+    /// or removes one.
+    /// </summary>
+    procedure CheckCanChangeTimesheetReviewRequests()
+    var
+        NotAllowedToChangeTimesheetReviewRequestsErr: Label 'You are not allowed to change timesheet review requests. Only the AI agent can.';
+    begin
+        if not IsAIAgent() then
+            Error(NotAllowedToChangeTimesheetReviewRequestsErr);
     end;
 
     /// <summary>

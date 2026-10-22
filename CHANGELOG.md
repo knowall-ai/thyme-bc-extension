@@ -2,6 +2,23 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
+## 1.26.0.0
+
+### Added
+
+- `timesheetReviewRequests` (page 50124, table 50113 `Thyme Timesheet Review Request`, status
+  enum 50109): ask the agent to review a time sheet again now (*Ask Poppie to look again* in
+  Thyme), instead of waiting for the time sheet to be resubmitted. Works like
+  `planReviewRequests`: `POST { "timeSheetNo" }` creates a `Requested` request (`requestedBy` /
+  `requestedAt` set by BC), one open (`Requested` or `Running`) request per time sheet (a second is
+  rejected, including by re-opening one), the agent claims it (`Running`), reports `progress` and
+  finishes it as `Done` or `Failed` (`errorMessage`); `startedAt` / `finishedAt` are stamped if blank.
+  Filter by `timeSheetNo` and `status`.
+- Who can do what: the same people who see the time sheet's reviews (its owner and approver, Thyme
+  administrators and the AI agent) read requests for it and can create one; only the AI agent changes
+  or deletes a request. `THYME USER` has direct read and only indirect insert (`Ri`), so requests are
+  created only through the API page and its check; `THYME AI AGENT` has full access.
+
 ## 1.25.0.1
 
 ### Added

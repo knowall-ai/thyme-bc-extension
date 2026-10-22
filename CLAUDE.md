@@ -28,17 +28,18 @@ This is a Business Central (BC) AL extension that provides custom API endpoints 
 - `src/api/ThymePlanReviewLinesAPI.Page.al` - Plan Review Lines API: a plan review's findings (page 50119, table 50108), with the `applyChanges` action; `src/codeunit/ThymePlanReviewApply.Codeunit.al` applies a finding's changes to the planning lines in one transaction (codeunit 50107)
 - `src/api/ThymePlanReviewChangesAPI.Page.al` - Plan Review Changes API: planning-line changes a finding proposes, applied from Thyme (page 50120, table 50109)
 - `src/api/ThymePlanReviewRequestsAPI.Page.al` - Plan Review Requests API: ask the agent to review a subject-week now (page 50121, table 50110, status enum 50108)
+- `src/api/ThymeTimesheetReviewRequestsAPI.Page.al` - Timesheet Review Requests API: ask the agent to review a time sheet again now (page 50124, table 50113, status enum 50109); owner, approver, Thyme admins and the agent read and create, only the agent changes
 - `src/api/ThymeSetupAPI.Page.al` - Thyme Setup API, single record (page 50112, table 50103 `Thyme Setup`)
 - `src/page/ThymeSetup.Page.al` - Thyme Setup card (page 50113)
 - `src/tableextension/ThymeResource.TableExt.al` - Resource billable target fields 50100-50101 and weekly capacity / flexible working days fields 50102-50104, GitHub username field 50105 (table extension 50100)
 - `src/pageextension/ThymeResourceCard.PageExt.al` - Thyme group on the Resource Card (page extension 50100)
-- `src/enum/` - Review verdict/severity and suggestion source/confidence/status and suggestion request status enums (50100-50105), project source type (50106), plan review subject and plan review request status (50107-50108)
+- `src/enum/` - Review verdict/severity and suggestion source/confidence/status and suggestion request status enums (50100-50105), project source type (50106), plan review subject and plan review request status (50107-50108), timesheet review request status (50109)
 - `src/permissionset/` - `THYME AI AGENT` (50100), `THYME USER` (50101) and `THYME ADMIN` (50102); add new tables/pages to these
 - `src/codeunit/ThymeConnectedAccounts.Codeunit.al` - GitHub username normalisation, and the resources API's `setGitHubUsername` action, which writes it after the row-level check using the indirect Resource modify permission THYME USER grants (codeunit 50106)
 - `src/codeunit/ThymeTimeSheetActions.Codeunit.al` - Time Sheet approval workflow actions (codeunit 50100)
 - `src/codeunit/ThymeInstall.Codeunit.al` / `ThymeUpgrade.Codeunit.al` - Create the Thyme Setup record on install / upgrade (codeunits 50101, 50102)
 - `src/codeunit/ThymeCompanyInitialize.Codeunit.al` - Creates the Thyme Setup record in new companies (codeunit 50103)
-- `src/codeunit/ThymeRecordSecurity.Codeunit.al` - Row-level security for reviews, review lines, suggestions, suggestion requests, project source links, plan review requests, who may change a person's GitHub username and who may change the plan (`CanEditPlan`: exactly `JobPlanningLine.WritePermission()`, no admin or agent shortcut; used by day notes and exposed as `canEditPlan` on projects and resources), plus the shared time sheet admin check (codeunit 50104). The API pages call it in OnOpenPage (filters in FilterGroup 2) and in their insert/modify/delete triggers. Note: `FilterGroup(-1)` (cross-column OR) is NOT applied on API page reads, so OR conditions must be expressed with AND-only filters (see the `Hidden From User Filter` FlowFields).
+- `src/codeunit/ThymeRecordSecurity.Codeunit.al` - Row-level security for reviews, review lines, suggestions, suggestion requests, project source links, plan review requests, timesheet review requests, who may change a person's GitHub username and who may change the plan (`CanEditPlan`: exactly `JobPlanningLine.WritePermission()`, no admin or agent shortcut; used by day notes and exposed as `canEditPlan` on projects and resources), plus the shared time sheet admin check (codeunit 50104). The API pages call it in OnOpenPage (filters in FilterGroup 2) and in their insert/modify/delete triggers. Note: `FilterGroup(-1)` (cross-column OR) is NOT applied on API page reads, so OR conditions must be expressed with AND-only filters (see the `Hidden From User Filter` FlowFields).
 
 ## API Configuration
 
@@ -71,6 +72,7 @@ Endpoints available at:
 /api/knowall/thyme/v1.0/companies({id})/planReviewLines
 /api/knowall/thyme/v1.0/companies({id})/planReviewChanges
 /api/knowall/thyme/v1.0/companies({id})/planReviewRequests
+/api/knowall/thyme/v1.0/companies({id})/timesheetReviewRequests
 /api/knowall/thyme/v1.0/companies({id})/thymeSetup
 ```
 

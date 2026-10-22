@@ -114,6 +114,7 @@ https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/planReviewLines
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/planReviewChanges
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/planReviewRequests
+https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timesheetReviewRequests
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/thymeSetup
 ----
 
@@ -708,6 +709,27 @@ gives the same answer per caller, for *Apply change* and *Ask Poppie to re-revie
 direct read and only indirect insert on requests (`Ri`), and the requests page grants `i`, so a request
 can only be created through the page and its check, not directly (for example a configuration package).
 
+=== Timesheet Review Requests API (Page 50124)
+
+Maps to `Thyme Timesheet Review Request` (table 50113), modelled on the Plan Review Requests API:
+`timeSheetNo` (Code[20], relation to Time Sheet Header), `status` (enum `Thyme TS Review Req.
+Status`, 50109: Requested, forced on insert, Running, Done, Failed), `progress`, `errorMessage`
+(Text[250]), `requestedBy`/`requestedAt` (set on insert, read-only), `startedAt`/`finishedAt`
+(stamped if blank when the status leaves Requested / reaches Done or Failed). One open request per
+time sheet: a second Requested or Running one is rejected on insert and on re-opening; the check
+locks the Time Sheet Header row first so two simultaneous inserts can't both pass. Keys on
+(Time Sheet No., Status) and (Status, Requested At). Thyme uses it for *Ask Poppie to look again*;
+the agent writes the resulting review to `timesheetReviews` as usual.
+
+Security (codeunit `Thyme Record Security`): requests follow the time sheet's reviews, not the plan's,
+because the review they produce is only visible to the time sheet's owner and approver. Read: the
+time sheet's owner and approver, Thyme administrators and the AI agent
+(`ApplyTimesheetReviewRequestFilter`, the same FlowField filters as reviews). Create: the same
+people, for that time sheet (`CheckCanRequestTimesheetReview`; the time sheet must exist). Change or
+delete: only the AI agent (`CheckCanChangeTimesheetReviewRequests`). `THYME USER` has direct read and
+only indirect insert (`Ri`), and the page grants `i`, so a request can only be created through the
+page and its check; `THYME AI AGENT` has RIMD.
+
 === Thyme Setup API (Page 50112)
 
 Maps to the extension's `Thyme Setup` table (table 50103), a single record with a blank
@@ -768,6 +790,7 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Plan Review Lines API | Page 50119
 | Thyme Plan Review Changes API | Page 50120
 | Thyme Plan Review Requests API | Page 50121
+| Thyme TS Review Requests API | Page 50124
 | Thyme Timesheet Review | Table 50100
 | Thyme Timesheet Review Line | Table 50101
 | Thyme Time Suggestion | Table 50102
@@ -779,6 +802,7 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Plan Review Line | Table 50108
 | Thyme Plan Review Change | Table 50109
 | Thyme Plan Review Request | Table 50110
+| Thyme Timesheet Review Request | Table 50113
 | Thyme Resource (extends Resource) | Table Extension 50100 (fields 50100-50104)
 | Thyme Resource Card (extends Resource Card) | Page Extension 50100
 | Thyme Review Verdict | Enum 50100
@@ -789,6 +813,7 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Suggestion Request Status | Enum 50105
 | Thyme Plan Review Subject | Enum 50107
 | Thyme Plan Review Req. Status | Enum 50108
+| Thyme TS Review Req. Status | Enum 50109
 | THYME AI AGENT | Permission Set 50100
 | THYME USER | Permission Set 50101
 | THYME ADMIN | Permission Set 50102
@@ -800,7 +825,7 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Source Link Events | Codeunit 50105
 | Thyme Connected Accounts | Codeunit 50106
 | Thyme Plan Review Apply | Codeunit 50107
-| (Reserved for future pages) | Page 50123-50199
+| (Reserved for future pages) | Page 50125-50199
 | (Reserved for future codeunits) | Codeunit 50108-50199
 |===
 
@@ -809,7 +834,7 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 * APIs inherit BC's standard security model
 * Users need appropriate permissions on Job, Job Task, Time Sheet, Resource, and Job Ledger Entry tables
 * The extension's own tables (reviews, review lines, suggestions) are not covered by the standard D365 permission sets. Assign `THYME AI AGENT` to the AI agent's Microsoft Entra application (full access) and `THYME USER` to Thyme users (read reviews; read and update suggestions; read Thyme Setup). Assign `THYME ADMIN` to people who change the default billable target. Per-person targets are Resource fields, so they follow the standard Resource permissions
-* Row-level security (codeunit `Thyme Record Security`): a timesheet review and its lines are visible only to the time sheet's owner and approver, Thyme administrators (*Time Sheet Admin.* in User Setup, or `THYME ADMIN`) and the AI agent (`THYME AI AGENT`); a time suggestion only to its resource's time sheet owner, administrators and the AI agent; a suggestion request to its resource's time sheet owner and approver, administrators and the AI agent. Day notes are readable by every Thyme user and changed only by people who may change the plan (permission to write Job Planning Lines). Plan reviews, their findings, changes and requests are readable by every Thyme user; reviews are written only by the AI agent or administrators, and requests created by people who may change the plan. The API pages filter in SQL through FlowFields in filter group 2, so lists, `$filter` and by-id requests all respect it. Only the AI agent or an administrator can write reviews, and users can only create or change suggestions for resources they own. `SUPER` alone does not bypass these rules
+* Row-level security (codeunit `Thyme Record Security`): a timesheet review and its lines are visible only to the time sheet's owner and approver, Thyme administrators (*Time Sheet Admin.* in User Setup, or `THYME ADMIN`) and the AI agent (`THYME AI AGENT`); a time suggestion only to its resource's time sheet owner, administrators and the AI agent; a suggestion request to its resource's time sheet owner and approver, administrators and the AI agent. Day notes are readable by every Thyme user and changed only by people who may change the plan (permission to write Job Planning Lines). Plan reviews, their findings, changes and requests are readable by every Thyme user; reviews are written only by the AI agent or administrators, and requests created by people who may change the plan. A timesheet review request is visible to, and can be created by, the time sheet's owner and approver, administrators and the AI agent; only the agent changes one. The API pages filter in SQL through FlowFields in filter group 2, so lists, `$filter` and by-id requests all respect it. Only the AI agent or an administrator can write reviews, and users can only create or change suggestions for resources they own. `SUPER` alone does not bypass these rules
 * OAuth 2.0 authentication via Azure AD
 * Supports both delegated and application permissions
 
