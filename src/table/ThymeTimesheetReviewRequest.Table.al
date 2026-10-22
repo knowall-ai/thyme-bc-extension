@@ -11,6 +11,8 @@ table 50113 "Thyme Timesheet Review Request"
 {
     Caption = 'Thyme Timesheet Review Request';
     DataClassification = CustomerContent;
+    // CheckNoOpenRequest locks and reads the time sheet header, even for callers without direct access
+    Permissions = tabledata "Time Sheet Header" = r;
 
     fields
     {
