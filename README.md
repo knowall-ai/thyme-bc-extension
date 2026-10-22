@@ -70,8 +70,10 @@ Base URL: `https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}`
 | `id` | System GUID |
 | `number` | Job No. |
 | `description` | Project description |
-| `billToCustomerNo` | Customer number |
-| `billToCustomerName` | Customer name |
+| `sellToCustomerNo` | Sell-to customer number: who the work is for (the end client when the work comes through a partner). Changing it keeps the Bill-to customer and its terms, dimensions and planning line prices (BC's own validation would reset them); refused once the project has invoiced (Sale) entries |
+| `sellToCustomerName` | Sell-to customer name. Read-only |
+| `billToCustomerNo` | Bill-to customer number: who pays (the partner, for partner work) |
+| `billToCustomerName` | Bill-to customer name |
 | `personResponsible` | Project manager |
 | `status` | Planning, Quote, Open, Completed |
 | `startingDate` | Project start date |

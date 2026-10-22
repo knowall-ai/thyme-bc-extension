@@ -2,6 +2,28 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
+## 1.27.0.3
+
+### Added
+
+- `sellToCustomerNo` and `sellToCustomerName` on `projects`: the project's Sell-to customer, Business
+  Central's standard field for who the work is for. With partner work, Sell-to is the end client and
+  Bill-to (`billToCustomerNo`) the partner who pays, so the client no longer has to be in the
+  project's name. `sellToCustomerName` is read-only.
+- Changing `sellToCustomerNo` keeps the project's Bill-to customer (codeunit 50109
+  `Thyme Project Customer`). BC's own Sell-to validation also validates Bill-to, which copies the new
+  customer's contact, payment terms, price groups and default dimensions onto the project and
+  re-prices its planning lines, losing prices set by hand; setting Bill-to back repeats it. The
+  codeunit runs BC's Sell-to validation, with its checks (refused once the project has invoiced (Sale)
+  ledger entries), and skips the Bill-to validation through a manually bound subscriber, so only the
+  Sell-to fields change. Posted entries and time sheets aren't touched. A project with no Bill-to
+  customer gets the Sell-to customer as Bill-to, as in BC, and clearing the Sell-to customer is BC's
+  own validation, which clears the Bill-to customer too (a project with a Bill-to but no Sell-to
+  customer can't be invoiced). Send `billToCustomerNo` only to change
+  the Bill-to customer: BC then applies that customer's terms and re-prices the planning lines.
+- `THYME USER` can run the codeunit; changing a project still needs Business Central's own
+  permission to modify projects.
+
 ## 1.26.0.0
 
 ### Added

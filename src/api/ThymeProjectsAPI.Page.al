@@ -2,6 +2,17 @@
 /// Custom API page exposing Projects (Jobs) with additional fields
 /// not available in the standard BC API v2.0.
 ///
+/// sellToCustomerNo / sellToCustomerName are the customer the project's work is for, and
+/// billToCustomerNo / billToCustomerName the customer who pays for it. They differ when the work is
+/// sold through a partner: Sell-to is the end client and Bill-to the partner. These are Business
+/// Central's own Project fields. Changing sellToCustomerNo keeps the project's Bill-to customer and
+/// everything that comes with it (contact, payment terms, default dimensions, planning line prices),
+/// where BC's own validation would set the Bill-to customer too (see codeunit "Thyme Project
+/// Customer"). BC's Sell-to checks still apply: it's refused once the project has invoiced (Sale)
+/// ledger entries. A project without a Bill-to customer gets the Sell-to customer as Bill-to, as in
+/// BC. Send billToCustomerNo only to change the Bill-to customer: BC then applies that customer's
+/// terms and re-prices the planning lines, even when it's the same customer.
+///
 /// canEditSourceLinks is true when the caller may add, change and remove the project's linked
 /// sources (see the projectSourceLinks endpoint): a Thyme administrator or the project's manager.
 ///
@@ -42,6 +53,26 @@ page 50100 "Thyme Projects API"
                 field(displayName; Rec.Description)
                 {
                     Caption = 'Display Name';
+                }
+                // Keeps the Bill-to customer (see "Thyme Project Customer"). Before the Bill-to
+                // fields, so a PATCH with both sets Sell-to first, then the Bill-to that was sent.
+                field(sellToCustomerNo; SellToCustomerNo)
+                {
+                    Caption = 'Sell-to Customer No.';
+                    TableRelation = Customer;
+
+                    trigger OnValidate()
+                    var
+                        ProjectCustomer: Codeunit "Thyme Project Customer";
+                    begin
+                        ProjectCustomer.SetSellToCustomer(Rec, SellToCustomerNo);
+                    end;
+                }
+                // Read-only: set sellToCustomerNo, and BC fills in the name from the customer.
+                field(sellToCustomerName; Rec."Sell-to Customer Name")
+                {
+                    Caption = 'Sell-to Customer Name';
+                    Editable = false;
                 }
                 field(billToCustomerNo; Rec."Bill-to Customer No.")
                 {
@@ -103,6 +134,7 @@ page 50100 "Thyme Projects API"
         CallerIsThymeAdmin: Boolean;
         CanEditSourceLinks: Boolean;
         CanEditPlan: Boolean;
+        SellToCustomerNo: Code[20];
 
     trigger OnOpenPage()
     var
@@ -117,5 +149,25 @@ page 50100 "Thyme Projects API"
         RecordSecurity: Codeunit "Thyme Record Security";
     begin
         CanEditSourceLinks := RecordSecurity.CanEditProjectSourceLinks(Rec, CallerIsThymeAdmin);
+        SellToCustomerNo := Rec."Sell-to Customer No.";
+    end;
+
+    trigger OnNewRecord(BelowxRec: Boolean)
+    begin
+        SellToCustomerNo := '';
+    end;
+
+    // BC can set the Sell-to customer itself (e.g. from a new Bill-to customer when there's none),
+    // so return what's on the record, not what was sent
+    trigger OnInsertRecord(BelowxRec: Boolean): Boolean
+    begin
+        SellToCustomerNo := Rec."Sell-to Customer No.";
+        exit(true);
+    end;
+
+    trigger OnModifyRecord(): Boolean
+    begin
+        SellToCustomerNo := Rec."Sell-to Customer No.";
+        exit(true);
     end;
 }

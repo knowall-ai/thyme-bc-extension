@@ -129,8 +129,10 @@ Maps to the BC `Job` table (table 167).
 | id | SystemId | Primary key (GUID)
 | number | No. | Job number
 | description | Description | Project name
-| billToCustomerNo | Bill-to Customer No. | Customer code
-| billToCustomerName | Bill-to Name | Customer display name
+| sellToCustomerNo | Sell-to Customer No. | Who the work is for (the end client of partner work). Set through codeunit 50109 `Thyme Project Customer`: BC's Sell-to validation runs (refused once the project has invoiced (Sale) entries) but the Bill-to validation it triggers is skipped, so the Bill-to customer, its contact, terms, default dimensions and the planning line prices stay as they are. A project with no Bill-to gets the Sell-to customer, as in BC
+| sellToCustomerName | Sell-to Customer Name | Read-only; filled in by BC from the customer
+| billToCustomerNo | Bill-to Customer No. | Who pays (the partner, for partner work)
+| billToCustomerName | Bill-to Name | Bill-to customer display name
 | personResponsible | Person Responsible | Project manager
 | status | Status | Enum: Planning, Quote, Open, Completed
 | startingDate | Starting Date | Project start
@@ -826,7 +828,9 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Connected Accounts | Codeunit 50106
 | Thyme Plan Review Apply | Codeunit 50107
 | (Reserved for future pages) | Page 50125-50199
-| (Reserved for future codeunits) | Codeunit 50108-50199
+| Thyme Project Notes | Codeunit 50108
+| Thyme Project Customer | Codeunit 50109
+| (Reserved for future codeunits) | Codeunit 50110-50199
 |===
 
 == Security
