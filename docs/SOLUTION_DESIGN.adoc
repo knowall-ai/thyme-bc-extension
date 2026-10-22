@@ -828,7 +828,9 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Connected Accounts | Codeunit 50106
 | Thyme Plan Review Apply | Codeunit 50107
 | (Reserved for future pages) | Page 50125-50199
-| (Reserved for future codeunits) | Codeunit 50108-50199
+| Thyme Project Notes | Codeunit 50108
+| Thyme Project Customer | Codeunit 50109
+| (Reserved for future codeunits) | Codeunit 50110-50199
 |===
 
 == Security
