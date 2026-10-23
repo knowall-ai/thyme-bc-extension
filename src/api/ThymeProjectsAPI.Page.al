@@ -68,8 +68,8 @@ page 50100 "Thyme Projects API"
                         ProjectCustomer.SetSellToCustomer(Rec, SellToCustomerNo);
                     end;
                 }
-                // Read-only: set sellToCustomerNo, and BC fills in the name from the customer.
-                field(sellToCustomerName; Rec."Sell-to Customer Name")
+                // Read-only: the customer's current name (see header). Set sellToCustomerNo instead.
+                field(sellToCustomerName; SellToCustomerName)
                 {
                     Caption = 'Sell-to Customer Name';
                     Editable = false;
@@ -135,6 +135,7 @@ page 50100 "Thyme Projects API"
         CanEditSourceLinks: Boolean;
         CanEditPlan: Boolean;
         SellToCustomerNo: Code[20];
+        SellToCustomerName: Text[100];
 
     trigger OnOpenPage()
     var
@@ -149,25 +150,40 @@ page 50100 "Thyme Projects API"
         RecordSecurity: Codeunit "Thyme Record Security";
     begin
         CanEditSourceLinks := RecordSecurity.CanEditProjectSourceLinks(Rec, CallerIsThymeAdmin);
-        SellToCustomerNo := Rec."Sell-to Customer No.";
+        SetSellToCustomer();
     end;
 
     trigger OnNewRecord(BelowxRec: Boolean)
     begin
         SellToCustomerNo := '';
+        SellToCustomerName := '';
     end;
 
     // BC can set the Sell-to customer itself (e.g. from a new Bill-to customer when there's none),
     // so return what's on the record, not what was sent
     trigger OnInsertRecord(BelowxRec: Boolean): Boolean
     begin
-        SellToCustomerNo := Rec."Sell-to Customer No.";
+        SetSellToCustomer();
         exit(true);
     end;
 
     trigger OnModifyRecord(): Boolean
     begin
-        SellToCustomerNo := Rec."Sell-to Customer No.";
+        SetSellToCustomer();
         exit(true);
+    end;
+
+    local procedure SetSellToCustomer()
+    var
+        Customer: Record Customer;
+    begin
+        SellToCustomerNo := Rec."Sell-to Customer No.";
+        SellToCustomerName := Rec."Sell-to Customer Name";
+        // Callers who can't read customers keep the stored name rather than getting an error
+        if (SellToCustomerNo = '') or not Customer.ReadPermission() then
+            exit;
+        Customer.SetLoadFields(Name);
+        if Customer.Get(SellToCustomerNo) then
+            SellToCustomerName := Customer.Name;
     end;
 }
