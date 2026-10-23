@@ -2,6 +2,15 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
+## 1.27.0.4
+
+### Fixed
+
+- `sellToCustomerName` on `projects` is now the customer's current name, looked up by
+  `sellToCustomerNo`. Business Central copies the customer's name onto a project when it's set and
+  doesn't refresh it after the customer is renamed, so projects for one customer could return
+  different, older names. No project data changes.
+
 ## 1.27.0.3
 
 ### Added
