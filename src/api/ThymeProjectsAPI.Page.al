@@ -179,7 +179,8 @@ page 50100 "Thyme Projects API"
     begin
         SellToCustomerNo := Rec."Sell-to Customer No.";
         SellToCustomerName := Rec."Sell-to Customer Name";
-        if SellToCustomerNo = '' then
+        // Callers who can't read customers keep the stored name rather than getting an error
+        if (SellToCustomerNo = '') or not Customer.ReadPermission() then
             exit;
         Customer.SetLoadFields(Name);
         if Customer.Get(SellToCustomerNo) then
