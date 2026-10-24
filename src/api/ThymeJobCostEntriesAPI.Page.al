@@ -4,8 +4,9 @@
 ///
 /// Unlike timeEntries (page 50105), which is filtered to Resource entries, this includes the
 /// non-hour costs posted to a project: Item and G/L Account entries, and resourceType tells
-/// people's time from Machine resources such as AI usage (e.g. resource AI-USAGE, unit cost 1). Hours must still come only from
-/// Resource entries for people: filter by type and resourceType, or use timeEntries.
+/// people's time from Machine resources such as AI usage (e.g. resource AI-USAGE, unit cost 1).
+/// Hours must come only from people's Resource entries: type Resource with resourceType Person.
+/// timeEntries isn't a substitute: it includes Machine Resource entries, with no resourceType.
 ///
 /// Endpoint: /api/knowall/thyme/v1.0/companies({companyId})/jobCostEntries
 /// </summary>

@@ -11,8 +11,10 @@ Notable changes to the Thyme BC Extension. Versions match `app.json`.
   `resourceType`: the resource's type (`Person` or `Machine`) on Resource entries, blank on others.
   Thyme uses it for a project's real cost and price, including non-hour costs such as AI usage
   posted against a Machine resource (e.g. `AI-USAGE`, unit cost 1, unit price 0). Read-only. Hours
-  come only from people's Resource entries: `type` `Resource` and `resourceType` `Person` (or use
-  `timeEntries`, which is unchanged). `resourceType` is calculated, so it can't be filtered on.
+  come only from people's Resource entries: `type` `Resource` and `resourceType` `Person`, checked
+  by the client (`resourceType` is calculated, so it can't be filtered on). `timeEntries` is
+  unchanged, but isn't a source of people-only hours: it includes Machine Resource entries and has
+  no `resourceType`.
 - `THYME USER` can run the page.
 
 ## 1.27.0.4
