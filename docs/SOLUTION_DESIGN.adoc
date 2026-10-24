@@ -404,13 +404,16 @@ Maps to the BC `Job Ledger Entry` table (table 169). Filtered to Resource-type e
 
 Maps to the BC `Job Ledger Entry` table (table 169), with *no* Type filter: Resource, Item and
 G/L Account entries. Read-only (`InsertAllowed`, `ModifyAllowed` and `DeleteAllowed` false,
-`DataAccessIntent = ReadOnly`). The fields are the same as the Time Entries API's.
+`DataAccessIntent = ReadOnly`). The fields are the same as the Time Entries API's, plus
+`resourceType` (looked up from the Resource table in OnAfterGetRecord: the enum value's name,
+`Person` or `Machine`, on Resource entries; blank on others, or if the user can't read resources).
 
 Thyme uses it for a project's actual cost and invoiced price. AI agents are BC resources with a unit
-price and a unit cost of 0, so their hours are only what's charged; their real costs (AI tokens,
-compute) are posted to the client's project as non-chargeable G/L Account job journal lines, which
-only this endpoint returns. Hours must come only from `type = Resource` entries: a G/L or Item
-entry's quantity is not hours. The Time Entries API stays Resource-only for that reason.
+price only, so their hours are what's charged; their real costs (AI tokens, compute) are posted to
+the client's project against a dedicated Machine resource (e.g. `AI-USAGE`: unit of measure in
+currency units, unit cost 1, unit price 0, non-chargeable). Hours must come only from people's
+Resource entries: an Item, G/L Account or Machine entry's quantity is not hours. The Time Entries
+API stays unchanged.
 
 
 A Job can have a *Currency Code*, so its planning lines and ledger entries are priced in a

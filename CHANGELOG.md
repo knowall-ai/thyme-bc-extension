@@ -7,10 +7,12 @@ Notable changes to the Thyme BC Extension. Versions match `app.json`.
 ### Added
 
 - `jobCostEntries` (page 50125 `Thyme Job Cost Entries API`): every Job Ledger Entry on a project,
-  of every type (Resource, Item and G/L Account), with the same fields as `timeEntries`. Thyme uses
-  it for a project's real cost and price, including non-hour costs such as AI services posted as
-  G/L Account job journal lines. Read-only. Hours still come only from Resource entries: filter
-  `type eq 'Resource'` or use `timeEntries`, which is unchanged.
+  of every type (Resource, Item and G/L Account), with the same fields as `timeEntries`, plus
+  `resourceType`: the resource's type (`Person` or `Machine`) on Resource entries, blank on others.
+  Thyme uses it for a project's real cost and price, including non-hour costs such as AI usage
+  posted against a Machine resource (e.g. `AI-USAGE`, unit cost 1, unit price 0). Read-only. Hours
+  come only from people's Resource entries: `type` `Resource` and `resourceType` `Person` (or use
+  `timeEntries`, which is unchanged). `resourceType` is calculated, so it can't be filtered on.
 - `THYME USER` can run the page.
 
 ## 1.27.0.4

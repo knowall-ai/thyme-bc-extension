@@ -262,12 +262,14 @@ POST /resources({id})/Microsoft.NAV.setGitHubUsername   { "githubUsername": "" }
 ### Job Cost Entries API
 
 Every Job Ledger Entry on a project, of every type: `Resource`, `Item` and `G/L Account`. Use it
-for a project's real cost and price, including non-hour costs such as AI services (tokens, compute)
-posted as G/L Account job journal lines. Read-only.
+for a project's real cost and price, including non-hour costs such as AI usage (tokens, compute)
+posted against a Machine resource (e.g. `AI-USAGE`, unit cost 1, unit price 0) or as G/L Account
+job journal lines. Read-only.
 
-It has the same fields as Time Entries, with `type` telling the entry types apart. Hours come only
-from `Resource` entries: a G/L or Item entry's `quantity` is not hours, so filter
-`type eq 'Resource'` (or use `timeEntries`) for hours.
+It has the same fields as Time Entries, with `type` telling the entry types apart, plus
+`resourceType`: the resource's type (`Person` or `Machine`) on Resource entries, blank on others
+(calculated, so not filterable). Hours come only from people's Resource entries: a G/L, Item or
+Machine entry's `quantity` is not hours.
 
 ```
 GET .../jobCostEntries?$filter=jobNo eq 'PR00010'

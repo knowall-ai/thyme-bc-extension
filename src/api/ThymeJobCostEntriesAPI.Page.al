@@ -3,8 +3,9 @@
 /// and G/L Account), for a project's real costs and prices. Read-only.
 ///
 /// Unlike timeEntries (page 50105), which is filtered to Resource entries, this includes the
-/// non-hour costs posted to a project, such as AI services posted as G/L Account job journal
-/// lines. Hours must still come only from Resource entries: filter by type, or use timeEntries.
+/// non-hour costs posted to a project: Item and G/L Account entries, and resourceType tells
+/// people's time from Machine resources such as AI usage (e.g. resource AI-USAGE, unit cost 1). Hours must still come only from
+/// Resource entries for people: filter by type and resourceType, or use timeEntries.
 ///
 /// Endpoint: /api/knowall/thyme/v1.0/companies({companyId})/jobCostEntries
 /// </summary>
@@ -59,6 +60,12 @@ page 50125 "Thyme Job Cost Entries API"
                 field(number; Rec."No.")
                 {
                     Caption = 'No.';
+                }
+                // The resource's type (Person or Machine) for Resource entries, blank otherwise,
+                // so Thyme can tell people's hours from machine costs such as AI usage
+                field(resourceType; ResourceTypeName)
+                {
+                    Caption = 'Resource Type';
                 }
                 field(description; Rec.Description)
                 {
@@ -125,4 +132,26 @@ page 50125 "Thyme Job Cost Entries API"
             }
         }
     }
+
+    var
+        ResourceTypeName: Text[30];
+
+    trigger OnAfterGetRecord()
+    begin
+        ResourceTypeName := GetResourceTypeName();
+    end;
+
+    // The enum value's name rather than its caption, so it doesn't change with the user's language
+    local procedure GetResourceTypeName(): Text[30]
+    var
+        Resource: Record Resource;
+    begin
+        if Rec.Type <> Rec.Type::Resource then
+            exit('');
+        if not Resource.ReadPermission() then
+            exit('');
+        if not Resource.Get(Rec."No.") then
+            exit('');
+        exit(CopyStr(Resource.Type.Names().Get(Resource.Type.Ordinals().IndexOf(Resource.Type.AsInteger())), 1, 30));
+    end;
 }
