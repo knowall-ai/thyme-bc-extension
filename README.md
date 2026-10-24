@@ -39,6 +39,7 @@ Once deployed, the APIs are available at:
 .../api/knowall/thyme/v1.0/companies({companyId})/timeSheetDetails
 .../api/knowall/thyme/v1.0/companies({companyId})/resources
 .../api/knowall/thyme/v1.0/companies({companyId})/timeEntries
+.../api/knowall/thyme/v1.0/companies({companyId})/jobCostEntries
 .../api/knowall/thyme/v1.0/companies({companyId})/jobPlanningLines
 .../api/knowall/thyme/v1.0/companies({companyId})/resourceUnitsOfMeasure
 .../api/knowall/thyme/v1.0/companies({companyId})/timesheetReviews
@@ -258,6 +259,34 @@ POST /resources({id})/Microsoft.NAV.setGitHubUsername   { "githubUsername": "" }
 
 **Note:** Time Entries are filtered to Resource-type entries only (employee time tracking).
 
+### Job Cost Entries API
+
+Every Job Ledger Entry on a project, of every type: `Resource`, `Item` and `G/L Account`. Use it
+for a project's real cost and price, including non-hour costs such as AI usage (tokens, compute)
+posted against a Machine resource (e.g. `AI-USAGE`, unit cost 1, unit price 0) or as G/L Account
+job journal lines. Read-only.
+
+`entryType` is `Usage` for posted work (time sheets, journals) and `Sale` for a posted sales invoice,
+whose quantity, cost and price are negative. Sum Usage entries only for a project's cost, price or
+hours: Sale entries cancel out the usage they invoice.
+
+It has the same fields as Time Entries, with `type` telling the entry types apart, plus
+`resourceType`: the resource's type (`Person` or `Machine`) on Resource entries, blank on others
+(calculated, so not filterable). Hours come only from people's Resource entries: a G/L, Item or
+Machine entry's `quantity` is not hours.
+
+**Note:** `resourceType` is read from the Resource table, so it's blank for a user without read
+permission on resources (`THYME USER` grants it from 1.28.0.1; or for a resource that's since been
+deleted). A client that tells AI usage
+apart by `resourceType = Machine` then can't, and would count a Machine resource's quantity as hours
+unless it also matches it by number. Thyme does both: it treats the resources in its
+`THYME_AI_RESOURCES` setting (default `AI-USAGE`) as AI usage whatever `resourceType` says, so list
+every Machine resource there if some users can't read resources.
+
+```
+GET .../jobCostEntries?$filter=jobNo eq 'PR00010'
+```
+
 ### Currencies
 
 A project can be priced in a currency other than the company's (the Job's **Currency Code**).
@@ -266,7 +295,7 @@ BC then keeps each amount in two currencies, and the endpoints expose both:
 | Endpoint | Project currency | Local currency (LCY) |
 |----------|------------------|----------------------|
 | `jobPlanningLines` | `unitCost`, `totalCost`, `unitPrice`, `totalPrice` | `unitCostLCY`, `totalCostLCY`, `unitPriceLCY`, `totalPriceLCY` |
-| `timeEntries` | `unitCostProjectCurrency`, `totalCostProjectCurrency`, `unitPriceProjectCurrency`, `totalPriceProjectCurrency` | `unitCost`, `totalCost`, `unitPrice`, `totalPrice` |
+| `timeEntries`, `jobCostEntries` | `unitCostProjectCurrency`, `totalCostProjectCurrency`, `unitPriceProjectCurrency`, `totalPriceProjectCurrency` | `unitCost`, `totalCost`, `unitPrice`, `totalPrice` |
 
 The older field names keep their original meaning for compatibility, which is why the unsuffixed
 names differ between the two endpoints. Both endpoints, and `projects`, return `currencyCode`
@@ -721,7 +750,7 @@ Create two environments in Settings → Environments:
 | Permission set | Assign to | Grants |
 |----------------|-----------|--------|
 | `THYME AI AGENT` | The AI agent's Microsoft Entra application | Full access to reviews, review lines, suggestions, suggestion requests, its heartbeat, plan reviews (with findings and changes), plan review requests and timesheet review requests; reads day notes, and changes them (through `dayNotes`) only if it also has permission to write Job Planning Lines (includes `THYME USER`) |
-| `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; read and create suggestion requests; read agent heartbeats; read plan reviews, their findings and changes; read and create plan review requests (checked in code); read and create timesheet review requests for time sheets they own or approve (checked in code); read day notes, and change them through `dayNotes` with permission to write Job Planning Lines; read the default billable target; run the Thyme API pages |
+| `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; read and create suggestion requests; read agent heartbeats; read plan reviews, their findings and changes; read and create plan review requests (checked in code); read and create timesheet review requests for time sheets they own or approve (checked in code); read day notes, and change them through `dayNotes` with permission to write Job Planning Lines; read the default billable target; read resources and posted Job Ledger Entries (`timeEntries`, `jobCostEntries`); run the Thyme API pages |
 | `THYME ADMIN` | Thyme administrators | Everything in `THYME USER`, plus changing the default billable target (Thyme Setup) and seeing every user's reviews and suggestions; writing plan reviews, their findings and changes through the plan review APIs (indirect permission) |
 
 Users with `THYME USER` only see reviews of time sheets they own or approve and their own
@@ -753,6 +782,7 @@ thyme-bc-extension/
 │   │   ├── ThymeTimeSheetLineAPI.Page.al       # Time Sheet Lines (page 50103)
 │   │   ├── ThymeResourcesAPI.Page.al           # Resources endpoint (page 50104)
 │   │   ├── ThymeTimeEntriesAPI.Page.al         # Time Entries endpoint (page 50105)
+│   │   ├── ThymeJobCostEntriesAPI.Page.al      # Job Cost Entries endpoint, all types (page 50125)
 │   │   ├── ThymeTimeSheetDetailAPI.Page.al     # Time Sheet Details (page 50106)
 │   │   ├── ThymeJobPlanningLinesAPI.Page.al    # Job Planning Lines (page 50107)
 │   │   ├── ThymeResourceUnitsOfMeasureAPI.Page.al # Resource Units of Measure (page 50108)

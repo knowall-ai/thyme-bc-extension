@@ -104,6 +104,7 @@ https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeSheetLines
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/resources
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeEntries
+https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/jobCostEntries
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timesheetReviews
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timesheetReviewLines
 https://api.businesscentral.dynamics.com/v2.0/{tenant}/{environment}/api/knowall/thyme/v1.0/companies({companyId})/timeSuggestions
@@ -399,7 +400,24 @@ Maps to the BC `Job Ledger Entry` table (table 169). Filtered to Resource-type e
 | lastModifiedDateTime | SystemModifiedAt | For sync
 |===
 
-=== Project currency
+=== Job Cost Entries API (Page 50125)
+
+Maps to the BC `Job Ledger Entry` table (table 169), with *no* Type filter: Resource, Item and
+G/L Account entries. Read-only (`InsertAllowed`, `ModifyAllowed` and `DeleteAllowed` false,
+`DataAccessIntent = ReadOnly`). The fields are the same as the Time Entries API's, plus
+`resourceType` (looked up from the Resource table in OnAfterGetRecord: the enum value's name,
+`Person` or `Machine`, on Resource entries; blank on others, or if the user can't read resources;
+`THYME USER` grants Resource and Job Ledger Entry read from 1.28.0.1). `entryType` is `Usage` for
+posted work and `Sale` for a posted sales invoice (negative quantity, cost and price): Thyme sums
+Usage entries only, so Sale entries don't cancel out the usage they invoice.
+
+Thyme uses it for a project's actual cost and invoiced price. AI agents are BC resources with a unit
+price only, so their hours are what's charged; their real costs (AI tokens, compute) are posted to
+the client's project against a dedicated Machine resource (e.g. `AI-USAGE`: unit of measure in
+currency units, unit cost 1, unit price 0, non-chargeable). Hours must come only from people's
+Resource entries: an Item, G/L Account or Machine entry's quantity is not hours. The Time Entries
+API stays unchanged.
+
 
 A Job can have a *Currency Code*, so its planning lines and ledger entries are priced in a
 foreign currency. BC stores each amount twice: in the project currency (`Unit Cost`,
@@ -793,6 +811,7 @@ Returns `userSecurityId`, `userName`, `displayName`, `state`, `expiryDate`, `con
 | Thyme Plan Review Changes API | Page 50120
 | Thyme Plan Review Requests API | Page 50121
 | Thyme TS Review Requests API | Page 50124
+| Thyme Job Cost Entries API | Page 50125
 | Thyme Timesheet Review | Table 50100
 | Thyme Timesheet Review Line | Table 50101
 | Thyme Time Suggestion | Table 50102

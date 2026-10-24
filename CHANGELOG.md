@@ -2,6 +2,35 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
+## 1.28.0.1
+
+### Changed
+
+- `THYME USER` reads the Resource and Job Ledger Entry tables directly, so a user with only
+  `THYME USER` gets `resourceType` on `jobCostEntries` (it was blank without Resource read from
+  another permission set) and can read `timeEntries` and `jobCostEntries`. `THYME USER` still has
+  only indirect modify on Resource, for `setGitHubUsername`.
+- `entryType` on `jobCostEntries` and `timeEntries` is `Usage` for posted work and `Sale` for a
+  posted sales invoice (negative quantity, cost and price). Clients summing a project's cost or
+  price should use Usage entries only, as Thyme does.
+
+## 1.28.0.0
+
+### Added
+
+- `jobCostEntries` (page 50125 `Thyme Job Cost Entries API`): every Job Ledger Entry on a project,
+  of every type (Resource, Item and G/L Account), with the same fields as `timeEntries`, plus
+  `resourceType`: the resource's type (`Person` or `Machine`) on Resource entries, blank on others.
+  Thyme uses it for a project's real cost and price, including non-hour costs such as AI usage
+  posted against a Machine resource (e.g. `AI-USAGE`, unit cost 1, unit price 0). Read-only. Hours
+  come only from people's Resource entries: `type` `Resource` and `resourceType` `Person`, checked
+  by the client (`resourceType` is calculated, so it can't be filtered on). `timeEntries` is
+  unchanged, but isn't a source of people-only hours: it includes Machine Resource entries and has
+  no `resourceType`.
+- `THYME USER` can run the page. `resourceType` is read from the Resource table (each resource once
+  per request), so it's blank for a user who can't read resources: list Machine resources in Thyme's
+  `THYME_AI_RESOURCES` too if that can happen.
+
 ## 1.27.0.4
 
 ### Fixed
