@@ -136,23 +136,38 @@ page 50125 "Thyme Job Cost Entries API"
 
     var
         ResourceTypeName: Text[30];
+        // Type name by resource number, so each resource is read once per request rather than
+        // once per entry (a project's entries are mostly a few resources)
+        ResourceTypeNames: Dictionary of [Code[20], Text[30]];
+        CanReadResources: Boolean;
+        ReadPermissionChecked: Boolean;
 
     trigger OnAfterGetRecord()
     begin
         ResourceTypeName := GetResourceTypeName();
     end;
 
-    // The enum value's name rather than its caption, so it doesn't change with the user's language
+    // The enum value's name rather than its caption, so it doesn't change with the user's language.
+    // Blank for non-Resource entries, a resource that no longer exists, or a user who can't read
+    // resources.
     local procedure GetResourceTypeName(): Text[30]
     var
         Resource: Record Resource;
+        TypeName: Text[30];
     begin
         if Rec.Type <> Rec.Type::Resource then
             exit('');
-        if not Resource.ReadPermission() then
+        if not ReadPermissionChecked then begin
+            CanReadResources := Resource.ReadPermission();
+            ReadPermissionChecked := true;
+        end;
+        if not CanReadResources then
             exit('');
-        if not Resource.Get(Rec."No.") then
-            exit('');
-        exit(CopyStr(Resource.Type.Names().Get(Resource.Type.Ordinals().IndexOf(Resource.Type.AsInteger())), 1, 30));
+        if ResourceTypeNames.Get(Rec."No.", TypeName) then
+            exit(TypeName);
+        if Resource.Get(Rec."No.") then
+            TypeName := CopyStr(Resource.Type.Names().Get(Resource.Type.Ordinals().IndexOf(Resource.Type.AsInteger())), 1, 30);
+        ResourceTypeNames.Add(Rec."No.", TypeName);
+        exit(TypeName);
     end;
 }

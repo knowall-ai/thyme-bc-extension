@@ -15,7 +15,9 @@ Notable changes to the Thyme BC Extension. Versions match `app.json`.
   by the client (`resourceType` is calculated, so it can't be filtered on). `timeEntries` is
   unchanged, but isn't a source of people-only hours: it includes Machine Resource entries and has
   no `resourceType`.
-- `THYME USER` can run the page.
+- `THYME USER` can run the page. `resourceType` is read from the Resource table (each resource once
+  per request), so it's blank for a user who can't read resources: list Machine resources in Thyme's
+  `THYME_AI_RESOURCES` too if that can happen.
 
 ## 1.27.0.4
 

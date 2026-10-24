@@ -271,6 +271,13 @@ It has the same fields as Time Entries, with `type` telling the entry types apar
 (calculated, so not filterable). Hours come only from people's Resource entries: a G/L, Item or
 Machine entry's `quantity` is not hours.
 
+**Note:** `resourceType` is read from the Resource table, so it's blank for a user without read
+permission on resources (or for a resource that's since been deleted). A client that tells AI usage
+apart by `resourceType = Machine` then can't, and would count a Machine resource's quantity as hours
+unless it also matches it by number. Thyme does both: it treats the resources in its
+`THYME_AI_RESOURCES` setting (default `AI-USAGE`) as AI usage whatever `resourceType` says, so list
+every Machine resource there if some users can't read resources.
+
 ```
 GET .../jobCostEntries?$filter=jobNo eq 'PR00010'
 ```
