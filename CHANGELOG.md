@@ -2,6 +2,18 @@
 
 Notable changes to the Thyme BC Extension. Versions match `app.json`.
 
+## 1.28.0.1
+
+### Changed
+
+- `THYME USER` reads the Resource and Job Ledger Entry tables directly, so a user with only
+  `THYME USER` gets `resourceType` on `jobCostEntries` (it was blank without Resource read from
+  another permission set) and can read `timeEntries` and `jobCostEntries`. `THYME USER` still has
+  only indirect modify on Resource, for `setGitHubUsername`.
+- `entryType` on `jobCostEntries` and `timeEntries` is `Usage` for posted work and `Sale` for a
+  posted sales invoice (negative quantity, cost and price). Clients summing a project's cost or
+  price should use Usage entries only, as Thyme does.
+
 ## 1.28.0.0
 
 ### Added

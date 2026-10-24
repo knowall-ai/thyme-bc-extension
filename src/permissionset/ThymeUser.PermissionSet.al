@@ -6,8 +6,9 @@
 /// and set their own GitHub username through the resources API's setGitHubUsername action.
 /// Every Thyme user reads day notes; changing them is checked in code (people who may change the plan:
 /// permission to write Job Planning Lines).
-/// Base-app data such as time sheets and resources still comes from the standard D365
-/// permission sets. To change the default billable target, use THYME ADMIN.
+/// Thyme users read resources and posted Job Ledger Entries (a project's hours, cost and price,
+/// with each resource's type on jobCostEntries). Other base-app data such as time sheets still
+/// comes from the standard D365 permission sets. To change the default billable target, use THYME ADMIN.
 /// Every Thyme user reads a project's Notes (Business Central's own) and adds to them, through the
 /// projectNotes API, as anyone who can read the project can on the Project card.
 /// Every Thyme user reads AI plan reviews (with their findings and proposed changes) and plan review
@@ -56,9 +57,13 @@ permissionset 50101 "THYME USER"
         // Direct read only; insert, modify and delete are indirect, so day notes can only be written
         // through the dayNotes API page, whose triggers check CanEditPlan (not, say, a config package).
         tabledata "Thyme Day Note" = Rimd,
-        // Indirect only: lets codeunit "Thyme Connected Accounts" save a person's own GitHub
-        // username after its row-level check; it gives no direct right to change resources.
-        tabledata Resource = m,
+        // Direct read, and indirect modify only: lets codeunit "Thyme Connected Accounts" save a
+        // person's own GitHub username after its row-level check; it gives no direct right to
+        // change resources. Read is what jobCostEntries' resourceType needs (blank without it).
+        tabledata Resource = Rm,
+        // Read the posted entries behind timeEntries and jobCostEntries (a project's hours, cost
+        // and price), so THYME USER alone is enough for Thyme's project pages
+        tabledata "Job Ledger Entry" = R,
         page "Thyme Projects API" = X,
         page "Thyme Job Tasks API" = X,
         page "Thyme Time Sheet API" = X,

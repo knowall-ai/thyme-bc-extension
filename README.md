@@ -266,13 +266,18 @@ for a project's real cost and price, including non-hour costs such as AI usage (
 posted against a Machine resource (e.g. `AI-USAGE`, unit cost 1, unit price 0) or as G/L Account
 job journal lines. Read-only.
 
+`entryType` is `Usage` for posted work (time sheets, journals) and `Sale` for a posted sales invoice,
+whose quantity, cost and price are negative. Sum Usage entries only for a project's cost, price or
+hours: Sale entries cancel out the usage they invoice.
+
 It has the same fields as Time Entries, with `type` telling the entry types apart, plus
 `resourceType`: the resource's type (`Person` or `Machine`) on Resource entries, blank on others
 (calculated, so not filterable). Hours come only from people's Resource entries: a G/L, Item or
 Machine entry's `quantity` is not hours.
 
 **Note:** `resourceType` is read from the Resource table, so it's blank for a user without read
-permission on resources (or for a resource that's since been deleted). A client that tells AI usage
+permission on resources (`THYME USER` grants it from 1.28.0.1; or for a resource that's since been
+deleted). A client that tells AI usage
 apart by `resourceType = Machine` then can't, and would count a Machine resource's quantity as hours
 unless it also matches it by number. Thyme does both: it treats the resources in its
 `THYME_AI_RESOURCES` setting (default `AI-USAGE`) as AI usage whatever `resourceType` says, so list
@@ -745,7 +750,7 @@ Create two environments in Settings → Environments:
 | Permission set | Assign to | Grants |
 |----------------|-----------|--------|
 | `THYME AI AGENT` | The AI agent's Microsoft Entra application | Full access to reviews, review lines, suggestions, suggestion requests, its heartbeat, plan reviews (with findings and changes), plan review requests and timesheet review requests; reads day notes, and changes them (through `dayNotes`) only if it also has permission to write Job Planning Lines (includes `THYME USER`) |
-| `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; read and create suggestion requests; read agent heartbeats; read plan reviews, their findings and changes; read and create plan review requests (checked in code); read and create timesheet review requests for time sheets they own or approve (checked in code); read day notes, and change them through `dayNotes` with permission to write Job Planning Lines; read the default billable target; run the Thyme API pages |
+| `THYME USER` | Thyme users | Read reviews and review lines; read and update suggestions; read and create suggestion requests; read agent heartbeats; read plan reviews, their findings and changes; read and create plan review requests (checked in code); read and create timesheet review requests for time sheets they own or approve (checked in code); read day notes, and change them through `dayNotes` with permission to write Job Planning Lines; read the default billable target; read resources and posted Job Ledger Entries (`timeEntries`, `jobCostEntries`); run the Thyme API pages |
 | `THYME ADMIN` | Thyme administrators | Everything in `THYME USER`, plus changing the default billable target (Thyme Setup) and seeing every user's reviews and suggestions; writing plan reviews, their findings and changes through the plan review APIs (indirect permission) |
 
 Users with `THYME USER` only see reviews of time sheets they own or approve and their own
