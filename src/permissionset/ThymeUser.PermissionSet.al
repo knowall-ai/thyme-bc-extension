@@ -66,6 +66,7 @@ permissionset 50101 "THYME USER"
         page "Thyme Time Sheet Detail API" = X,
         page "Thyme Resources API" = X,
         page "Thyme Time Entries API" = X,
+        page "Thyme Job Cost Entries API" = X,
         page "Thyme Job Planning Lines API" = X,
         page "Thyme Resource UoM API" = X,
         page "Thyme Timesheet Reviews API" = X,

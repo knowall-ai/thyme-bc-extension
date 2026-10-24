@@ -39,6 +39,7 @@ Once deployed, the APIs are available at:
 .../api/knowall/thyme/v1.0/companies({companyId})/timeSheetDetails
 .../api/knowall/thyme/v1.0/companies({companyId})/resources
 .../api/knowall/thyme/v1.0/companies({companyId})/timeEntries
+.../api/knowall/thyme/v1.0/companies({companyId})/jobCostEntries
 .../api/knowall/thyme/v1.0/companies({companyId})/jobPlanningLines
 .../api/knowall/thyme/v1.0/companies({companyId})/resourceUnitsOfMeasure
 .../api/knowall/thyme/v1.0/companies({companyId})/timesheetReviews
@@ -258,6 +259,20 @@ POST /resources({id})/Microsoft.NAV.setGitHubUsername   { "githubUsername": "" }
 
 **Note:** Time Entries are filtered to Resource-type entries only (employee time tracking).
 
+### Job Cost Entries API
+
+Every Job Ledger Entry on a project, of every type: `Resource`, `Item` and `G/L Account`. Use it
+for a project's real cost and price, including non-hour costs such as AI services (tokens, compute)
+posted as G/L Account job journal lines. Read-only.
+
+It has the same fields as Time Entries, with `type` telling the entry types apart. Hours come only
+from `Resource` entries: a G/L or Item entry's `quantity` is not hours, so filter
+`type eq 'Resource'` (or use `timeEntries`) for hours.
+
+```
+GET .../jobCostEntries?$filter=jobNo eq 'PR00010'
+```
+
 ### Currencies
 
 A project can be priced in a currency other than the company's (the Job's **Currency Code**).
@@ -266,7 +281,7 @@ BC then keeps each amount in two currencies, and the endpoints expose both:
 | Endpoint | Project currency | Local currency (LCY) |
 |----------|------------------|----------------------|
 | `jobPlanningLines` | `unitCost`, `totalCost`, `unitPrice`, `totalPrice` | `unitCostLCY`, `totalCostLCY`, `unitPriceLCY`, `totalPriceLCY` |
-| `timeEntries` | `unitCostProjectCurrency`, `totalCostProjectCurrency`, `unitPriceProjectCurrency`, `totalPriceProjectCurrency` | `unitCost`, `totalCost`, `unitPrice`, `totalPrice` |
+| `timeEntries`, `jobCostEntries` | `unitCostProjectCurrency`, `totalCostProjectCurrency`, `unitPriceProjectCurrency`, `totalPriceProjectCurrency` | `unitCost`, `totalCost`, `unitPrice`, `totalPrice` |
 
 The older field names keep their original meaning for compatibility, which is why the unsuffixed
 names differ between the two endpoints. Both endpoints, and `projects`, return `currencyCode`
@@ -753,6 +768,7 @@ thyme-bc-extension/
 │   │   ├── ThymeTimeSheetLineAPI.Page.al       # Time Sheet Lines (page 50103)
 │   │   ├── ThymeResourcesAPI.Page.al           # Resources endpoint (page 50104)
 │   │   ├── ThymeTimeEntriesAPI.Page.al         # Time Entries endpoint (page 50105)
+│   │   ├── ThymeJobCostEntriesAPI.Page.al      # Job Cost Entries endpoint, all types (page 50125)
 │   │   ├── ThymeTimeSheetDetailAPI.Page.al     # Time Sheet Details (page 50106)
 │   │   ├── ThymeJobPlanningLinesAPI.Page.al    # Job Planning Lines (page 50107)
 │   │   ├── ThymeResourceUnitsOfMeasureAPI.Page.al # Resource Units of Measure (page 50108)

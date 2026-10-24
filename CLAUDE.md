@@ -13,7 +13,8 @@ This is a Business Central (BC) AL extension that provides custom API endpoints 
 - `src/api/ThymeTimeSheetLineAPI.Page.al` - Time Sheet Line API (page 50103)
 - `src/api/ThymeTimeSheetDetailAPI.Page.al` - Time Sheet Detail API (page 50106)
 - `src/api/ThymeResourcesAPI.Page.al` - Resources API (page 50104)
-- `src/api/ThymeTimeEntriesAPI.Page.al` - Time Entries API (page 50105)
+- `src/api/ThymeTimeEntriesAPI.Page.al` - Time Entries API (page 50105): Resource entries only, for hours
+- `src/api/ThymeJobCostEntriesAPI.Page.al` - Job Cost Entries API (page 50125): every Job Ledger Entry type (Resource, Item, G/L Account), read-only, for a project's real cost and price; same fields as timeEntries
 - `src/api/ThymeJobPlanningLinesAPI.Page.al` - Job Planning Lines API (page 50107)
 - `src/api/ThymeResourceUnitsOfMeasureAPI.Page.al` - Resource Units of Measure API (page 50108)
 - `src/api/ThymeTimesheetReviewsAPI.Page.al` - Timesheet Reviews API (page 50109, table 50100)
@@ -59,6 +60,7 @@ Endpoints available at:
 /api/knowall/thyme/v1.0/companies({id})/timeSheetDetails
 /api/knowall/thyme/v1.0/companies({id})/resources
 /api/knowall/thyme/v1.0/companies({id})/timeEntries
+/api/knowall/thyme/v1.0/companies({id})/jobCostEntries
 /api/knowall/thyme/v1.0/companies({id})/jobPlanningLines
 /api/knowall/thyme/v1.0/companies({id})/resourceUnitsOfMeasure
 /api/knowall/thyme/v1.0/companies({id})/timesheetReviews
